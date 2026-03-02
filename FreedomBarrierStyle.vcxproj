@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{c40ea728-e512-48b5-a727-fcbf311c4b09}</ProjectGuid>
+    <RootNamespace>FreedomBarrierStyle</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>FreedomBarrierStyle</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(ProjectDir)$(Configuration)\$(SolutionName)\</OutDir>
+    <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
+    <TargetName>FreedomBarrierStyle</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(ProjectDir)$(Configuration)\$(SolutionName)\</OutDir>
+    <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
+    <TargetName>FreedomBarrierStyle</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\$(ProjectName)\</OutDir>
+    <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
+    <TargetName>FreedomBarrierStyle</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\Wip$(SolutionName)\</OutDir>
+    <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
+    <TargetName>FreedomBarrierStyle</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\boost_vc\include\boost-1_84;C:\fmt-10.1.0\include;C:\DxLib_VC\AddProject_VC;Source\System;Source\System\Game;C:\LuaScript</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AssemblerListingLocation>$(IntDir)%(RelativeDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\boost_vc\lib;$(ProjectDir)lib\x86_64;C:\DxLib_VC\AddProject_VC;C:\LuaScript</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(CoreLibraryDependencies);discord_game_sdk.dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <Manifest>
+      <AdditionalManifestFiles>$(ProjectDir)manifest\ActiveCodePageUTF8.manifest</AdditionalManifestFiles>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\boost_vc\include\boost-1_84;C:\fmt-10.1.0\include;C:\DxLib_VC\AddProject_VC;Source\System;Source\System\Game;C:\LuaScript</AdditionalIncludeDirectories>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AssemblerListingLocation>$(IntDir)%(RelativeDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MaxSpeed</Optimization>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\boost_vc\lib;$(ProjectDir)lib\x86_64;C:\DxLib_VC\AddProject_VC;C:\LuaScript</AdditionalLibraryDirectories>
+      <ProgramDatabaseFile>$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
+      <AdditionalDependencies>$(CoreLibraryDependencies);discord_game_sdk.dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <Manifest>
+      <AdditionalManifestFiles>$(ProjectDir)manifest\ActiveCodePageUTF8.manifest</AdditionalManifestFiles>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\boost_vc\include\boost-1_84;C:\fmt-10.1.0\include;C:\DxLib_VC\AddProject_VC;Source\System;Source\System\Game;C:\LuaScript</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AssemblerListingLocation>$(IntDir)%(RelativeDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\boost_vc\lib;$(ProjectDir)lib\x86_64;C:\DxLib_VC\AddProject_VC;C:\LuaScript</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(CoreLibraryDependencies);discord_game_sdk.dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <Manifest>
+      <AdditionalManifestFiles>$(ProjectDir)manifest\ActiveCodePageUTF8.manifest</AdditionalManifestFiles>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\boost_vc\include\boost-1_84;C:\fmt-10.1.0\include;C:\DxLib_VC\AddProject_VC;Source\System;Source\System\Game;C:\LuaScript</AdditionalIncludeDirectories>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AssemblerListingLocation>$(IntDir)%(RelativeDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MaxSpeed</Optimization>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\boost_vc\lib;$(ProjectDir)lib\x86_64;C:\DxLib_VC\AddProject_VC;C:\LuaScript</AdditionalLibraryDirectories>
+      <ProgramDatabaseFile>$(Platform)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
+      <AdditionalDependencies>$(CoreLibraryDependencies);discord_game_sdk.dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <Manifest>
+      <AdditionalManifestFiles>$(ProjectDir)manifest\ActiveCodePageUTF8.manifest</AdditionalManifestFiles>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Main.cpp" />
+    <ClCompile Include="Source\pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Source\System\Library\DiscordGameSDK\achievement_manager.cpp" />
+    <ClCompile Include="Source\System\Library\DiscordGameSDK\activity_manager.cpp" />
+    <ClCompile Include="Source\System\Library\DiscordGameSDK\application_manager.cpp" />
+    <ClCompile Include="Source\System\Library\DiscordGameSDK\core.cpp" />
+    <ClCompile Include="Source\System\Library\DiscordGameSDK\image_manager.cpp" />
+    <ClCompile Include="Source\System\Library\DiscordGameSDK\lobby_manager.cpp" />
+    <ClCompile Include="Source\System\Library\DiscordGameSDK\network_manager.cpp" />
+    <ClCompile Include="Source\System\Library\DiscordGameSDK\overlay_manager.cpp" />
+    <ClCompile Include="Source\System\Library\DiscordGameSDK\relationship_manager.cpp" />
+    <ClCompile Include="Source\System\Library\DiscordGameSDK\storage_manager.cpp" />
+    <ClCompile Include="Source\System\Library\DiscordGameSDK\store_manager.cpp" />
+    <ClCompile Include="Source\System\Library\DiscordGameSDK\types.cpp" />
+    <ClCompile Include="Source\System\Library\DiscordGameSDK\user_manager.cpp" />
+    <ClCompile Include="Source\System\Library\DiscordGameSDK\voice_manager.cpp" />
+    <ClCompile Include="Source\System\Library\ExLib\ExString\ExString.cpp" />
+    <ClCompile Include="Source\System\OldGame\Config.cpp" />
+    <ClCompile Include="Source\System\OldGame\GameSystem.cpp" />
+    <ClCompile Include="Source\System\OldGame\Loading.cpp" />
+    <ClCompile Include="Source\System\OldGame\MultiRoom.cpp" />
+    <ClCompile Include="Source\System\OldGame\MultiSelect.cpp" />
+    <ClCompile Include="Source\System\OldGame\Playing.cpp" />
+    <ClCompile Include="Source\System\OldGame\Result.cpp" />
+    <ClCompile Include="Source\System\OldGame\Skin.cpp" />
+    <ClCompile Include="Source\System\OldGame\SongSelect.cpp" />
+    <ClCompile Include="Source\System\OldGame\Title.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="packages\DxLib.vc140.3.2.4.1\build\native\include\DxCompileConfig.h" />
+    <ClInclude Include="packages\DxLib.vc140.3.2.4.1\build\native\include\DxDataType.h" />
+    <ClInclude Include="packages\DxLib.vc140.3.2.4.1\build\native\include\DxDataTypeWin.h" />
+    <ClInclude Include="packages\DxLib.vc140.3.2.4.1\build\native\include\DxFunctionWin.h" />
+    <ClInclude Include="packages\DxLib.vc140.3.2.4.1\build\native\include\DxLib.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="Source\Main.h" />
+    <ClInclude Include="Source\pch.h" />
+    <ClInclude Include="Source\System\Include.hpp" />
+    <ClInclude Include="Source\System\Library\Chunk\Chunk.hpp" />
+    <ClInclude Include="Source\System\Library\DxLib++\AddStruct\AddStruct.hpp" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\achievement_manager.h" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\activity_manager.h" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\application_manager.h" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\core.h" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\discord.h" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\event.h" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\ffi.h" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\image_manager.h" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\lobby_manager.h" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\network_manager.h" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\overlay_manager.h" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\relationship_manager.h" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\storage_manager.h" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\store_manager.h" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\types.h" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\user_manager.h" />
+    <ClInclude Include="Source\System\Library\DiscordGameSDK\voice_manager.h" />
+    <ClInclude Include="Source\System\Library\DxLib++\DxLib++.hpp" />
+    <ClInclude Include="Source\System\Library\DxLib++\SoundDevice\SoundDevice.hpp" />
+    <ClInclude Include="Source\System\Library\Easing\Easing.hpp" />
+    <ClInclude Include="Source\System\Library\Exception\Exception.hpp" />
+    <ClInclude Include="Source\System\Library\ExLib\ExLib.hpp" />
+    <ClInclude Include="Source\System\Library\ExLib\ExMath\ExMath.hpp" />
+    <ClInclude Include="Source\System\Library\ExLib\ExString\ExString.hpp" />
+    <ClInclude Include="Source\System\Library\ExLib\ExString\strconv.h" />
+    <ClInclude Include="Source\System\Library\FileAccess\FileAccess.hpp" />
+    <ClInclude Include="Source\System\Library\Sol\config.hpp" />
+    <ClInclude Include="Source\System\Library\Sol\sol.hpp" />
+    <ClInclude Include="Source\System\Library\DxLib++\Timer\Timer.hpp" />
+    <ClInclude Include="Source\System\Library\DxLib++\Input\Input.hpp" />
+    <ClInclude Include="Source\System\Library\DxLib++\Json\json.hpp" />
+    <ClInclude Include="Source\System\Library\LibraryInclude.h" />
+    <ClInclude Include="Source\System\Library\MathParser\MathParser.h" />
+    <ClInclude Include="Source\System\OldGame\Config.h" />
+    <ClInclude Include="Source\System\OldGame\GameSystem.h" />
+    <ClInclude Include="Source\System\OldGame\Loading.h" />
+    <ClInclude Include="Source\System\OldGame\MultiRoom.h" />
+    <ClInclude Include="Source\System\OldGame\MultiSelect.h" />
+    <ClInclude Include="Source\System\OldGame\Playing.h" />
+    <ClInclude Include="Source\System\OldGame\Result.h" />
+    <ClInclude Include="Source\System\OldGame\Skin.h" />
+    <ClInclude Include="Source\System\OldGame\SongSelect.h" />
+    <ClInclude Include="Source\System\OldGame\Title.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="manifest\ActiveCodePageUTF8.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="appicon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="FreedomBarrierStyle.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
