@@ -275,6 +275,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="README.md" />
+    <None Include="README" />
   </ItemGroup>
 </Project>
