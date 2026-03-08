@@ -6,8 +6,6 @@
 #include <fstream>
 #include <filesystem>
 
-#include <boost/stacktrace.hpp>
-
 class Exception {
 	void LogOut() const {
 		std::ofstream ofs("Exception_dump.txt");
@@ -20,8 +18,7 @@ class Exception {
 			FileName <<
 			" in " <<
 			Line <<
-			"\nstack trace:\n" <<
-			boost::stacktrace::stacktrace();
+			"\nstack trace:\n";
 
 		ofs.close();
 	}

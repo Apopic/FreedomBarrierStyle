@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 /*
 *  using
@@ -43,6 +43,8 @@ using ulonglong = unsigned long long;
 #include <thread>
 #include <unordered_map>
 #include <vector>
+#include <iterator>
+#include <format>
 
 /*
 *  Library

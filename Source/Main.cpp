@@ -2,17 +2,17 @@
 
 static inline std::atomic_bool _waitvsyncLog = false;
 static inline std::mutex _syncmtx;
-static inline void _LogUpdate(bool *endflag) {
+static inline void _LogUpdate(bool* endflag) {
 	WaitVSync(1);
 	Timer<framecount> timer(true);
 	ulonglong mem = 0, now = 0;
 	while (true) {
-	#ifndef TRUE
+#ifndef TRUE
 		while (now == mem) { now = (ulonglong)timer.GetRecordingTime(); }
 		mem = now;
-	#else
+#else
 		WaitVSync(1);
-	#endif
+#endif
 		if (*endflag) { break; }
 		std::lock_guard<std::mutex> lock(_syncmtx);
 		_waitvsyncLog = true;
@@ -23,10 +23,6 @@ static inline bool GetVSyncWaitLog() {
 	return _waitvsyncLog.exchange(false);
 }
 
-/// <summary>
-/// MainProcess
-/// </summary>
-/// <returns></returns>
 int Main::Process() {
 
 	if (!InitSuccessFlag) { return -1; }
@@ -44,6 +40,7 @@ int Main::Process() {
 #ifdef _DEBUG
 		//clsDx();
 #endif
+
 		if (ProcessMessage() == -1) {
 			Game.EndFlag = true;
 		}
@@ -79,21 +76,19 @@ PROC_END:
 	return 0;
 }
 
-/// <summary>
-/// Program Entry Point
-/// </summary>
-/// <param name="hInstance"></param>
-/// <param name="hPrevInstance"></param>
-/// <param name="lpCmdLine"></param>
-/// <param name="nCmdShow"></param>
-/// <returns></returns>
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {
+	
+	fs::current_path(fs::path(GetExePath()).parent_path());
+	
 	Main _main;
 	int ret = _main.Process();
 	return ret;
 }
 
 Main::Main() {
+
+	SetDoubleStartValidFlag(Game.Config.MultiBoot);
+
 #ifndef _DEBUG
 	SetOutApplicationLogValidFlag(FALSE);
 #endif
@@ -115,8 +110,6 @@ Main::Main() {
 		Game.Config.BufferSize,
 		Game.Config.SampleRate
 	);
-
-	//SetUseDirect3D11SwapEffect(DX_SWAP_EFFECT_FLIP_DISCARD);
 
 	if (FAILED(DxLib_Init())) { InitSuccessFlag = false; return; }
 

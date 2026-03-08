@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "../resource.h"
 #include "OldGame/GameSystem.h"
 #include "Include.hpp"

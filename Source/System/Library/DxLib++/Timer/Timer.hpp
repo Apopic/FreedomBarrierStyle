@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 //#include <chrono>
 #include "DxLib.h"
 
@@ -17,6 +17,8 @@ class Timer{
 	inline static double RefreshRate = GetRefreshRate();
 
 public:
+
+	double ExtendRate = 1.0;
 
 	Timer(bool startflag = true) {
 		if (startflag) {

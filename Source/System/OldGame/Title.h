@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Include.hpp"
 
 extern class GameSystem;

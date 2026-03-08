@@ -10,6 +10,8 @@ std::string strtrim(const std::string& str);
 std::string ToUpper(const std::string& str);
 std::string ToLower(const std::string& str);
 
+int GetStrlen(std::string str, int handle);
+
 template<typename func>
 void Exsubstr(const std::string& raw, const std::string& name, func f) {
 	if (raw.find(name) != 0) {

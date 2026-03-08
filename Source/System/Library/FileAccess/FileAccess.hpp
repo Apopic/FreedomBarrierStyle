@@ -1,8 +1,9 @@
-#pragma once
+﻿#pragma once
 #include <vector>
 #include <string>
 #include <filesystem>
 #include <fstream>
+#include "cppunzip.hpp"
 #include "Library/ExLib/ExString/strconv.h"
 
 enum class FAO {
@@ -57,6 +58,7 @@ public:
 		std::string line;
 		while (std::getline(ifs, line)) {
 			m_List.push_back(line);
+
 		}
 
 		RemoveComment(option);
@@ -74,7 +76,9 @@ public:
 
 			if (option != FAO::rc_all) {
 				if (option == FAO::rc_slash) {
-					line = line.find("//") != std::string::npos ? line.substr(0, line.find("//")) : line;
+					if (line.find("SONGLINK:") == std::string::npos) {
+						line = line.find("//") != std::string::npos ? line.substr(0, line.find("//")) : line;
+					}
 				}
 				else if (option == FAO::rc_sharp) {
 					line = line.find("#") != std::string::npos ? line.substr(0, line.find("#")) : line;
@@ -112,10 +116,9 @@ public:
 	}
 
 	void CodePageToUTF8(UINT codepage) {
-		std::ifstream ifs(FilePath.u8string());
+		std::ifstream ifs(FilePath.string());
 
 		if (!ifs.is_open()) {
-			SendException("It's better to force it to close before you lose your data.");
 			return;
 		}
 
@@ -133,10 +136,9 @@ public:
 
 		std::string ret = cp_to_utf8(str, codepage);
 
-		std::ofstream ofs(FilePath.u8string());
+		std::ofstream ofs(FilePath.string());
 		
 		if (!ofs.is_open()) {
-			SendException("It's better to force it to close before you lose your data.");
 			return;
 		}
 
@@ -144,13 +146,24 @@ public:
 
 		ofs.close();
 
-		this->Read(FilePath.u8string(), m_Option);
+		this->Read(FilePath.string(), m_Option);
 	}
 
 	inline size_t LineCount() const { return m_List.size(); }
 	inline bool GetIsOpen() const { return m_IsOpen; }
 
 	std::filesystem::path FilePath;
+	std::vector<std::string> m_List;
+
+	Packet::bytearray ToBytes() const {
+		Packet::bytearray ret;
+		Packet::StoreBytes(ret, m_List);
+	}
+
+	Packet::byte_view FromBytes(Packet::byte_view view) {
+		Packet::LoadBytes(view, m_List);
+		return view;
+	}
 
 private:
 
@@ -160,10 +173,21 @@ private:
 	using ulong = unsigned long;
 	using ulonglong = unsigned long long;
 
-	std::vector<std::string> m_List;
 	bool m_IsOpen;
 	FAO m_Option;
 };
+
+inline std::string GetExePath() {
+	std::vector<char> buffer(MAX_PATH);
+	size_t length = GetModuleFileName(NULL, buffer.data(), buffer.size());
+
+	if (length > 0) {
+		std::string fullPath(buffer.data(), length);
+		return fullPath;
+	}
+ 
+	return 0;
+}
 
 inline bool FilePathExists(const std::string& path) {
 	std::ifstream ifs(path);
@@ -173,3 +197,4 @@ inline bool FilePathExists(const std::string& path) {
 	}
 	return ret;
 }
+

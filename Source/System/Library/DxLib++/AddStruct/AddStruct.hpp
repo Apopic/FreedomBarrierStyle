@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "../Json/json.hpp"
 #include <string>
 #include "DxLib.h"
@@ -141,6 +141,21 @@ struct GraphData {
 			TRUE
 		);
 	}
+	void RectDraw(Pos2D<float> pos, Pos2D<float> orgpos, Size2D<float> size, int index = 0) {
+		if (index < 0 || Handles.size() <= index) {
+			return;
+		}
+		DrawRectGraphF(
+			Pos.X + pos.X - (Size.Width * 0.5f),
+			Pos.Y + pos.Y - (Size.Height * 0.5f),
+			orgpos.X,
+			orgpos.Y,
+			size.Width,
+			size.Height,
+			Handles[index],
+			TRUE
+		);
+	}
 
 	std::vector<int> Handles;
 };
@@ -245,20 +260,30 @@ struct FontData {
 			edgecolor
 		);
 	}
+	void DrawFontString(Pos2D<float> pos, std::string str, unsigned int color = GetColor(255, 255, 255)) {
+		Draw(
+			pos,
+			color,
+			GetColor(0, 0, 0),
+			str.length(),
+			str
+		);
+	}
 
 	int Handle = 0;
 	HANDLE MemHandle = nullptr;
 };
+
 struct SoundData {
 
 	int BufferNum = 0;
 	int Frequency = 0;
 	int Volume = 0;
 
-	void Load(const std::string& filepath, int buffernum = 1) {
+	void Load(const std::string filepath, int buffernum = 1) {
 		BufferNum = buffernum;
 		Handle = LoadSoundMem(filepath.c_str(), BufferNum);
-		
+
 		Frequency = GetFrequencySoundMem(Handle);
 		Volume = GetVolumeSoundMem(Handle);
 	}
@@ -273,6 +298,13 @@ struct SoundData {
 		
 		Handle = LoadSoundMem(FilePath.c_str(), BufferNum);
 		
+		Frequency = GetFrequencySoundMem(Handle);
+		Volume = GetVolumeSoundMem(Handle);
+	}
+	void Load(const void* filedata, size_t filesize, int buffernum = 1) {
+		BufferNum = buffernum;
+		Handle = LoadSoundMemByMemImage(filedata, filesize, BufferNum);
+
 		Frequency = GetFrequencySoundMem(Handle);
 		Volume = GetVolumeSoundMem(Handle);
 	}
@@ -294,6 +326,9 @@ struct SoundData {
 	}
 	void SetVolume(float volume) const {
 		ChangeVolumeSoundMem(((volume) / 100.0) * 255, Handle);
+	}
+	void SetCurrent(double time) const {
+		SetSoundCurrentTime(time, Handle);
 	}
 	
 	int Handle = 0;

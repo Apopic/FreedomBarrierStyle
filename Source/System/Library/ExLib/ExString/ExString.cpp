@@ -1,4 +1,5 @@
 #include "ExString.hpp"
+#include "DxLib.h"
 
 std::vector<std::string> split(const std::string& str, char del) {
 
@@ -72,3 +73,6 @@ std::string ToLower(const std::string& str) {
 	return ret;
 }
 
+int GetStrlen(std::string str, int handle) {
+	return GetDrawStringWidthToHandle(str.c_str(), strlenDx(str.c_str()), handle);
+}

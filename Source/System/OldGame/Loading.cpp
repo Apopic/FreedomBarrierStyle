@@ -1,7 +1,7 @@
 ﻿#include "Loading.h"
 #include "GameSystem.h"
 
-_Loading::_Loading(GameSystem *ptr) {
+_Loading::_Loading(GameSystem* ptr) {
 
 }
 
@@ -18,46 +18,69 @@ void GameSystem::LoadingEnd() {
 }
 
 void GameSystem::LoadingDraw() {
-	DrawString(0, 16, "NowLoading...", GetColor(255, 255, 255));
-	DrawString(0, 32, "Tips:", GetColor(255, 255, 255));
+	Skin.Base->Other.Font.Game.DrawFontString({ 0,8 }, "譜面読み込み中…");
 }
 
 void GameSystem::LoadingProc() {
 
-	Playing.Chart.Init();
+	ChartData LoadData = ChartData();
 
-	ChartData& LoadData = *SongSelect.BoxDatas[SongSelect.BoxDataIndex]->GetChart();
-	LoadData.ReLoad(LoadData.FilePath, &Skin, &Config);
+	if (SongSelect.IsDanMode) {
 
-	FileAccess FA(LoadData.FilePath, FAO::rc_slash);
-	TJANoteData TJAMainData;
+		if (Playing.Chart.IsDanPlay) {
+			if (Playing.Chart.IsFall || Playing.Chart.DanPlayCount >= Playing.Chart.OriginalData.DanIndexs.size() - 1) {
+				NowScene = Scene::Result;
+				return;
+			}
+			Playing.Chart.DanPlayCount++;
+		}
+
+		Playing.Chart.Init();
+
+		LoadData = SongSelect.ChartDataGet(*SongSelect.DanBoxDatas[SongSelect.BoxDataIndex]->GetChart());
+		LoadData.ReLoad(LoadData.FilePath, &Skin, &Config);
+
+		if (!Playing.Chart.IsDanPlay) {
+			Playing.Chart.IsDanPlay = true;
+			Playing.Chart.ExamDatas.resize(LoadData.ExamDatas.size());
+		}
+	}
+	else {
+
+		LoadData = Playing.Chart.OriginalData;
+		LoadData.ReLoad(LoadData.FilePath, &Skin, &Config);
+		Playing.Chart.Init();
+
+	}
+
+	SongSelect.CourseIndex = LoadData.CourseIndex;
+	std::vector<std::string> FA = LoadData.FileData;
+
+	NoteData MainData;
 
 	Playing.Chart.OriginalData = LoadData;
 	Playing.Chart.NowBPM = LoadData.BPM;
+	MainData.BPM = LoadData.BPM;
 
-	TJAMainData.BPM = LoadData.BPM;
-	
-	// Set Offset
 	double _offset = 0;
 	if (240 / LoadData.BPM > -LoadData.Offset) {
 		_offset = 240000 / LoadData.BPM;
 		Playing.Chart.SongBlankTime = _offset - (LoadData.Offset * -1000) + Config.SongOffset;
-		TJAMainData.RelaTime = _offset;
+		MainData.RelaTime = _offset;
 	}
 	else {
 		_offset = LoadData.Offset * -1000 - Config.SongOffset;
 		Playing.Chart.SongBlankTime = 0;
-		TJAMainData.RelaTime = _offset;
+		MainData.RelaTime = _offset;
 	}
 
-	Playing.Chart.RawNoteDatas.push_back(TJAMainData);
+	Playing.Chart.RawNoteDatas.push_back(MainData);
 
-	TJAMainData.AbsTime = _offset;
+	MainData.AbsTime = _offset;
 
-	// TrimCourse
 	for (uint i = 0; i < (uint)ChartCourseType::Count; ++i) {
 		if (LoadData.CourseDatas[i].IsPlayFlag && i != SongSelect.CourseIndex) {
-			for (uint j = LoadData.CourseDatas[i].CourseIndex; j < FA.LineCount(); ++j) {
+			for (uint j = LoadData.CourseDatas[i].CourseIndex; j < FA.size(); ++j) {
 				if (FA[j].find("#END") != std::string::npos) {
 					FA[j] = "";
 					break;
@@ -71,9 +94,16 @@ void GameSystem::LoadingProc() {
 	int BarlineNoteCount = 0;
 
 	bool StartFlag = false;
+	bool NextFlag = false;
 	bool BarlineDisplay = true;
 	bool BarlineLoading = false;
 	bool AddBarline = false;
+
+	NoteData MemNoteData = NoteData();
+	bool BranchFlag = false;
+	double MemBranchStartTime = 0;
+	double BranchAddTime = 0;
+	uint BranchCount = 0;
 
 	bool NowRollFlag = false;
 	uint RollStartIndex = 0;
@@ -82,92 +112,194 @@ void GameSystem::LoadingProc() {
 
 	uint NoteCount = 0;
 
-	// MainLoading
-	for (size_t i = 0, size = FA.LineCount(); i < size; ++i) {
-		Exsubstr(FA[i], "#START", [&](const std::string& data) {
-			StartFlag = true;
-			});
-		Exsubstr(FA[i], "#END", [&](const std::string& data) {
-			StartFlag = false;
-			});
-		Exsubstr(FA[i], "#GOGOSTART", [&](const std::string& data) {
-			TJAMainData.GoGoStart = true;
-			});
-		Exsubstr(FA[i], "#GOGOSTART", [&](const std::string& data) {
-			TJAMainData.GoGoEnd = true;
-			});
-		Exsubstr(FA[i], "#BARLINEON", [&](const std::string& data) {
-			BarlineDisplay = true;
-			});
-		Exsubstr(FA[i], "#BARLINEOFF", [&](const std::string& data) {
-			BarlineDisplay = false;
-			});
-		if (!StartFlag) {
-			Exsubstr(FA[i], "#BMSCROLL", [&](const std::string& data) {
-				Playing.Chart.ScrollType = ScrollType::BMSCROLL;
+	uint GoGoNoteCount = 0;
+	size_t delayindex = 0;
+
+	if (Playing.Chart.DanPlayCount > 0) {
+		delayindex = LoadData.DanIndexs[Playing.Chart.DanPlayCount];
+		StartFlag = true;
+	}
+
+	for (size_t i = delayindex, size = FA.size(); i < size; ++i) {
+
+		try {
+			Exsubstr(FA[i], "#START", [&](const std::string& data) {
+				StartFlag = true;
 				});
-			Exsubstr(FA[i], "#HBSCROLL", [&](const std::string& data) {
-				Playing.Chart.ScrollType = ScrollType::HBSCROLL;
+			Exsubstr(FA[i], "#END", [&](const std::string& data) {
+				StartFlag = false;
 				});
+			Exsubstr(FA[i], "#GOGOSTART", [&](const std::string& data) {
+				MainData.GoGoStart = true;
+				});
+			Exsubstr(FA[i], "#GOGOEND", [&](const std::string& data) {
+				MainData.GoGoEnd = true;
+				});
+			Exsubstr(FA[i], "#BARLINEON", [&](const std::string& data) {
+				BarlineDisplay = true;
+				});
+			Exsubstr(FA[i], "#BARLINEOFF", [&](const std::string& data) {
+				BarlineDisplay = false;
+				});
+			if (!StartFlag) {
+				Exsubstr(FA[i], "#BMSCROLL", [&](const std::string& data) {
+					Playing.Chart.ScrollType = ScrollType::BMSCROLL;
+					});
+				Exsubstr(FA[i], "#HBSCROLL", [&](const std::string& data) {
+					Playing.Chart.ScrollType = ScrollType::HBSCROLL;
+					});
+			}
+			Exsubstr(FA[i], "#SECTION", [&](const std::string& data) {
+				MainData.Section = true;
+				});
+			Exsubstr(FA[i], "#LEVELHOLD", [&](const std::string& data) {
+				MainData.LevelHold = true;
+				});
+			Exsubstr(FA[i], "#BRANCHSTART", [&](const std::string& data) {
+				auto sp = split(data, ',');
+				BranchData item;
+				if (sp[0] == "p") {
+					item.Type = BranchType::Accuracy;
+				}
+				else if (sp[0] == "r") {
+				    item.Type = BranchType::Roll;
+				}
+				else if (sp[0] == "s") {
+					item.Type = BranchType::Score;
+				}
+				item.Border[1] = stod(sp[1]);
+				item.Border[2] = stod(sp[2]);
+				item.AbsTime = MainData.AbsTime;
+				item.StartTime = MemBranchStartTime;
+				item.Start = true;
+				Playing.Chart.BranchDatas.push_back(item);
+				Playing.Chart.IsBranchedChart = true;
+				BranchFlag = true;
+				BranchCount = 0;
+				BranchAddTime = 0;
+				});
+			if (BranchFlag) {
+				if (FA[i].find("#N") != std::string::npos && FA[i].find("#NEXTSONG") == std::string::npos) {
+					if (!BranchCount) { MemNoteData = MainData; }
+					MainData = MemNoteData;
+					if (BranchCount) { Playing.Chart.RawNoteDatas.back().RelaTime += -BranchAddTime; }
+					if (!BranchCount) { MainData.BranchStart = true; }
+					MainData.BranchLevel = BranchLevel::Normal;
+					BranchCount++;
+					BranchAddTime = 0;
+				}
+				if (FA[i].find("#E") != std::string::npos && FA[i].find("#END") == std::string::npos) {
+					if (!BranchCount) { MemNoteData = MainData; }
+					MainData = MemNoteData;
+					if (BranchCount) { Playing.Chart.RawNoteDatas.back().RelaTime += -BranchAddTime; }
+					if (!BranchCount) { MainData.BranchStart = true; }
+					MainData.BranchLevel = BranchLevel::Expert;
+					BranchCount++;
+					BranchAddTime = 0;
+				}
+				if (FA[i].find("#M") != std::string::npos && FA[i].find("#MEASURE") == std::string::npos) {
+					if (!BranchCount) { MemNoteData = MainData; }
+					MainData = MemNoteData;
+					if (BranchCount) { Playing.Chart.RawNoteDatas.back().RelaTime += -BranchAddTime; }
+					if (!BranchCount) { MainData.BranchStart = true; }
+					MainData.BranchLevel = BranchLevel::Master;
+					BranchCount++;
+					BranchAddTime = 0;
+				}
+				if (FA[i].find("#BRANCHEND") != std::string::npos) {
+					if (!BranchCount) { MainData.BranchStart = true; }
+					MainData.BranchLevel = BranchLevel::None;
+					BranchFlag = false;
+					BranchCount = 0;
+					BranchAddTime = 0;
+				}
+			}
+			Exsubstr(FA[i], "#SCROLL", [&](const std::string& data) {
+				if (data.find("i") != std::string::npos) {
+					int Uindex = data.rfind("+") == std::string::npos ? 0 : data.rfind("+");
+					int Dindex = data.rfind("-") == std::string::npos ? 0 : data.rfind("-");
+
+					bool Flag = Uindex > Dindex;
+
+					if (data.rfind("+") != std::string::npos && Flag) {
+						std::string real = strtrim(data.substr(0, data.rfind("+")));
+						std::string imag = strtrim(data.substr(data.rfind("+") + 1, data.rfind("i") - (data.rfind("+") + 1)));
+						MainData.Scroll = real.empty() ? 0 : stod(real);
+						MainData.Scrolli = imag.empty() ? -1 : stod(imag) * -1;
+					}
+					if (data.rfind("-") != std::string::npos && !Flag) {
+						std::string real = strtrim(data.substr(0, data.rfind("-")));
+						std::string imag = strtrim(data.substr(data.rfind("-") + 1, data.rfind("i") - (data.rfind("-") + 1)));
+						MainData.Scroll = real == "" ? 0 : stod(real);
+						MainData.Scrolli = imag == "" ? 1 : stod(imag);
+					}
+				}
+				else {
+					MainData.Scroll = stod(data);
+					MainData.Scrolli = 0;
+				}
+				});
+			Exsubstr(FA[i], "#BPMCHANGE", [&](const std::string& data) {
+				MainData.BPM = stod(data);
+				MainData.BpmChangeFlag = true;
+				});
+			Exsubstr(FA[i], "#MEASURE", [&](const std::string& data) {
+				auto sp = split(data, '/');
+				MainData.Measure = stod(sp[0]) / stod(sp[1]);
+				});
+			Exsubstr(FA[i], "#DELAY", [&](const std::string& data) {
+				Playing.Chart.RawNoteDatas.back().RelaTime += stod(data) * 1000;
+				MainData.AbsTime += stod(data) * 1000;
+				});
+			Exsubstr(FA[i], "#NEXTSONG", [&](const std::string& data) {
+				if (!StartFlag || NextFlag) {
+					StartFlag = false;
+					NextFlag = false;
+					return;
+				}
+
+				auto sp = split(data, ',');
+				auto&& item = Playing.Chart.OriginalData;
+
+				item.DanTitle = sp[0];
+				item.DanTitleStrlen = GetStrlen(sp[0], Skin.Base->Playing.Font.Title.Handle);
+			    item.DanSubTitle = sp[1];
+				item.DanSubTitleStrlen = GetStrlen(sp[1], Skin.Base->Playing.Font.SubTitle.Handle);
+				LoadData.CourseDatas[SongSelect.CourseIndex].AddScore = stoi(sp[4]);
+
+				fs::path WavePath = fs::path(LoadData.FilePath).parent_path().string() + "\\" + sp[3];
+				std::ifstream file(WavePath, std::ios::binary);
+				LoadData.WaveData = std::string((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
+				file.close();
+
+				NextFlag = true;
+				});
+
+			if (FA[i].find("#") != std::string::npos) { continue; }
+
+			if (!StartFlag) { continue; }
+
+			if (!BarlineLoading) {
+				BarlineLoading = true;
+				for (size_t j = i; j < size; ++j) {
+					if (FA[j].find("#") != std::string::npos) { continue; }
+					for (size_t k = 0, strsize = FA[j].size(); k < strsize; ++k) {
+						if (FA[j][k] == ',') {
+							goto BARLINEREADEND;
+						}
+						else if (FA[j][k] >= '0' && FA[j][k] <= '9') {
+							++BarlineNoteCount;
+						}
+					}
+				}
+			BARLINEREADEND:;
+			}
 		}
-
-		// getvalue
-		Exsubstr(FA[i], "#SCROLL", [&](const std::string& data) {
-			if (data.find("i") != std::string::npos) {
-				int Uindex = data.rfind("+") == std::string::npos ? 0 : data.rfind("+");
-				int Dindex = data.rfind("-") == std::string::npos ? 0 : data.rfind("-");
-
-				bool Flag = Uindex > Dindex;
-
-				if (data.rfind("+") != std::string::npos && Flag) {
-					std::string real = strtrim(data.substr(0, data.rfind("+")));
-					std::string imag = strtrim(data.substr(data.rfind("+") + 1, data.rfind("i") - (data.rfind("+") + 1)));
-					TJAMainData.Scroll = real.empty() ? 0 : stod(real);
-					TJAMainData.Scrolli = imag.empty() ? -1 : stod(imag) * -1;
-				}
-				if (data.rfind("-") != std::string::npos && !Flag) {
-					std::string real = strtrim(data.substr(0, data.rfind("-")));
-					std::string imag = strtrim(data.substr(data.rfind("-") + 1, data.rfind("i") - (data.rfind("-") + 1)));
-					TJAMainData.Scroll = real == "" ? 0 : stod(real);
-					TJAMainData.Scrolli = imag == "" ? 1 : stod(imag);
-				}
-			}
-			else {
-				TJAMainData.Scroll = stod(data);
-				TJAMainData.Scrolli = 0;
-			}
-			});
-		Exsubstr(FA[i], "#BPMCHANGE", [&](const std::string& data) {
-			TJAMainData.BPM = stod(data);
-			TJAMainData.BpmChangeFlag = true;
-			});
-		Exsubstr(FA[i], "#MEASURE", [&](const std::string& data) {
-			auto sp = split(data, '/');
-			TJAMainData.Measure = stod(sp[0]) / stod(sp[1]);
-			});
-		Exsubstr(FA[i], "#DELAY", [&](const std::string& data) {
-			Playing.Chart.RawNoteDatas.back().RelaTime += stod(data) * 1000;
-			TJAMainData.AbsTime += stod(data) * 1000;
-			});
-
-		if (FA[i].find("#") != std::string::npos) { continue; }
-
-		if (!StartFlag) { continue; }
-
-		if (!BarlineLoading) {
-			BarlineLoading = true;
-			for (size_t j = i; j < size; ++j) {
-				if (FA[j].find("#") != std::string::npos) { continue; }
-				for (size_t k = 0, strsize = FA[j].size(); k < strsize; ++k) {
-					if (FA[j][k] == ',') {
-						goto BARLINEREADEND;
-					}
-					else if (FA[j][k] >= '0' && FA[j][k] <= '9') {
-						++BarlineNoteCount;
-					}
-				}
-			}
-		BARLINEREADEND:;
+		catch (const std::invalid_argument) {
+			std::string error = std::to_string(i + 1) + "行目の記述が不正です。";
+			MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
+			NowScene = Scene::SongSelect;
+			return;
 		}
 
 		for (size_t j = 0, strsize = FA[i].size(); j < strsize; ++j) {
@@ -183,44 +315,45 @@ void GameSystem::LoadingProc() {
 					break;
 				}
 
-				TJAMainData.NoteType = FA[i][j];
+				MainData.NoteType = FA[i][j];
 
-				double barlinetime = (240000 / TJAMainData.BPM) * TJAMainData.Measure;
+				double barlinetime = (240000 / MainData.BPM) * MainData.Measure;
 				double divtime = barlinetime / (EmptyFlag ? 1 : BarlineNoteCount);
 
-				TJAMainData.RelaTime = divtime;
+				MainData.RelaTime = divtime;
 
 				if (!AddBarline) {
 					AddBarline = true;
+					MemBranchStartTime = MainData.AbsTime - divtime + 150;
 					if (BarlineDisplay) {
-						TJAMainData.BarlineDisplay = true;
+						MainData.BarlineDisplay = true;
 					}
 					else {
-						TJAMainData.BarlineDisplay = false;
+						MainData.BarlineDisplay = false;
 					}
 				}
 				else {
-					TJAMainData.BarlineDisplay = false;
+					MainData.BarlineDisplay = false;
 				}
 
 #define Matched if (RollType == _ch) {\
 break;\
-TJAMainData.NoteType = '\0';\
+MainData.NoteType = '\0';\
 }
 
 
-#define SetOtherRollEnd Playing.Chart.RawNoteDatas[RollStartIndex].RollEndTime = TJAMainData.AbsTime;\
+#define SetOtherRollEnd Playing.Chart.RawNoteDatas[RollStartIndex].RollEndTime = MainData.AbsTime;\
 Playing.Chart.RawNoteDatas[RollStartIndex].RollEndIndex = Playing.Chart.RawNoteDatas.size();\
 RollStartIndex = Playing.Chart.RawNoteDatas.size();\
-RollType = TJAMainData.NoteType
+RollType = MainData.NoteType
 
-#define Set8RollEnd Playing.Chart.RawNoteDatas[RollStartIndex].RollEndTime = TJAMainData.AbsTime;\
+#define Set8RollEnd Playing.Chart.RawNoteDatas[RollStartIndex].RollEndTime = MainData.AbsTime;\
 Playing.Chart.RawNoteDatas[RollStartIndex].RollEndIndex = Playing.Chart.RawNoteDatas.size();\
 NowRollFlag = false;\
 RollType = '\0'
 
 				if (NowRollFlag) {
-					const char _ch = TJAMainData.NoteType;
+					const char _ch = MainData.NoteType;
 					switch (_ch) {
 					case '5':
 						Matched;
@@ -248,59 +381,62 @@ RollType = '\0'
 #undef SetOtherRollEnd
 #undef Set8RollEnd
 
-				if (!NowRollFlag && (TJAMainData.NoteType >= '5' && TJAMainData.NoteType <= '7') || TJAMainData.NoteType == '9') {
+				if (!NowRollFlag && (MainData.NoteType >= '5' && MainData.NoteType <= '7') || MainData.NoteType == '9') {
 					RollStartIndex = Playing.Chart.RawNoteDatas.size();
 					NowRollFlag = true;
-					RollType = TJAMainData.NoteType;
+					RollType = MainData.NoteType;
 				}
 
 				bool removeflag =
-					TJAMainData.NoteType == '0' &&
-					TJAMainData.GoGoStart == false &&
-					TJAMainData.GoGoEnd == false &&
-					TJAMainData.BpmChangeFlag == false &&
-					!TJAMainData.BarlineDisplay;
+					MainData.NoteType == '0' &&
+					!MainData.GoGoStart &&
+					!MainData.GoGoEnd &&
+					!MainData.BpmChangeFlag &&
+					!MainData.BarlineDisplay &&
+					!MainData.BranchStart &&
+					!MainData.Section &&
+					!MainData.LevelHold;
 
-				if (TJAMainData.NoteType >= '1' && TJAMainData.NoteType <= '4') {
+				if (MainData.NoteType >= '1' && MainData.NoteType <= '4' && MainData.BranchLevel <= BranchLevel::Normal) {
 					++NoteCount;
+					++Playing.Chart.AllNoteCount;
 				}
-				if (TJAMainData.NoteType == '0') {
-					TJAMainData.HitFlag = true;
+				if (MainData.NoteType == '0') {
+					MainData.HitFlag = true;
 				}
 				if (GetRand(99) < Config.RandomRate) {
-					switch (TJAMainData.NoteType)
-					{
+					switch (MainData.NoteType) {
 					case '1':
-						TJAMainData.NoteType = '2';
+						MainData.NoteType = '2';
 						break;
 					case '2':
-						TJAMainData.NoteType = '1';
+						MainData.NoteType = '1';
 						break;
 					case '3':
-						TJAMainData.NoteType = '4';
+						MainData.NoteType = '4';
 						break;
 					case '4':
-						TJAMainData.NoteType = '3';
+						MainData.NoteType = '3';
 						break;
 					}
 				}
 
 				if (!removeflag) {
-					TJANoteData data(TJAMainData);
+					NoteData data(MainData);
 					data.Scroll *= Config.ChartSpeed;
 					data.Scrolli *= Config.ChartSpeed;
 					data.PosTime *= std::abs(std::complex(data.Scroll, data.Scrolli));
 					Playing.Chart.RawNoteDatas.push_back(std::move(data));
 				}
 				else {
-					Playing.Chart.RawNoteDatas.back().RelaTime += TJAMainData.RelaTime;
+					Playing.Chart.RawNoteDatas.back().RelaTime += MainData.RelaTime;
 				}
 
-				if (TJAMainData.NoteType == '7' || TJAMainData.NoteType == '9') {
+				if (MainData.NoteType == '7' || MainData.NoteType == '9') {
 					auto& balloon = LoadData.CourseDatas[SongSelect.CourseIndex].Balloon;
 					int ballooncount = 0;
-					if (BalloonIndex < balloon.size()) {
-						ballooncount = balloon[BalloonIndex];
+					if (BalloonIndex + Playing.Chart.DanBalloonIndex < balloon.size()) {
+						ballooncount = balloon[BalloonIndex + Playing.Chart.DanBalloonIndex];
 					}
 					else {
 						ballooncount = 5;
@@ -309,15 +445,20 @@ RollType = '\0'
 					Playing.Chart.RawNoteDatas.back().BalloonCount = ballooncount;
 					++BalloonIndex;
 				}
+				if (BranchFlag) {
+					BranchAddTime += MainData.RelaTime * (std::signbit(MainData.BPM) || std::signbit(MainData.Measure) ? -1 : 1);
+				}
 
-				TJAMainData.HitFlag = false;
-				TJAMainData.GoGoStart = false;
-				TJAMainData.GoGoEnd = false;
-				TJAMainData.BpmChangeFlag = false;
+				MainData.HitFlag = false;
+				MainData.GoGoStart = false;
+				MainData.GoGoEnd = false;
+				MainData.BpmChangeFlag = false;
+				MainData.BranchStart = false;
+				MainData.Section = false;
+				MainData.LevelHold = false;
 
-				TJAMainData.AbsTime += divtime;
-
-				TJAMainData.PosTime += TJAMainData.RelaTime * (std::signbit(TJAMainData.BPM) || std::signbit(TJAMainData.Measure) ? -1 : 1);
+				MainData.AbsTime += divtime;
+				MainData.PosTime += MainData.RelaTime * (std::signbit(MainData.BPM) || std::signbit(MainData.Measure) ? -1 : 1);
 
 				if (EndFlag) {
 					BarlineLoading = false;
@@ -328,39 +469,64 @@ RollType = '\0'
 			}
 		}
 	}
-	
-	Playing.Chart.ProcNotes.ChunkSet(Playing.Chart.RawNoteDatas, Config.ChartChunkSize);
-	Playing.Chart.DrawNotes.ChunkSet(Playing.Chart.RawNoteDatas, Config.ChartChunkSize);
 
-	for (auto&& item : Playing.Chart.DrawNotes) {
-		std::sort(item.begin(), item.end(), [&](const auto lhs, const auto rhs) {
-			return lhs.get().PosTime < rhs.get().PosTime;
-		});
+	if (SongSelect.IsDanMode) {
+		Playing.Chart.DanBalloonIndex += BalloonIndex;
 	}
-
-	SetCreateSoundDataType(DX_SOUNDDATATYPE_FILE);
-	Playing.Chart.SongData.Load(LoadData.WavePath, 1);
-	SetCreateSoundDataType(DX_SOUNDDATATYPE_MEMNOPRESS);
-
-	Playing.Chart.SongData.SetVolume(LoadData.SongVolume * (Config.SongVolume / 100));
-	int freq = Playing.Chart.SongData.Frequency * Config.SongSpeed;
-	Playing.Chart.SongData.SetFrequency(freq);
-	Playing.Chart.SongSpeed = (double)freq / Playing.Chart.SongData.Frequency;
 
 	Playing.Chart.AddScore = LoadData.CourseDatas[SongSelect.CourseIndex].AddScore;
 	if (Playing.Chart.AddScore == 0) {
 		Playing.Chart.AddScore = 100'0000 / (double)NoteCount;
 	}
 
-	Skin.Base->Playing.SE.Don.SetVolume(LoadData.SEVolume * (Config.SEVolume / 100));
-	Skin.Base->Playing.SE.Ka.SetVolume(LoadData.SEVolume * (Config.SEVolume / 100));
-	Skin.Base->Playing.SE.Balloon.SetVolume(LoadData.SEVolume * (Config.SEVolume / 100));
+	double SongSpeed = Config.SongSpeed;
+	if (MultiRoom.MultiFlag) {
 
-	Playing.HitNote = _Playing::_HitNote();
+		int findval = MultiRoom.HostVal;
+		auto it = std::find_if(Private.PlayerDatas.begin(), Private.PlayerDatas.end(), [findval](PlayerData n) { return n.Standby >= findval; });
+		SongSpeed = Private.PlayerDatas[std::distance(Private.PlayerDatas.begin(), it)].Option.SongSpeed;
+
+		while (!ProcessMessage()) {
+			if (Private.PlayerDatas[Private.MyIndex].Standby % MultiRoom.HostVal == 1) {
+				Private.PlayerDatas[Private.MyIndex].RawNoteDatas = Playing.Chart.RawNoteDatas;
+				Private.PlayerDatas[Private.MyIndex].Standby++;
+				Send(DataType::List, Private.PlayerDatas[Private.MyIndex]);
+			}
+			if (CheckStandby(Private.PlayerDatas, 2)) {
+				break;
+			}
+			Recv();
+		}
+	}
+
+	SetCreateSoundDataType(DX_SOUNDDATATYPE_FILE);
+	Playing.Chart.SongData.Load(LoadData.WaveData.data(), LoadData.WaveData.size(), 1);
+	SetCreateSoundDataType(DX_SOUNDDATATYPE_MEMNOPRESS);
+
+	Playing.Chart.SongData.SetVolume(Playing.Chart.OriginalData.SongVolume * (Config.SongVolume / 100));
+	int freq = Playing.Chart.SongData.Frequency * SongSpeed;
+	Playing.Chart.SongData.SetFrequency(freq);
+	Playing.Chart.SongSpeed = (double)freq / Playing.Chart.SongData.Frequency;
+
+	Skin.Base->Playing.SE.Don.SetVolume(Playing.Chart.OriginalData.SEVolume * (Config.SEVolume / 100));
+	Skin.Base->Playing.SE.Ka.SetVolume(Playing.Chart.OriginalData.SEVolume * (Config.SEVolume / 100));
+	Skin.Base->Playing.SE.Balloon.SetVolume(Playing.Chart.OriginalData.SEVolume * (Config.SEVolume / 100));
+
+	for (auto&& note : Playing.HitNote) {
+		note = _Playing::_HitNote();
+	}
+
+	Playing.Chart.Judge[0].ScoreRateGood = Playing.ScoreRateCalc(Config.JudgeGood, 25.0) * Playing.SongSpeedRateCalc(SongSpeed);
+	Playing.Chart.Judge[0].ScoreRateOk = Playing.ScoreRateCalc(Config.JudgeOk, 75.0) * Playing.SongSpeedRateCalc(SongSpeed);
+
+	Playing.Chart.FrameNowTime.ExtendRate = Config.FrameExtendRate;
 
 	WaitVSync(2);
-	Playing.Chart.NowTime.Start();
-	Playing.Chart.FrameNowTime.Start();
+	if (!Config.TrainingMode || MultiRoom.MultiFlag || SongSelect.IsDanMode) {
+		Playing.Chart.NowTime.Start();
+		Playing.Chart.FrameNowTime.Start();
+	}
 
 	NowScene = Scene::Playing;
+
 }

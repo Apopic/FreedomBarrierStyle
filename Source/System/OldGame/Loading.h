@@ -1,5 +1,7 @@
-#pragma once
+﻿#pragma once
 #include "Include.hpp"
+#include "Config.h"
+#include "Skin.h"
 
 extern class GameSystem;
 
@@ -9,5 +11,4 @@ public:
 	_Loading(GameSystem* ptr);
 	~_Loading();
 
-	
 };

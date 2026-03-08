@@ -1,4 +1,4 @@
-#include "Title.h"
+﻿#include "Title.h"
 #include "GameSystem.h"
 
 _Title::_Title(GameSystem *ptr) {
@@ -10,14 +10,18 @@ _Title::~_Title() {
 }
 
 void GameSystem::TitleInit() {
+
+	SetState("Title");
+
+	Playing.Chart.OriginalData.WaveData.clear();
+	Playing.Chart.Init();
+
 	Title.CaptionAlphaTimer.Start();
 	Title.SelectorAlphaTimer.Start();
 	Title.PlateAlphaTimer.End();
 
 	Skin.Base->Title.SE.Don.SetVolume(Config.SEVolume);
 	Skin.Base->Title.SE.Ka.SetVolume(Config.SEVolume);
-
-	DiscordActivityChange("Idle", nullptr, nullptr, true);
 }
 
 void GameSystem::TitleEnd() {
@@ -25,13 +29,6 @@ void GameSystem::TitleEnd() {
 }
 
 void GameSystem::TitleDraw() {
-
-	Skin.Base->Title.Font.Title.Draw(
-		Skin.Base->Title.Config.TitlePos,
-		GetColor(255, 255, 255),
-		GetColor(0, 0, 0),
-		"FreedomBarrierStyle"
-	);
 
 	Skin.Base->Title.Image.BackGround.Draw({0, 0});
 
@@ -52,6 +49,7 @@ void GameSystem::TitleDraw() {
 		SetDrawBlendMode(0, 0);
 
 	}
+
 	else {
 
 		int _platealpha = 255 * std::cos(2 * DX_PI * Title.PlateAlphaTimer.GetRecordingTime() / Title.PlateAlphaTime());
@@ -99,10 +97,11 @@ void GameSystem::TitleProc() {
 			NowScene = Scene::MultiRoom;
 			break;
 		case _Title::Mode::Dan:
-			NowScene = Scene::SongSelect;
+			NowScene = Scene::DanSelect;
 			break;
 		case _Title::Mode::Config:
-			NowScene = Scene::SongSelect;
+			PrevScene = Scene::Title;
+			NowScene = Scene::Config;
 			break;
 		case _Title::Mode::End:
 			EndFlag = true;
@@ -147,8 +146,6 @@ void GameSystem::TitleProc() {
 		
 		Input.HitKeyesProcess({VK_UP,VK_LEFT}, KeyState::Down, [&] { KaKeyProc(false); });
 		Input.HitKeyesProcess({VK_DOWN,VK_RIGHT}, KeyState::Down, [&] { KaKeyProc(true); });
-
-
 	}
 }
 

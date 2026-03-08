@@ -1,4 +1,4 @@
-#include "Skin.h"
+﻿#include "Skin.h"
 #include "GameSystem.h"
 
 _Skin::_Skin(GameSystem *ptr) {
@@ -15,7 +15,7 @@ _Skin::_Skin(GameSystem *ptr) {
 			SkinInfos.push_back(
 				SkinInfo{
 					data["Info"]["Name"],
-					f.path().u8string()
+					f.path().string()
 				}
 			);
 
@@ -57,13 +57,15 @@ void _Skin::SkinLoad(const std::string& name) {
 	json data = json::parse(ifs);
 	ifs.close();
 
-	std::string SkinDir = fs::path(SkinFilePath).parent_path().u8string() + "\\";
+	std::string SkinDir = fs::path(SkinFilePath).parent_path().string() + "\\";
 
 	const json& Infodata = data["Info"];
 	const json& Titledata = data["Base"]["Title"];
 	const json& SongSelectdata = data["Base"]["SongSelect"];
 	const json& Playingdata = data["Base"]["Playing"];
 	const json& Resultdata = data["Base"]["Result"];
+	const json& MultiRoomdata = data["Base"]["MultiRoom"];
+	const json& Otherdata = data["Base"]["Other"];
 
 	// structResource
 
@@ -99,7 +101,7 @@ void _Skin::SkinLoad(const std::string& name) {
 		return;
 	}
 
-#define ValLoad(base, type, keyname) Base->base.type.keyname = base##data[#type][#keyname]
+#define ValLoad(base, type, keyname) Base->base.type.keyname = base##data[#type].value(#keyname, Base->base.type.keyname)
 #define DataLoad(base, type, keyname) Base->base.type.keyname.Load(SkinDir, base##data[#type][#keyname])
 
 	SkinDispose();
@@ -109,12 +111,12 @@ void _Skin::SkinLoad(const std::string& name) {
 
 #pragma region Title
 
-	ValLoad(Title, Config, TitlePos       ).get<Pos2D<float>>();
-	ValLoad(Title, Config, CaptionPos     ).get<Pos2D<float>>();
-	ValLoad(Title, Config, ModesPos       ).get<Pos2D<float>>();
+	ValLoad(Title, Config, TitlePos       );
+	ValLoad(Title, Config, CaptionPos     );
+	ValLoad(Title, Config, ModesPos       );
 	ValLoad(Title, Config, ModesLineHeight);
 
-	Base->Title.Image.BackGround.Load(SkinDir, Titledata["Image"]["BackGround"]);
+	DataLoad(Title, Image, BackGround);
 	DataLoad(Title, Image, BackPlate_Small);
 	DataLoad(Title, Image, BackPlate_Big);
 	DataLoad(Title, Image, Selector);
@@ -130,14 +132,21 @@ void _Skin::SkinLoad(const std::string& name) {
 
 #pragma region SongSelect
 
-	ValLoad(SongSelect, Config, BoxDistance   ).get<Pos2D<float>>();
-	ValLoad(SongSelect, Config, SongBoxListPos).get<Pos2D<float>>();
+	ValLoad(SongSelect, Config, BoxDistance   );
+	ValLoad(SongSelect, Config, SongBoxListPos);
 
 	DataLoad(SongSelect, Image, BackGround);
 	DataLoad(SongSelect, Image, Box);
+	DataLoad(SongSelect, Image, TitleBox);
+	DataLoad(SongSelect, Image, LevelBox);
+	DataLoad(SongSelect, Image, Crown);
 
 	DataLoad(SongSelect, Font, Title);
 	DataLoad(SongSelect, Font, SubTitle);
+	DataLoad(SongSelect, Font, BoxTitle);
+	DataLoad(SongSelect, Font, BoxSubTitle);
+	DataLoad(SongSelect, Font, Course);
+	DataLoad(SongSelect, Font, HighScore);
 
 	DataLoad(SongSelect, SE, Don);
 	DataLoad(SongSelect, SE, Ka);
@@ -146,44 +155,65 @@ void _Skin::SkinLoad(const std::string& name) {
 
 #pragma region Playing
 
-	ValLoad(Playing, Config, TitlePos   ).get<Pos2D<float>>();
-	ValLoad(Playing, Config, SubTitlePos).get<Pos2D<float>>();
+	ValLoad(Playing, Config, TitlePos   );
+	ValLoad(Playing, Config, SubTitlePos);
+	ValLoad(Playing, Config, PlayerNamePos);
+	ValLoad(Playing, Config, ExamNamePos);
+	ValLoad(Playing, Config, ExamValPos);
 	ValLoad(Playing, Config, LaneExtendRate);
 	ValLoad(Playing, Config, JudgeUpperExplosionFrameTime);
+	ValLoad(Playing, Config, GoGoFireFrameTime);
+	ValLoad(Playing, Config, BranchSlideAnimation);
+	ValLoad(Playing, Config, BranchSlideTime);
 
+	DataLoad(Playing, Image, Box);
 	DataLoad(Playing, Image, BackGround);
 	DataLoad(Playing, Image, LaneFrame);
 	DataLoad(Playing, Image, Lane);
+	DataLoad(Playing, Image, NormalLane);
+	DataLoad(Playing, Image, ExpertLane);
+	DataLoad(Playing, Image, MasterLane);
 	DataLoad(Playing, Image, Base);
 	DataLoad(Playing, Image, NamePlate);
 	DataLoad(Playing, Image, MiniTaiko);
 	DataLoad(Playing, Image, MiniTaiko_Don);
 	DataLoad(Playing, Image, MiniTaiko_Ka);
 	DataLoad(Playing, Image, ComboNumber);
+	DataLoad(Playing, Image, ScoreNumber);
+	DataLoad(Playing, Image, BalloonNumber);
 	DataLoad(Playing, Image, Note);
 	DataLoad(Playing, Image, JudgeUnderExplosion);
 	DataLoad(Playing, Image, JudgeUpperExplosion);
+	DataLoad(Playing, Image, GoGoFire);
+	DataLoad(Playing, Image, JudgeString);
+	DataLoad(Playing, Image, ProgressBar);
+	DataLoad(Playing, Image, ExamProgressBar);
 
 	DataLoad(Playing, Font, Title);
 	DataLoad(Playing, Font, SubTitle);
+	DataLoad(Playing, Font, PlayerName);
+	DataLoad(Playing, Font, ExamName);
+	DataLoad(Playing, Font, ExamVal);
 
 	DataLoad(Playing, SE, Don);
 	DataLoad(Playing, SE, Ka);
 	DataLoad(Playing, SE, Balloon);
+	DataLoad(Playing, SE, DanFall);
 
 #pragma endregion
 
 #pragma region Result
 
-	ValLoad(Result, Config, TitlePos   ).get<Pos2D<float>>();
-	ValLoad(Result, Config, SubTitlePos).get<Pos2D<float>>();
-	ValLoad(Result, Config, ScorePos   ).get<Pos2D<float>>();
-	ValLoad(Result, Config, AccurecyPos).get<Pos2D<float>>();
-	ValLoad(Result, Config, GoodPos    ).get<Pos2D<float>>();
-	ValLoad(Result, Config, OkPos      ).get<Pos2D<float>>();
-	ValLoad(Result, Config, BadPos     ).get<Pos2D<float>>();
-	ValLoad(Result, Config, RollPos    ).get<Pos2D<float>>();
-	ValLoad(Result, Config, MaxComboPos).get<Pos2D<float>>();
+	ValLoad(Result, Config, TitlePos   );
+	ValLoad(Result, Config, SubTitlePos);
+	ValLoad(Result, Config, PlayerNamePos);
+	ValLoad(Result, Config, ScorePos   );
+	ValLoad(Result, Config, AccuracyPos);
+	ValLoad(Result, Config, GoodPos    );
+	ValLoad(Result, Config, OkPos      );
+	ValLoad(Result, Config, BadPos     );
+	ValLoad(Result, Config, RollPos    );
+	ValLoad(Result, Config, MaxComboPos);
 
 	DataLoad(Result, Image, BackGround);
 	DataLoad(Result, Image, JudgeScore);
@@ -194,9 +224,38 @@ void _Skin::SkinLoad(const std::string& name) {
 
 	DataLoad(Result, Font, Title);
 	DataLoad(Result, Font, SubTitle);
+	DataLoad(Result, Font, PlayerName);
 
 	DataLoad(Result, SE, Don);
 	DataLoad(Result, SE, Ka);
+
+#pragma endregion
+
+#pragma region MultiRoom
+
+	ValLoad(MultiRoom, Config, PlayerNamePos);
+	ValLoad(MultiRoom, Config, HiddenPos    );
+	ValLoad(MultiRoom, Config, SuddenPos    );
+	ValLoad(MultiRoom, Config, RandomPos    );
+	ValLoad(MultiRoom, Config, GoodPos      );
+	ValLoad(MultiRoom, Config, OkPos        );
+	ValLoad(MultiRoom, Config, BadPos       );
+	ValLoad(MultiRoom, Config, ChartSpeedPos);
+	ValLoad(MultiRoom, Config, SongSpeedPos );
+
+	DataLoad(MultiRoom, Image, BackGround);
+	DataLoad(MultiRoom, Image, TitleBox);
+	DataLoad(MultiRoom, Image, PlayersBox);
+	DataLoad(MultiRoom, Image, Crown);
+
+	DataLoad(MultiRoom, Font, PlayerName);
+	DataLoad(MultiRoom, Font, OptionData);
+
+#pragma endregion
+
+#pragma region Other
+
+	DataLoad(Other, Font, Game);
 
 #pragma endregion
 
@@ -213,4 +272,3 @@ void _Skin::SkinDispose() {
 		delete Base;
 	}
 }
-

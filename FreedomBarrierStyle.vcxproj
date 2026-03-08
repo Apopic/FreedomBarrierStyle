@@ -91,6 +91,9 @@
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
     <TargetName>FreedomBarrierStyle</TargetName>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnabled>false</VcpkgEnabled>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -126,8 +129,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\boost_vc\include\boost-1_84;C:\fmt-10.1.0\include;C:\DxLib_VC\AddProject_VC;Source\System;Source\System\Game;C:\LuaScript</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\discord_social_sdk\include;C:\cppunzip-main;C:\vcpkg\packages\zlib_x64-windows\include;C:\vcpkg\packages\curl_x64-windows\include;C:\Socket_h-main\include;C:\DxLib_VC\AddProject_VC;Source\System</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -146,9 +149,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\boost_vc\lib;$(ProjectDir)lib\x86_64;C:\DxLib_VC\AddProject_VC;C:\LuaScript</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\cppunzip-main;C:\vcpkg\packages\zlib_x64-windows\include;C:\vcpkg\packages\curl_x64-windows\include;C:\DxLib_VC\AddProject_VC</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>$(CoreLibraryDependencies);discord_game_sdk.dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(CoreLibraryDependencies);C:\vcpkg\packages\curl_x64-windows\lib\libcurl.lib;C:\discord_social_sdk\lib\release\discord_partner_sdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>$(ProjectDir)manifest\ActiveCodePageUTF8.manifest</AdditionalManifestFiles>
@@ -189,8 +192,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\boost_vc\include\boost-1_84;C:\fmt-10.1.0\include;C:\DxLib_VC\AddProject_VC;Source\System;Source\System\Game;C:\LuaScript</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\discord_social_sdk\include;C:\cppunzip-main;C:\vcpkg\packages\zlib_x64-windows\include;C:\vcpkg\packages\curl_x64-windows\include;C:\Socket_h-main\include;C:\DxLib_VC\AddProject_VC;Source\System</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -209,9 +212,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\boost_vc\lib;$(ProjectDir)lib\x86_64;C:\DxLib_VC\AddProject_VC;C:\LuaScript</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\cppunzip-main;C:\vcpkg\packages\zlib_x64-windows\include;C:\vcpkg\packages\curl_x64-windows\include;C:\DxLib_VC\AddProject_VC</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(Platform)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>$(CoreLibraryDependencies);discord_game_sdk.dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(CoreLibraryDependencies);C:\vcpkg\packages\curl_x64-windows\lib\libcurl.lib;C:\discord_social_sdk\lib\release\discord_partner_sdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>$(ProjectDir)manifest\ActiveCodePageUTF8.manifest</AdditionalManifestFiles>
@@ -225,26 +228,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Source\System\Library\DiscordGameSDK\achievement_manager.cpp" />
-    <ClCompile Include="Source\System\Library\DiscordGameSDK\activity_manager.cpp" />
-    <ClCompile Include="Source\System\Library\DiscordGameSDK\application_manager.cpp" />
-    <ClCompile Include="Source\System\Library\DiscordGameSDK\core.cpp" />
-    <ClCompile Include="Source\System\Library\DiscordGameSDK\image_manager.cpp" />
-    <ClCompile Include="Source\System\Library\DiscordGameSDK\lobby_manager.cpp" />
-    <ClCompile Include="Source\System\Library\DiscordGameSDK\network_manager.cpp" />
-    <ClCompile Include="Source\System\Library\DiscordGameSDK\overlay_manager.cpp" />
-    <ClCompile Include="Source\System\Library\DiscordGameSDK\relationship_manager.cpp" />
-    <ClCompile Include="Source\System\Library\DiscordGameSDK\storage_manager.cpp" />
-    <ClCompile Include="Source\System\Library\DiscordGameSDK\store_manager.cpp" />
-    <ClCompile Include="Source\System\Library\DiscordGameSDK\types.cpp" />
-    <ClCompile Include="Source\System\Library\DiscordGameSDK\user_manager.cpp" />
-    <ClCompile Include="Source\System\Library\DiscordGameSDK\voice_manager.cpp" />
     <ClCompile Include="Source\System\Library\ExLib\ExString\ExString.cpp" />
     <ClCompile Include="Source\System\OldGame\Config.cpp" />
+    <ClCompile Include="Source\System\OldGame\DanSelect.cpp" />
     <ClCompile Include="Source\System\OldGame\GameSystem.cpp" />
     <ClCompile Include="Source\System\OldGame\Loading.cpp" />
     <ClCompile Include="Source\System\OldGame\MultiRoom.cpp" />
-    <ClCompile Include="Source\System\OldGame\MultiSelect.cpp" />
     <ClCompile Include="Source\System\OldGame\Playing.cpp" />
     <ClCompile Include="Source\System\OldGame\Result.cpp" />
     <ClCompile Include="Source\System\OldGame\Skin.cpp" />
@@ -263,23 +252,6 @@
     <ClInclude Include="Source\System\Include.hpp" />
     <ClInclude Include="Source\System\Library\Chunk\Chunk.hpp" />
     <ClInclude Include="Source\System\Library\DxLib++\AddStruct\AddStruct.hpp" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\achievement_manager.h" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\activity_manager.h" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\application_manager.h" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\core.h" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\discord.h" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\event.h" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\ffi.h" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\image_manager.h" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\lobby_manager.h" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\network_manager.h" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\overlay_manager.h" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\relationship_manager.h" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\storage_manager.h" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\store_manager.h" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\types.h" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\user_manager.h" />
-    <ClInclude Include="Source\System\Library\DiscordGameSDK\voice_manager.h" />
     <ClInclude Include="Source\System\Library\DxLib++\DxLib++.hpp" />
     <ClInclude Include="Source\System\Library\DxLib++\SoundDevice\SoundDevice.hpp" />
     <ClInclude Include="Source\System\Library\Easing\Easing.hpp" />
@@ -297,6 +269,7 @@
     <ClInclude Include="Source\System\Library\LibraryInclude.h" />
     <ClInclude Include="Source\System\Library\MathParser\MathParser.h" />
     <ClInclude Include="Source\System\OldGame\Config.h" />
+    <ClInclude Include="Source\System\OldGame\DanSelect.h" />
     <ClInclude Include="Source\System\OldGame\GameSystem.h" />
     <ClInclude Include="Source\System\OldGame\Loading.h" />
     <ClInclude Include="Source\System\OldGame\MultiRoom.h" />
