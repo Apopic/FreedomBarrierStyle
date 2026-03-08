@@ -4,6 +4,9 @@
 #include "Skin.h"
 #include "cppunzip.hpp"
 #include <shobjidl.h>
+#include <urlmon.h>
+
+#pragma comment(lib, "urlmon.lib")
 
 using namespace cppunzip;
 
@@ -684,36 +687,59 @@ public:
 		recusiveproc(__BoxDatas, recusiveproc);
 	};
 
-	ChartData ChartDataGet(ChartData Chart) {
+	void SongDownload(const std::string link, const fs::path path) {
 
-		auto SongDownload = [&](const std::string link, const fs::path path) {
-
-			std::string batFile = fs::absolute("song install core.bat").string();
-			std::string args = link;
-
-			SHELLEXECUTEINFO sei = { sizeof(sei) };
-			sei.fMask = SEE_MASK_NOCLOSEPROCESS;
-			sei.lpVerb = "open";
-			sei.lpFile = batFile.c_str();
-			sei.lpParameters = args.c_str();
-			sei.nShow = SW_NORMAL;
-
-			if (!ShellExecuteEx(&sei)) {
-				if (fs::exists("song.ogg")) {
-					fs::remove("song.ogg");
-				}
-				std::string error = "song install.batの起動に失敗しました";
-				MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
-			}
-
-			if (sei.hProcess != NULL) {
-				WaitForSingleObject(sei.hProcess, INFINITE);
-				CloseHandle(sei.hProcess);
-				if (!fs::exists(path)) {
-					fs::rename("song.ogg", path);
-				}
-			}
+		static auto IsInstalled = [](const std::string& packageName) {
+				std::string command = "winget list \"" + packageName + "\" > nul 2>&1";
+				int result = std::system(command.c_str());
+				return (bool)(result == 0);
 			};
+
+		if (!IsInstalled("yt-dlp")) {
+			std::system("winget install yt-dlp");
+		}
+		else {
+			std::system("winget upgrade yt-dlp");
+		}
+
+		if (fs::exists("song.ogg")) {
+			fs::remove("song.ogg");
+		}
+
+		{
+			
+			std::string command = "yt-dlp -x --audio-format mp3 -o \"song\" " + link;
+
+			int result = std::system(command.c_str());
+
+			if (result != 0) {
+				std::string error = "音源のダウンロードに失敗しました";
+				MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
+				return;
+			}
+		}
+
+		{
+			std::string command = "ffmpeg -i \"song.mp3\" \"song.ogg\"";
+			int result = std::system(command.c_str());
+
+			if (fs::exists("song.mp3")) {
+				fs::remove("song.mp3");
+			}
+
+			if (result != 0) {
+				std::string error = "音源の変換に失敗しました";
+				MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
+				return;
+			}
+		}
+
+		if (fs::exists("song.ogg")) {
+			fs::rename("song.ogg", path);
+		}
+	}
+
+	ChartData ChartDataGet(ChartData Chart) {
 
 		ChartData& Dest = Chart;
 
@@ -730,7 +756,7 @@ public:
 			case IDOK:
 				SongDownload(Chart.SongLink, Chart.WavePath);
 				break;
-			}	
+			}
 		}
 
 		std::ifstream file(Chart.WavePath, std::ios::binary);
@@ -742,7 +768,7 @@ public:
 
 	void ImportFile() {
 
-		auto UnZip = [&](fs::path path, fs::path dest) {
+		static auto UnZip = [](fs::path path, fs::path dest) {
 
 			std::ifstream is(path, std::ios::binary);
 			IStreamFile f(is);
@@ -763,7 +789,7 @@ public:
 					file.close();
 				}
 			}
-			};
+		};
 
 		int fileCount = GetDragFileNum();
 
