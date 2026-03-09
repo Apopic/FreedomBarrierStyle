@@ -2,7 +2,7 @@
 #include "GameSystem.h"
 
 _MultiRoom::_MultiRoom(GameSystem* ptr) {
-
+	gameptr = ptr;
 }
 
 _MultiRoom::~_MultiRoom() {
@@ -23,6 +23,12 @@ void GameSystem::MultiRoomInit() {
 			MultiRoom.ConnectPort = Config.ServerPort;
 
 		}
+
+		PlayerData data = PlayerData();
+
+		if (MultiRoom.ConnectProc(&Config, data)) {		
+			Send(DataType::List, data);
+		}
 	}
 }
 
@@ -38,7 +44,7 @@ void GameSystem::MultiRoomDraw() {
 	Skin.Base->MultiRoom.Image.BackGround.Draw({ 0, 0 });
 
 	if (!MultiRoom.MultiFlag) {
-		Skin.Base->Other.Font.Game.DrawFontString({ 0,8 }, "サーバーに接続中…");
+		Skin.Base->Other.Font.Game.DrawFontString({ 0,8 }, "サーバーに接続中…\n(長時間繋がらない場合はTabキーで再接続)");
 		return;
 	}
 
@@ -144,9 +150,11 @@ void GameSystem::MultiRoomProc() {
 		}
 
 		if (!Playing.Chart.OriginalData.WaveData.empty()) {
+
 			if (!MultiRoom.IsSelected && !MultiRoom.IsHost) {
 				MultiRoom.IsSelected = true;
 			}
+
 			if (!SongSelect.DemoSongPlayBlank.GetNowRecording()) {
 				SongSelect.DemoSong.Delete();
 				SongSelect.DemoSongPlayBlank.Start();
@@ -241,25 +249,14 @@ void GameSystem::MultiRoomProc() {
 
 	else {
 
-		MultiRoom.MultiFlag = MultiRoom.server.Connect(IPAddress::SolveHostName(MultiRoom.ConnectAddress)->Port(MultiRoom.ConnectPort));
+		static auto ReConnectProc = [&]() {
+			Skin.Base->Title.SE.Don.Play();
+			PlayerData data = PlayerData();
+			if (MultiRoom.ConnectProc(&Config, data)) {
+				Send(DataType::List, data);
+			}
+			};
 
-		if (MultiRoom.MultiFlag) {
-
-			MultiRoom.KeyInit();
-
-			PlayerData data;
-			data.Name = Config.PlayerName;
-			data.Option.Random = Config.RandomRate;
-			data.Option.Hidden = Config.HiddenLevel;
-			data.Option.Sudden = Config.SuddenLevel;
-			data.Option.Good = Config.JudgeGood;
-			data.Option.Ok = Config.JudgeOk;
-			data.Option.Bad = Config.JudgeBad;
-			data.Option.ChartSpeed = Config.ChartSpeed;
-			data.Option.SongSpeed = Config.SongSpeed;
-
-			Send(DataType::List, data);
-
-		}
+		Input.HitKeyProcess(VK_TAB, KeyState::Down, ReConnectProc);
 	}
 }

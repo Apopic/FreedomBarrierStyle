@@ -2,6 +2,7 @@
 #include "Include.hpp"
 #include "Cryptgraphy/KeyManager.h"
 #include "SongSelect.h"
+#include "Config.h"
 #include <curl/curl.h>
 
 extern class GameSystem;
@@ -64,5 +65,30 @@ public:
 
 		AES128::cbytearray<16> sharedkey{ '1','x','2','3','x','0','2','1','5','4','8','x','2','0','x','1' };
 		server.CryptEngine.Init(sharedkey);
+	}
+
+	template<typename T>
+	bool ConnectProc(_Config* Config, T& data) {
+
+		MultiFlag = server.Connect(IPAddress::SolveHostName(ConnectAddress)->Port(ConnectPort));
+
+		if (MultiFlag) {
+
+			KeyInit();
+
+			data.Name = Config->PlayerName;
+			data.Option.Random = Config->RandomRate;
+			data.Option.Hidden = Config->HiddenLevel;
+			data.Option.Sudden = Config->SuddenLevel;
+			data.Option.Good = Config->JudgeGood;
+			data.Option.Ok = Config->JudgeOk;
+			data.Option.Bad = Config->JudgeBad;
+			data.Option.ChartSpeed = Config->ChartSpeed;
+			data.Option.SongSpeed = Config->SongSpeed;
+
+			return true;
+		}
+
+		return false;
 	}
 };
