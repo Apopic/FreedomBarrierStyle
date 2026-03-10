@@ -105,6 +105,8 @@ discordpp::Activity activity;
 
 GameSystem::GameSystem() {
 
+	TextToKeyInit();
+
 	if (Config.DiscordSDK) {
 
 		static auto TokenDecrypt = [&] {

@@ -152,7 +152,29 @@ public:
 	std::vector<PlayerData> MultiDatas;
 
 	AES128 encoder;
-	AES128::cbytearray<16> key{ '1','x','2','3','x','0','2','1','5','4','8','x','2','0','x','1' };
+	AES128::cbytearray<16> key;	
+
+	void TextToKeyInit() {
+
+		HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(IDR_TEXT1), "TEXT");
+		if (!hRes) return;
+
+		HGLOBAL hData = LoadResource(NULL, hRes);
+		if (!hData) return;
+
+		DWORD size = SizeofResource(NULL, hRes);
+		if (size == 0) return;
+
+		char* pData = static_cast<char*>(LockResource(hData));
+		if (!pData) return;
+
+		std::string text(pData, size);
+
+		auto sp = split(text, ',');
+		for (int i = 0; i < sp.size(); i++) {
+			key[i] = sp[i][0];
+		}
+	}
 
 	void SetState(std::string state);
 

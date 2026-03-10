@@ -687,6 +687,22 @@ public:
 		recusiveproc(__BoxDatas, recusiveproc);
 	};
 
+	void SongPreview(_Config* Config, ChartData* ChartData, bool ToDataLoad = false) {
+		if (!DemoSongPlayBlank.GetNowRecording()) {
+			DemoSong.Delete();
+			DemoSongPlayBlank.Start();
+		}
+		else if (DemoSongPlayBlank.GetRecordingTime() > DemoSongPlayBlankTime() && !DemoSong.IsPlay()) {
+			SetCreateSoundDataType(DX_SOUNDDATATYPE_FILE);
+			if (!ToDataLoad) { DemoSong.Load(ChartData->WavePath, 3); }
+			else { DemoSong.Load(ChartData->WaveData.data(), ChartData->WaveData.size(), 3); }
+			SetCreateSoundDataType(DX_SOUNDDATATYPE_MEMNOPRESS);
+			DemoSong.SetCurrent(ChartData->DemoStart);
+			DemoSong.SetVolume(ChartData->SongVolume * (Config->SongVolume / 100));
+			DemoSong.Play(FALSE);
+		}
+	}
+
 	void SongDownload(const std::string link, const fs::path path) {
 
 		static auto IsInstalled = [](const std::string& packageName) {

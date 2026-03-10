@@ -3,6 +3,7 @@
 #include "Cryptgraphy/KeyManager.h"
 #include "SongSelect.h"
 #include "Config.h"
+#include "Skin.h"
 #include <curl/curl.h>
 
 extern class GameSystem;
@@ -63,8 +64,103 @@ public:
 		auto v = ECDSA::Sign(key.GetSecretKey(), { message.begin(), message.end() });
 		bool ret = ECDSA::Verify(q, v, { message.begin(), message.end() });
 
-		AES128::cbytearray<16> sharedkey{ '1','x','2','3','x','0','2','1','5','4','8','x','2','0','x','1' };
+		AES128::cbytearray<16> sharedkey;
+		
+		HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(IDR_TEXT1), "TEXT");
+		if (!hRes) return;
+
+		HGLOBAL hData = LoadResource(NULL, hRes);
+		if (!hData) return;
+
+		DWORD size = SizeofResource(NULL, hRes);
+		if (size == 0) return;
+
+		char* pData = static_cast<char*>(LockResource(hData));
+		if (!pData) return;
+
+		std::string text(pData, size);
+
+		auto sp = split(text, ',');
+		for (int i = 0; i < sp.size(); i++) {
+			sharedkey[i] = sp[i][0];
+		}
+
 		server.CryptEngine.Init(sharedkey);
+	}
+
+	void ChartStrDraw(_Skin* Skin, _SongSelect* SongSelect, ChartData* ChartData) {
+
+		Pos2D<float> pos = {
+		Skin->Base->SongSelect.Image.TitleBox.Pos.X,
+		Skin->Base->SongSelect.Image.TitleBox.Pos.Y
+		};
+
+		Skin->Base->SongSelect.Font.BoxTitle.Draw(
+			{ pos.X, pos.Y - 40 },
+			GetColor(255, 255, 255),
+			GetColor(0, 0, 0),
+			ChartData->Title
+		);
+		Skin->Base->SongSelect.Font.BoxSubTitle.Draw(
+			{ pos.X, pos.Y + 10 },
+			GetColor(255, 255, 255),
+			GetColor(0, 0, 0),
+			ChartData->SubTitle
+		);
+
+		std::string levelstr = SongSelect->CourseList[ChartData->CourseIndex] + 
+			"  ★×" + std::to_string(ChartData->CourseDatas[ChartData->CourseIndex].Level);
+
+		Skin->Base->SongSelect.Font.Course.Draw(
+			{ pos.X - 100.0f, pos.Y + 50 },
+			GetColor(255, 255, 255),
+			GetColor(0, 0, 0),
+			levelstr
+		);
+	}
+
+	template<typename T>
+	void PlayerDatasDraw(_Skin* Skin, T& Private) {
+
+		for (int i = 0; i < Private.PlayerDatas.size(); i++) {
+
+			auto data = Private.PlayerDatas[i];
+			float y = 100.0f * i;
+			bool a = 1 - (GrantIndex == i) * HostSelectMode;
+			bool b = 1 - data.Standby % HostVal;
+
+			Skin->Base->MultiRoom.Image.PlayersBox.Draw({ 0, y });
+
+			Skin->Base->MultiRoom.Font.PlayerName.Draw({
+				Skin->Base->MultiRoom.Config.PlayerNamePos.X,
+				Skin->Base->MultiRoom.Config.PlayerNamePos.Y + y },
+				GetColor(255 * a, 255 * a, 255 * b),
+				GetColor(0, 0, 0),
+				GetStrlen(data.Name, Skin->Base->MultiRoom.Font.PlayerName.Handle),
+				data.Name
+				);
+
+			if (data.Standby >= HostVal) {
+				Skin->Base->MultiRoom.Image.Crown.Draw({ 0, y }, 3);
+			}
+
+#define DRAWOPTION(Name) \
+        OptionDraw(Skin->Base->MultiRoom.Font.OptionData, {Skin->Base->MultiRoom.Config.Name##Pos.X, Skin->Base->MultiRoom.Config.Name##Pos.Y + y - 10.0f}, #Name, FALSE);\
+		OptionDraw(Skin->Base->MultiRoom.Font.OptionData, {Skin->Base->MultiRoom.Config.Name##Pos.X, Skin->Base->MultiRoom.Config.Name##Pos.Y + y + 10.0f}, std::to_string(data.Option.Name), TRUE);
+
+			    DRAWOPTION(Hidden)
+				DRAWOPTION(Sudden)
+				DRAWOPTION(Random)
+				DRAWOPTION(Good)
+				DRAWOPTION(Ok)
+				DRAWOPTION(Bad)
+				DRAWOPTION(ChartSpeed)
+
+				if (data.Standby >= HostVal) {
+					DRAWOPTION(SongSpeed)
+				}
+		}
+#undef DRAWOPTION
 	}
 
 	template<typename T>

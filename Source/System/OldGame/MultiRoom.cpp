@@ -51,74 +51,10 @@ void GameSystem::MultiRoomDraw() {
 	Skin.Base->MultiRoom.Image.TitleBox.Draw({ 0,0 });
 
 	if (!Playing.Chart.OriginalData.WaveData.empty()) {
-		Pos2D<float> pos = {
-				Skin.Base->SongSelect.Image.TitleBox.Pos.X,
-				Skin.Base->SongSelect.Image.TitleBox.Pos.Y
-		};
-
-		Skin.Base->SongSelect.Font.BoxTitle.Draw(
-			{ pos.X, pos.Y - 40 },
-			GetColor(255, 255, 255),
-			GetColor(0, 0, 0),
-			Playing.Chart.OriginalData.Title
-		);
-		Skin.Base->SongSelect.Font.BoxSubTitle.Draw(
-			{ pos.X, pos.Y + 10 },
-			GetColor(255, 255, 255),
-			GetColor(0, 0, 0),
-			Playing.Chart.OriginalData.SubTitle
-		);
-
-		int levelval = Playing.Chart.OriginalData.CourseDatas[Playing.Chart.OriginalData.CourseIndex].Level;
-		std::string levelstr = SongSelect.CourseList[Playing.Chart.OriginalData.CourseIndex] + "  ★×" + std::to_string(levelval);
-
-		Skin.Base->SongSelect.Font.Course.Draw(
-			{ pos.X - 100.0f, pos.Y + 50 },
-			GetColor(255, 255, 255),
-			GetColor(0, 0, 0),
-			levelstr
-		);
+		MultiRoom.ChartStrDraw(&Skin, &SongSelect, &Playing.Chart.OriginalData);
 	}
 
-	for (int i = 0; auto data : Private.PlayerDatas) {
-
-		float y = 100.0f * i;
-		bool a = 1 - (MultiRoom.GrantIndex == i) * MultiRoom.HostSelectMode;
-		bool b = 1 - data.Standby % MultiRoom.HostVal;
-
-		Skin.Base->MultiRoom.Image.PlayersBox.Draw({ 0, y });
-
-		Skin.Base->MultiRoom.Font.PlayerName.Draw({
-			Skin.Base->MultiRoom.Config.PlayerNamePos.X,
-			Skin.Base->MultiRoom.Config.PlayerNamePos.Y + y },
-			GetColor(255 * a, 255 * a, 255 * b),
-			GetColor(0, 0, 0),
-			GetStrlen(data.Name, Skin.Base->MultiRoom.Font.PlayerName.Handle),
-			data.Name
-			);
-
-		if (data.Standby >= MultiRoom.HostVal) {
-			Skin.Base->MultiRoom.Image.Crown.Draw({ 0, y }, 3);
-		}
-
-#define DRAWOPTION(Name) \
-        MultiRoom.OptionDraw(Skin.Base->MultiRoom.Font.OptionData, {Skin.Base->MultiRoom.Config.Name##Pos.X, Skin.Base->MultiRoom.Config.Name##Pos.Y + y - 10.0f}, #Name, FALSE);\
-		MultiRoom.OptionDraw(Skin.Base->MultiRoom.Font.OptionData, {Skin.Base->MultiRoom.Config.Name##Pos.X, Skin.Base->MultiRoom.Config.Name##Pos.Y + y + 10.0f}, std::to_string(data.Option.Name), TRUE);
-
-		DRAWOPTION(Hidden)
-			DRAWOPTION(Sudden)
-			DRAWOPTION(Random)
-			DRAWOPTION(Good)
-			DRAWOPTION(Ok)
-			DRAWOPTION(Bad)
-			DRAWOPTION(ChartSpeed)
-
-			if (data.Standby >= MultiRoom.HostVal) {
-				DRAWOPTION(SongSpeed)
-			}
-
-		i++;
-	}
+	MultiRoom.PlayerDatasDraw(&Skin, Private);
 }
 
 void GameSystem::MultiRoomProc() {
@@ -155,18 +91,7 @@ void GameSystem::MultiRoomProc() {
 				MultiRoom.IsSelected = true;
 			}
 
-			if (!SongSelect.DemoSongPlayBlank.GetNowRecording()) {
-				SongSelect.DemoSong.Delete();
-				SongSelect.DemoSongPlayBlank.Start();
-			}
-			else if (SongSelect.DemoSongPlayBlank.GetRecordingTime() > SongSelect.DemoSongPlayBlankTime() && !SongSelect.DemoSong.IsPlay()) {
-				SetCreateSoundDataType(DX_SOUNDDATATYPE_FILE);
-				SongSelect.DemoSong.Load(Playing.Chart.OriginalData.WaveData.data(), Playing.Chart.OriginalData.WaveData.size(), 1);
-				SongSelect.DemoSong.SetVolume(Playing.Chart.OriginalData.SongVolume * (Config.SongVolume / 100));
-				SongSelect.DemoSong.SetCurrent(Playing.Chart.OriginalData.DemoStart);
-				SetCreateSoundDataType(DX_SOUNDDATATYPE_MEMNOPRESS);
-				SongSelect.DemoSong.Play(FALSE);
-			}
+			SongSelect.SongPreview(&Config, &Playing.Chart.OriginalData, true);
 		}
 
 		static auto DonInputProc = [&] {

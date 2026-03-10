@@ -412,18 +412,7 @@ void GameSystem::SongSelectProc() {
 		};
 
 	if (!SongSelect.BoxDatas[SongSelect.BoxDataIndex]->IsGenre()) {
-		if (!SongSelect.DemoSongPlayBlank.GetNowRecording()) {
-			SongSelect.DemoSong.Delete();
-			SongSelect.DemoSongPlayBlank.Start();
-		}
-		else if (SongSelect.DemoSongPlayBlank.GetRecordingTime() > SongSelect.DemoSongPlayBlankTime() && !SongSelect.DemoSong.IsPlay()) {
-			SetCreateSoundDataType(DX_SOUNDDATATYPE_FILE);
-			SongSelect.DemoSong.Load(SongSelect.BoxDatas[SongSelect.BoxDataIndex]->GetChart()->WavePath, 1);
-			SetCreateSoundDataType(DX_SOUNDDATATYPE_MEMNOPRESS);
-			SongSelect.DemoSong.SetCurrent(SongSelect.BoxDatas[SongSelect.BoxDataIndex]->GetChart()->DemoStart);
-			SongSelect.DemoSong.SetVolume(SongSelect.BoxDatas[SongSelect.BoxDataIndex]->GetChart()->SongVolume * (Config.SongVolume / 100));
-			SongSelect.DemoSong.Play(FALSE);
-		}
+		SongSelect.SongPreview(&Config, SongSelect.BoxDatas[SongSelect.BoxDataIndex]->GetChart());
 	}
 
 	if (GetDragFileNum()) {

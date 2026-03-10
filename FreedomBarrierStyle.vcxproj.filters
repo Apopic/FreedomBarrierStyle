@@ -187,4 +187,7 @@
   <ItemGroup>
     <None Include="README" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\Downloads\key.txt" />
+  </ItemGroup>
 </Project>
