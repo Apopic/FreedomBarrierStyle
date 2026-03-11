@@ -24,7 +24,7 @@ enum class AlphaType {
 	Sudden
 };
 
-enum class ScrollType{
+enum class ScrollType {
 	Normal,
 	BMSCROLL,
 	HBSCROLL,
@@ -81,7 +81,7 @@ struct NoteData {
 	bool BarlineDisplay = false;
 
 	bool HitFlag = false;
-	
+
 	BranchLevel BranchLevel = BranchLevel::None;
 	bool BranchStart = false;
 	bool Section = false;
@@ -167,12 +167,12 @@ struct JudgeData {
 	ulonglong Combo = 0;
 	ulonglong MaxCombo = 0;
 	ulonglong MemCombo = 0;
- 	ulonglong HitNote = 0;
+	ulonglong HitNote = 0;
 	double ScoreRateGood = 0;
 	double ScoreRateOk = 0;
 	double Accuracy = 0;
 	char NoteType = '\0';
-	JudgeType HitJudge = JudgeType::None; 
+	JudgeType HitJudge = JudgeType::None;
 	BranchLevel Level = BranchLevel::None;
 	BranchLevel PrevLevel = BranchLevel::Normal;
 
@@ -243,11 +243,11 @@ struct HitNoteData {
 			FlyingNote.IsActive = true;
 			JudgeString.IsActive = true;
 			break;
-		}		
+		}
 
 		MoveTimer.End();
 	}
-	
+
 	Timer<nanosecond> MoveTimer;
 	double MoveElapsedTime = 0;
 
@@ -268,7 +268,7 @@ struct HitNoteData {
 		bool Big = false;
 		JudgeType Type = JudgeType::None;
 	} JudgeUnderExplosion;
-	
+
 	struct JudgeUpperExplosion {
 		bool IsActive = false;
 		bool Big = false;
@@ -308,6 +308,7 @@ struct ChartStreamData {
 	}
 
 	std::vector<NoteData> RawNoteDatas = std::vector<NoteData>();
+	std::vector<NoteData> RefNoteDatas = std::vector<NoteData>();
 	std::vector<BranchData> BranchDatas = std::vector<BranchData>();
 
 	SoundData SongData;
@@ -323,7 +324,7 @@ struct ChartStreamData {
 
 	double SongSpeed = 1;
 
-	ScrollType ScrollType = ScrollType::Normal;	
+	ScrollType ScrollType = ScrollType::Normal;
 
 	bool AutoPlayLR = false;
 	Timer<microsecond> WaitRollTime;
@@ -374,7 +375,7 @@ public:
 		if (FrameCounter) {
 			double hz = Chart.FrameNowTime.GetRefreshRate() * extendrate;
 			double frame = ((long long)(Chart.FrameNowTime.GetRecordingTime(second) * hz) + fastdrawrate) / hz;
-			ret = millisecond * frame;		
+			ret = millisecond * frame;
 		}
 		else {
 			ret = Chart.NowTime.GetRecordingTime() / microsecond;
@@ -396,7 +397,7 @@ public:
 		uint Index = 0;
 		uint Size() { return m_size; }
 
-		void Add(HitNoteData &&data) {
+		void Add(HitNoteData&& data) {
 
 			Datas[Index] = std::move(data);
 
@@ -408,7 +409,7 @@ public:
 		}
 	} HitNote[4];
 
-	void NoteAlpha(int &Alpha, double _one, AlphaType Type) {
+	void NoteAlpha(int& Alpha, double _one, AlphaType Type) {
 
 		if (_one > 1) {
 			_one = 1;
@@ -431,7 +432,7 @@ public:
 
 	void TaikoAlpha(int index) {
 		double alpha = 255 * (1 - GetEasingRate(MiniTaikoFlash[index].GetRecordingTime() / MiniTaikoFlashTime, ease::Base::In, ease::Line::Cubic));
-		if (alpha < 0) { MiniTaikoFlash[index].End(); }	
+		if (alpha < 0) { MiniTaikoFlash[index].End(); }
 		SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha);
 	}
 
@@ -685,9 +686,10 @@ public:
 	}
 
 	template<typename T>
-	void NoteProc(_Skin* Skin, _Config* Config, T* gameptr, std::vector<NoteData>& NoteDatas, double nowtime) {
+	void NoteProc(_Skin* Skin, _Config* Config, T&& NoteDatas, double nowtime) {
 
 		Chart.BalloonCount = 0;
+
 		for (auto&& data : NoteDatas) {
 
 			bool HitFlag = data.AbsTime < nowtime;
@@ -756,7 +758,7 @@ public:
 				_HitError < -Config->JudgeBad) {
 				Chart.Judge[0].Hit(JudgeType::Bad, 0, '\0');
 				Chart.BranchJudge.Hit(JudgeType::Bad, 0, '\0');
-				Action(HitType::Empty, gameptr);
+				Action(HitType::Empty);
 				data.HitFlag = true;
 			}
 
@@ -786,7 +788,7 @@ public:
 	}
 
 	template<typename T>
-	void AutoPlayProc(_Skin* Skin, _Config* Config, T* gameptr, std::vector<NoteData>& NoteDatas, const double NowTime) {
+	void AutoPlayProc(_Skin* Skin, _Config* Config, T&& NoteDatas, double NowTime) {
 
 		int RollCount = 0;
 		NoteData* BalloonData = nullptr;
@@ -819,24 +821,24 @@ public:
 				case '1':
 					Skin->Base->Playing.SE.Don.Play();
 					Chart.AutoPlayLR = !Chart.AutoPlayLR;
-					Action((HitType)(0 + Chart.AutoPlayLR * 2), gameptr);
+					Action((HitType)(0 + Chart.AutoPlayLR * 2));
 					break;
 				case '2':
 					Skin->Base->Playing.SE.Ka.Play();
 					Chart.AutoPlayLR = !Chart.AutoPlayLR;
-					Action((HitType)(1 + Chart.AutoPlayLR * 2), gameptr);
+					Action((HitType)(1 + Chart.AutoPlayLR * 2));
 					break;
 				case '3':
 					Skin->Base->Playing.SE.Don.Play();
 					Skin->Base->Playing.SE.Don.Play();
-					Action(HitType::DonLeft, gameptr);
-					Action(HitType::DonRight, gameptr);
+					Action(HitType::DonLeft);
+					Action(HitType::DonRight);
 					break;
 				case '4':
 					Skin->Base->Playing.SE.Ka.Play();
 					Skin->Base->Playing.SE.Ka.Play();
-					Action(HitType::KaLeft, gameptr);
-					Action(HitType::KaRight, gameptr);
+					Action(HitType::KaLeft);
+					Action(HitType::KaRight);
 					break;
 				}
 				data.NoteType = '\0';
@@ -872,32 +874,31 @@ public:
 		}
 	}
 
-	template<typename T>
-	void PlayProc(_Skin* Skin, _Config* Config, T* gameptr, const double NowTime) {
+	void PlayProc(_Skin* Skin, _Config* Config, double NowTime) {
 
 		Input.HitKeyesProcess(Config->DonInputLeft, KeyState::Down, [&] {
 			Skin->Base->Playing.SE.Don.Play();
 			JudgeNote(Skin, Config, NowTime, '1');
-			Action(HitType::DonLeft, gameptr);
+			Action(HitType::DonLeft);
 			});
 		Input.HitKeyesProcess(Config->DonInputRight, KeyState::Down, [&] {
 			Skin->Base->Playing.SE.Don.Play();
 			JudgeNote(Skin, Config, NowTime, '1');
-			Action(HitType::DonRight, gameptr);
+			Action(HitType::DonRight);
 			});
 		Input.HitKeyesProcess(Config->KaInputLeft, KeyState::Down, [&] {
 			Skin->Base->Playing.SE.Ka.Play();
 			JudgeNote(Skin, Config, NowTime, '2');
-			Action(HitType::KaLeft, gameptr);
+			Action(HitType::KaLeft);
 			});
 		Input.HitKeyesProcess(Config->KaInputRight, KeyState::Down, [&] {
 			Skin->Base->Playing.SE.Ka.Play();
 			JudgeNote(Skin, Config, NowTime, '2');
-			Action(HitType::KaRight, gameptr);
+			Action(HitType::KaRight);
 			});
 	}
 
-	void TraningModeProc(_Config* Config, const double nowtime) {
+	void TraningModeProc(_Config* Config, double nowtime) {
 
 		if (!MeasureJump.GetNowRecording()) {
 
@@ -1017,7 +1018,7 @@ break;\
 
 	void JudgeNote(_Skin* Skin, _Config* Config, double nowtime, char type) {
 
-		auto& NoteDatas = Chart.RawNoteDatas;
+		auto&& NoteDatas = Chart.RawNoteDatas;
 		auto& BranchJudge = Chart.BranchJudge;
 		auto& Judge = Chart.Judge[0];
 
@@ -1124,7 +1125,7 @@ break;\
 		}
 	}
 
-	void NoteDrawData(std::vector<NoteData>& ProcNotes, const double NowTime) {
+	void NoteDrawData(std::vector<NoteData>& ProcNotes, double NowTime) {
 		double _addms = ProcNotes[0].AbsTime;
 		for (int i = 0, size = ProcNotes.size(); i < size; ++i) {
 			NoteData& data = ProcNotes[i];
@@ -1511,37 +1512,5 @@ break;\
 		}
 	}
 
-	template<typename T>
-	void Action(HitType type, T* gameptr) {
-
-		if ((int)type >= 0) {
-			MiniTaikoFlash[(int)type].Start();
-		}
-
-		if (gameptr->Config.AutoPlayFlag) {
-			Chart.Judge[0].Score = 0;
-		}
-
-		if (gameptr->MultiRoom.MultiFlag) {
-			gameptr->Public.HitKey = type;
-			gameptr->Public.Judge = Chart.Judge[0];
-			gameptr->Public.GetIndex = gameptr->Private.MyIndex;
-			gameptr->Send(gameptr->DataType::Public, gameptr->Public);
-			Chart.Judge[0].NoteType = '\0';
-			Chart.Judge[0].HitJudge = JudgeType::None;
-		}
-	}
-
-	double ScoreRateCalc(double judge, double basis) {
-		const double c = 0.9;
-		const double b = basis;
-		const double m = 10;
-		const double d = std::pow(b, std::pow(m, -1 / c));
-		return 1 / std::pow(std::log(judge * (b - d) / b + d) / std::log(b), c);
-	}
-
-	double SongSpeedRateCalc(double speed) {
-		return (speed - 1.0) * 0.2 + 1.0;
-	}
-
+	void Action(HitType type);
 };

@@ -516,8 +516,8 @@ RollType = '\0'
 		note = _Playing::_HitNote();
 	}
 
-	Playing.Chart.Judge[0].ScoreRateGood = Playing.ScoreRateCalc(Config.JudgeGood, 25.0) * Playing.SongSpeedRateCalc(SongSpeed);
-	Playing.Chart.Judge[0].ScoreRateOk = Playing.ScoreRateCalc(Config.JudgeOk, 75.0) * Playing.SongSpeedRateCalc(SongSpeed);
+	Playing.Chart.Judge[0].ScoreRateGood = Loading.ScoreRateCalc(Config.JudgeGood, 25.0) * Loading.SongSpeedRateCalc(SongSpeed);
+	Playing.Chart.Judge[0].ScoreRateOk = Loading.ScoreRateCalc(Config.JudgeOk, 75.0) * Loading.SongSpeedRateCalc(SongSpeed);
 
 	Playing.Chart.FrameNowTime.ExtendRate = Config.FrameExtendRate;
 

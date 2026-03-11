@@ -91,7 +91,7 @@ public:
 		"KeyConfig",
 	};
 
-	std::string GameConfig[34]{
+	std::string GameConfig[35]{
 	"PlayerName",
 	"AutoPlayFlag",
 	"ServerAddress",
@@ -113,6 +113,7 @@ public:
 	"SEVolume",
 	"HitNoteDisp",
 	"RollSpeed",
+	"NoteOptimize",
 	"WaitVSync",
 	"FastInput",
 	"FastDrawRate",

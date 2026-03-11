@@ -180,13 +180,13 @@ void GameSystem::PlayingProc() {
 		return;
 	}
 
-	Playing.NoteProc(&Skin, &Config, gameptr, NoteDatas, NowTime);
+	Playing.NoteProc(&Skin, &Config, NoteDatas, NowTime);
 
 	if (Config.AutoPlayFlag) { 
-		Playing.AutoPlayProc(&Skin, &Config, gameptr, NoteDatas, NowTime);
+		Playing.AutoPlayProc(&Skin, &Config, NoteDatas, NowTime);
 	}
 	else {
-		Playing.PlayProc(&Skin, &Config, gameptr, NowTime);
+		Playing.PlayProc(&Skin, &Config, NowTime);
 	}
 
 	if (SongSelect.IsDanMode) {
@@ -195,5 +195,25 @@ void GameSystem::PlayingProc() {
 
 	if (MultiRoom.MultiFlag) {
 		Playing.MultiProc(Public, Private);	
+	}
+}
+
+void _Playing::Action(HitType type) {
+
+	if ((int)type >= 0) {
+		MiniTaikoFlash[(int)type].Start();
+	}
+
+	if (gameptr->Config.AutoPlayFlag) {
+		Chart.Judge[0].Score = 0;
+	}
+
+	if (gameptr->MultiRoom.MultiFlag) {
+		gameptr->Public.HitKey = type;
+		gameptr->Public.Judge = Chart.Judge[0];
+		gameptr->Public.GetIndex = gameptr->Private.MyIndex;
+		gameptr->Send(DataType::Public, gameptr->Public);
+		Chart.Judge[0].NoteType = '\0';
+		Chart.Judge[0].HitJudge = JudgeType::None;
 	}
 }
