@@ -368,6 +368,9 @@ public:
 	double MeasureJumpTime = 60;
 	double MemNowTime = 0;
 
+	Timer<millisecond> KeyViewFlash[16];
+	double KeyViewFlashTime = 160;
+
 	std::string ExamList[8] = { "Accuracy", "Good", "Ok", "Bad", "Score", "Roll", "HitNote", "MaxCombo" };
 
 	double ChartNowTime(bool FrameCounter = false, double fastdrawrate = 0, double extendrate = 1) const {
@@ -879,22 +882,22 @@ public:
 		Input.HitKeyesProcess(Config->DonInputLeft, KeyState::Down, [&] {
 			Skin->Base->Playing.SE.Don.Play();
 			JudgeNote(Skin, Config, NowTime, '1');
-			Action(HitType::DonLeft);
+			Action(HitType::DonLeft, Config->DonInputLeft);
 			});
 		Input.HitKeyesProcess(Config->DonInputRight, KeyState::Down, [&] {
 			Skin->Base->Playing.SE.Don.Play();
 			JudgeNote(Skin, Config, NowTime, '1');
-			Action(HitType::DonRight);
+			Action(HitType::DonRight, Config->DonInputRight);
 			});
 		Input.HitKeyesProcess(Config->KaInputLeft, KeyState::Down, [&] {
 			Skin->Base->Playing.SE.Ka.Play();
 			JudgeNote(Skin, Config, NowTime, '2');
-			Action(HitType::KaLeft);
+			Action(HitType::KaLeft, Config->KaInputLeft);
 			});
 		Input.HitKeyesProcess(Config->KaInputRight, KeyState::Down, [&] {
 			Skin->Base->Playing.SE.Ka.Play();
 			JudgeNote(Skin, Config, NowTime, '2');
-			Action(HitType::KaRight);
+			Action(HitType::KaRight, Config->KaInputRight);
 			});
 	}
 
@@ -1512,5 +1515,41 @@ break;\
 		}
 	}
 
-	void Action(HitType type);
+	void KeyAlpha(int index) {
+		double alpha = 255 * (1 - GetEasingRate(KeyViewFlash[index].GetRecordingTime() / KeyViewFlashTime, ease::Base::In, ease::Line::Cubic));
+		if (alpha < 0) { KeyViewFlash[index].End(); }
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha);
+	}
+
+	void KeyViewDraw(_Skin* Skin, std::vector<std::string> Keys, int x) {
+		
+		Pos2D<float> Size = {
+			Skin->Base->Playing.Image.KeyViewBack.Size.Width,
+			Skin->Base->Playing.Image.KeyViewBack.Size.Height
+		};
+
+		for (int y = 0, i = 0; i < Keys.size(); i++) {
+
+			if (Keys[i] == "*") { continue; }
+
+			Skin->Base->Playing.Image.KeyViewBack.Draw({ Size.X * x, Size.Y * y });
+
+			if (KeyViewFlash[x * 4 + y].GetNowRecording()) {
+				KeyAlpha(x * 4 + y);
+				Skin->Base->Playing.Image.KeyViewFlash.Draw({ Size.X * x, Size.Y * y });
+				SetDrawBlendMode(0, 0);
+			}
+
+			Skin->Base->Playing.Font.KeyStr.Draw({
+				Skin->Base->Playing.Image.KeyViewBack.Pos.X + Size.X * x,
+				Skin->Base->Playing.Image.KeyViewBack.Pos.Y + Size.Y * y },
+				GetColor(255, 255, 255),
+				GetColor(0, 0, 0),
+				Keys[i]);
+
+			y++;
+		}
+	}
+
+	void Action(HitType type, std::vector<int> keys);
 };

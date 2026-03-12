@@ -24,6 +24,10 @@ void GameSystem::PlayingInit() {
 	for (auto&& taiko : Playing.MiniTaikoFlash) {
 		taiko.End();
 	}
+
+	for (auto&& key : Playing.KeyViewFlash) {
+		key.End();
+	}
 }
 
 void GameSystem::PlayingEnd() {
@@ -113,6 +117,13 @@ void GameSystem::PlayingDraw() {
 		Playing.ExamValDraw(&Skin);
 	}
 
+	if (Skin.Base->Playing.Config.KeyInputView && !MultiRoom.MultiFlag) {
+		Playing.KeyViewDraw(&Skin, Config.KaLeftStr,   (int)HitType::KaLeft);
+		Playing.KeyViewDraw(&Skin, Config.DonLeftStr,  (int)HitType::DonLeft);
+		Playing.KeyViewDraw(&Skin, Config.DonRightStr, (int)HitType::DonRight);
+		Playing.KeyViewDraw(&Skin, Config.KaRightStr,  (int)HitType::KaRight);
+	}
+
 	if (Config.ViewDebugData) {
 		DrawFormatString(0, 0, GetColor(255, 255, 255), "\n\n\nNowTime:%lf\nBPM:%lf", NowTime / Playing.Chart.SongSpeed, Playing.Chart.NowBPM * Playing.Chart.SongSpeed);
 	}
@@ -198,7 +209,15 @@ void GameSystem::PlayingProc() {
 	}
 }
 
-void _Playing::Action(HitType type) {
+void _Playing::Action(HitType type, std::vector<int> keys = std::vector<int>()) {
+
+	if (gameptr->Skin.Base->Playing.Config.KeyInputView) {
+		for (int i = 0; i < keys.size(); i++) {
+			Input.HitKeyProcess(keys[i], KeyState::Hold, [&] {
+				KeyViewFlash[i + (int)type * 4].Start();
+			});
+		}
+	}
 
 	if ((int)type >= 0) {
 		MiniTaikoFlash[(int)type].Start();

@@ -117,6 +117,7 @@ public:
 				double GoGoFireFrameTime = 60;
 				bool BranchSlideAnimation = true;
 				double BranchSlideTime = 120;
+				bool KeyInputView = true;
 			} Config;
 			struct _Image {
 				GraphData Box;
@@ -141,11 +142,14 @@ public:
 				GraphData JudgeString;
 				GraphData ProgressBar;
 				GraphData ExamProgressBar;
+				GraphData KeyViewBack;
+				GraphData KeyViewFlash;
 			} Image;
 			struct _Font {
 				FontData Title;
 				FontData SubTitle;
 				FontData PlayerName;
+				FontData KeyStr;
 				FontData ExamName;
 				FontData ExamVal;
 			} Font;
@@ -163,13 +167,9 @@ public:
 				Pos2D<float> TitlePos = { 25,75 };
 				Pos2D<float> SubTitlePos = { 25,125 };
 				Pos2D<float> PlayerNamePos = { 860,360 };
-				Pos2D<float> ScorePos = { 290,200 };
-				Pos2D<float> AccuracyPos = { 480,200 };
-				Pos2D<float> GoodPos = { 230,311 };
-				Pos2D<float> OkPos = { 230,370 };
-				Pos2D<float> BadPos = { 230,429 };
-				Pos2D<float> RollPos = { 230,524 };
-				Pos2D<float> MaxComboPos = { 230,583 };
+				Pos2D<std::vector<float>> JudgeDataPos =
+				{ {290, 480, 230, 230, 230, 230, 230},
+				  {200, 200, 311, 370, 429, 524, 583} };
 			} Config;
 			struct _Image {
 				GraphData BackGround;
@@ -195,14 +195,9 @@ public:
 		struct _MultiRoom {
 			struct _Config {
 				Pos2D<float> PlayerNamePos = { 240,355 };
-				Pos2D<float> HiddenPos = { 400,360 };
-				Pos2D<float> SuddenPos = { 500,360 };
-				Pos2D<float> RandomPos = { 600,360 };
-				Pos2D<float> GoodPos = { 700,360 };
-				Pos2D<float> OkPos = { 800,360 };
-				Pos2D<float> BadPos = { 900,360 };
-				Pos2D<float> ChartSpeedPos = { 1020,360 };
-				Pos2D<float> SongSpeedPos = { 1150,360 };
+				Pos2D<std::vector<float>> OptionDataPos =
+				{ {400, 500, 600, 700, 800, 900, 1020, 1150},
+				  {360, 360, 360, 360, 360, 360, 360,  360} };
 			} Config;
 			struct _Image {
 				GraphData BackGround;

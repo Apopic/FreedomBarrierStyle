@@ -165,6 +165,7 @@ void _Skin::SkinLoad(const std::string& name) {
 	ValLoad(Playing, Config, GoGoFireFrameTime);
 	ValLoad(Playing, Config, BranchSlideAnimation);
 	ValLoad(Playing, Config, BranchSlideTime);
+	ValLoad(Playing, Config, KeyInputView);
 
 	DataLoad(Playing, Image, Box);
 	DataLoad(Playing, Image, BackGround);
@@ -188,10 +189,13 @@ void _Skin::SkinLoad(const std::string& name) {
 	DataLoad(Playing, Image, JudgeString);
 	DataLoad(Playing, Image, ProgressBar);
 	DataLoad(Playing, Image, ExamProgressBar);
+	DataLoad(Playing, Image, KeyViewBack);
+	DataLoad(Playing, Image, KeyViewFlash);
 
 	DataLoad(Playing, Font, Title);
 	DataLoad(Playing, Font, SubTitle);
 	DataLoad(Playing, Font, PlayerName);
+	DataLoad(Playing, Font, KeyStr);
 	DataLoad(Playing, Font, ExamName);
 	DataLoad(Playing, Font, ExamVal);
 
@@ -207,13 +211,7 @@ void _Skin::SkinLoad(const std::string& name) {
 	ValLoad(Result, Config, TitlePos   );
 	ValLoad(Result, Config, SubTitlePos);
 	ValLoad(Result, Config, PlayerNamePos);
-	ValLoad(Result, Config, ScorePos   );
-	ValLoad(Result, Config, AccuracyPos);
-	ValLoad(Result, Config, GoodPos    );
-	ValLoad(Result, Config, OkPos      );
-	ValLoad(Result, Config, BadPos     );
-	ValLoad(Result, Config, RollPos    );
-	ValLoad(Result, Config, MaxComboPos);
+	ValLoad(Result, Config, JudgeDataPos );
 
 	DataLoad(Result, Image, BackGround);
 	DataLoad(Result, Image, JudgeScore);
@@ -234,14 +232,7 @@ void _Skin::SkinLoad(const std::string& name) {
 #pragma region MultiRoom
 
 	ValLoad(MultiRoom, Config, PlayerNamePos);
-	ValLoad(MultiRoom, Config, HiddenPos    );
-	ValLoad(MultiRoom, Config, SuddenPos    );
-	ValLoad(MultiRoom, Config, RandomPos    );
-	ValLoad(MultiRoom, Config, GoodPos      );
-	ValLoad(MultiRoom, Config, OkPos        );
-	ValLoad(MultiRoom, Config, BadPos       );
-	ValLoad(MultiRoom, Config, ChartSpeedPos);
-	ValLoad(MultiRoom, Config, SongSpeedPos );
+	ValLoad(MultiRoom, Config, OptionDataPos);
 
 	DataLoad(MultiRoom, Image, BackGround);
 	DataLoad(MultiRoom, Image, TitleBox);

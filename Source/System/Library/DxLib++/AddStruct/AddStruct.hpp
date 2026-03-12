@@ -7,8 +7,8 @@ using json = nlohmann::json;
 
 template<class T>
 struct Pos2D {
-	T X = 0;
-	T Y = 0;
+	T X = { 0 };
+	T Y = { 0 };
 };
 template<class T>
 void from_json(const json& data, Pos2D<T>& v);

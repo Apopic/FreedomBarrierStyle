@@ -71,18 +71,18 @@ void GameSystem::ResultDraw() {
 	Skin.Base->Result.Image.Accuracy.Draw({ 0,0 });
 	Skin.Base->Result.Image.Score.Draw({ 0,0 });
 
-#define ResultDraw(name) Result.name##Draw(Skin.Base->Result.Config.name##Pos, Playing.Chart.Judge[Result.Index].name);
+#define ResultDraw(name, index) Result.name##Draw({Skin.Base->Result.Config.JudgeDataPos.X[index], Skin.Base->Result.Config.JudgeDataPos.Y[index] }, Playing.Chart.Judge[Result.Index].name);
 
-	ResultDraw(Score)
-	ResultDraw(Accuracy)
+	ResultDraw(Score, 0)
+	ResultDraw(Accuracy, 1)
 
-#define JudgeDraw(name) Result.JudgesDraw(Skin.Base->Result.Config.name##Pos, Playing.Chart.Judge[Result.Index].name);
+#define JudgeDraw(name, index) Result.JudgesDraw({Skin.Base->Result.Config.JudgeDataPos.X[index],Skin.Base->Result.Config.JudgeDataPos.Y[index], }, Playing.Chart.Judge[Result.Index].name);
 
-	JudgeDraw(Good)
-	JudgeDraw(Ok)
-	JudgeDraw(Bad)
-	JudgeDraw(Roll)
-	JudgeDraw(MaxCombo)
+	JudgeDraw(Good, 2)
+	JudgeDraw(Ok, 3)
+	JudgeDraw(Bad, 4)
+	JudgeDraw(Roll, 5)
+	JudgeDraw(MaxCombo, 6)
 
 	const JudgeData& data = Playing.Chart.Judge[Result.Index];
 	int crownindex = 0;

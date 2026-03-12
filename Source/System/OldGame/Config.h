@@ -62,10 +62,15 @@ public:
 	bool ViewDebugData = false;
 	bool MultiBoot = false;
 
-	std::vector<int> KaInputLeft{ 'D','S',0,0 };
-	std::vector<int> DonInputLeft{ 'F','G',0,0 };
-	std::vector<int> DonInputRight{ 'J','H',0,0 };
-	std::vector<int> KaInputRight{ 'K','L',0,0 };
+	std::vector<int> KaInputLeft   {'D','S',0,0};
+	std::vector<int> DonInputLeft  {'F','G',0,0};
+	std::vector<int> DonInputRight {'J','H',0,0};
+	std::vector<int> KaInputRight  {'K','L',0,0};
+
+	std::vector<std::string> KaLeftStr;
+	std::vector<std::string> DonLeftStr;
+	std::vector<std::string> DonRightStr;
+	std::vector<std::string> KaRightStr;
 
 	int Selector = 0;
 	bool GenreFlag = true;
@@ -91,7 +96,7 @@ public:
 		"KeyConfig",
 	};
 
-	std::string GameConfig[35]{
+	std::string GameConfig[34]{
 	"PlayerName",
 	"AutoPlayFlag",
 	"ServerAddress",
@@ -113,7 +118,6 @@ public:
 	"SEVolume",
 	"HitNoteDisp",
 	"RollSpeed",
-	"NoteOptimize",
 	"WaitVSync",
 	"FastInput",
 	"FastDrawRate",
@@ -163,8 +167,8 @@ public:
 
 	void DrawConfigData(int& i, std::string data);
 
-	void DrawKeyData(int& i, int selector, int data);
-	void AllDrawKeyData(int& i, int selector, std::vector<int> data);
+	void DrawKeyData(int& i, int selector, int data, std::string name);
+	void AllDrawKeyData(int& i, int selector, std::vector<int> data, std::vector<std::string> name);
 
 	template<typename T, typename I>
 	void ProcConfigData(int& i, T& data, I& input) {
@@ -191,23 +195,32 @@ public:
 		i++;
 	}
 
-	std::string GetKeyName(DWORD vkCode) {
-		UINT scanCode = MapVirtualKey(vkCode, MAPVK_VK_TO_VSC);
+	std::vector<std::string> GetKeyStr(std::vector<int> Codes) {
 
-		switch (vkCode) {
-		case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN:
-		case VK_PRIOR: case VK_NEXT: case VK_END: case VK_HOME:
-		case VK_INSERT: case VK_DELETE: case VK_DIVIDE:
-		case VK_NUMLOCK:
-			scanCode |= KF_EXTENDED;
-			break;
+		std::vector<std::string> NameVec;
+
+		for (auto Code : Codes) {
+			uint scanCode = MapVirtualKey(Code, MAPVK_VK_TO_VSC);
+
+			switch (Code) {
+			case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN:
+			case VK_PRIOR: case VK_NEXT: case VK_END: case VK_HOME:
+			case VK_INSERT: case VK_DELETE: case VK_DIVIDE:
+			case VK_NUMLOCK:
+				scanCode |= KF_EXTENDED;
+				break;
+			}
+
+			char keyName[128];
+			if (GetKeyNameTextA((scanCode << 16), keyName, sizeof(keyName)) > 0) {
+				NameVec.push_back(std::string(keyName));
+			}
+			else {
+				NameVec.push_back("*");
+			}
 		}
 
-		char keyName[128];
-		if (GetKeyNameTextA((scanCode << 16), keyName, sizeof(keyName)) > 0) {
-			return std::string(keyName);
-		}
-		return "*";
+		return NameVec;
 	}
 };
 

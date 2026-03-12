@@ -23,7 +23,7 @@ void _Config::ConfigLoad() {
 
 	json data = json::parse(ifs);
 
-#define JSONDATA(name) name = data.value(#name, name)
+#define JSONDATA(name) name = data.value(#name, name)\
 
 	JSONDATA(PlayerName);
 	JSONDATA(AutoPlayFlag);
@@ -65,6 +65,11 @@ void _Config::ConfigLoad() {
 	JSONDATA(KaInputRight);
 
 #undef JSONDATA
+
+	KaLeftStr   = GetKeyStr(KaInputLeft);
+	DonLeftStr  = GetKeyStr(DonInputLeft);
+	DonRightStr = GetKeyStr(DonInputRight);
+	KaRightStr  = GetKeyStr(KaInputRight);
 
 	//KeyCodeParser(false);
 
@@ -109,10 +114,6 @@ void _Config::ConfigWrite() {
 		JSONDATA(DiscordSDK),
 		JSONDATA(ViewDebugData),
 		JSONDATA(MultiBoot),
-		JSONDATA(KaInputLeft),
-		JSONDATA(DonInputLeft),
-		JSONDATA(DonInputRight),
-		JSONDATA(KaInputRight),
 	};
 #undef JSONDATA
 
@@ -135,7 +136,7 @@ void GameSystem::ConfigEnd() {
 
 void GameSystem::ConfigDraw() {
 
-	Skin.Base->SongSelect.Image.BackGround.Draw(Pos2D<float>{0, 0});
+	Skin.Base->SongSelect.Image.BackGround.Draw({0, 0});
 
 	unsigned int c = GetColor(255, 255, 255);
 
@@ -217,17 +218,17 @@ void GameSystem::ConfigDraw() {
 
 			int s = 0;
 
-			Config.AllDrawKeyData(s, Config.Selector, Config.KaInputLeft);
-			Config.AllDrawKeyData(s, Config.Selector, Config.DonInputLeft);
-			Config.AllDrawKeyData(s, Config.Selector, Config.DonInputRight);
-			Config.AllDrawKeyData(s, Config.Selector, Config.KaInputRight);
+			Config.AllDrawKeyData(s, Config.Selector, Config.KaInputLeft, Config.KaLeftStr);
+			Config.AllDrawKeyData(s, Config.Selector, Config.DonInputLeft, Config.DonLeftStr);
+			Config.AllDrawKeyData(s, Config.Selector, Config.DonInputRight, Config.DonRightStr);
+			Config.AllDrawKeyData(s, Config.Selector, Config.KaInputRight, Config.KaRightStr);
 
 			int i = 0;
 
-			Config.DrawKeyData(i, Config.Selector, Config.KaInputLeft[Config.KeyIndex]);
-			Config.DrawKeyData(i, Config.Selector, Config.DonInputLeft[Config.KeyIndex]);
-			Config.DrawKeyData(i, Config.Selector, Config.DonInputRight[Config.KeyIndex]);
-			Config.DrawKeyData(i, Config.Selector, Config.KaInputRight[Config.KeyIndex]);
+			Config.DrawKeyData(i, Config.Selector, Config.KaInputLeft[Config.KeyIndex], Config.KaLeftStr[Config.KeyIndex]);
+			Config.DrawKeyData(i, Config.Selector, Config.DonInputLeft[Config.KeyIndex], Config.DonLeftStr[Config.KeyIndex]);
+			Config.DrawKeyData(i, Config.Selector, Config.DonInputRight[Config.KeyIndex], Config.DonRightStr[Config.KeyIndex]);
+			Config.DrawKeyData(i, Config.Selector, Config.KaInputRight[Config.KeyIndex], Config.KaRightStr[Config.KeyIndex]);
 
 			if (Config.inputflag) {
 				Skin.Base->Other.Font.Game.DrawFontString({ 580,360 }, "割り当てるキーを押してください");
@@ -434,6 +435,11 @@ void GameSystem::ConfigProc() {
 
 		if (Config.inputflag == 2) {
 
+			Config.KaLeftStr = Config.GetKeyStr(Config.KaInputLeft);
+			Config.DonLeftStr = Config.GetKeyStr(Config.DonInputLeft);
+			Config.DonRightStr = Config.GetKeyStr(Config.DonInputRight);
+			Config.KaRightStr = Config.GetKeyStr(Config.KaInputRight);
+
 			Config.ConfigWrite();
 			Config.Key = 0;
 			Config.inputflag = 0;
@@ -462,25 +468,25 @@ void _Config::DrawConfigData(int& i, std::string data) {
 
 	if (Selector == i) {
 		unsigned int c = GetColor((1 - inputflag) * 255, (1 - inputflag) * 255, 255);
-		if (configptr->MultiRoom.MultiFlag && !(Selector == 1 || Selector >= 4 && Selector <= 12)) { c = GetColor(0, 0, 9); }
+		if (configptr->MultiRoom.MultiFlag && !(Selector == 1 || Selector >= 4 && Selector <= 12)) { c = GetColor(0, 0, 0); }
 		configptr->Skin.Base->Other.Font.Game.DrawFontString({ 370,360 }, data, c);
 	}
 	i++;
 }
 
-void _Config::DrawKeyData(int& i, int selector, int data) {
+void _Config::DrawKeyData(int& i, int selector, int data, std::string name) {
 	unsigned int c = GetColor(255, 255, 255);
 	if (Selector == i) { c = GetColor((1 - inputflag) * 255, (1 - inputflag) * 255, inputflag * 255); }
-	configptr->Skin.Base->Other.Font.Game.DrawFontString({ 64 * (float)KeyIndex + 320, (32 * ((float)i - selector)) + 360 }, data ? GetKeyName(data) : "*", c);
+	configptr->Skin.Base->Other.Font.Game.DrawFontString({ 64 * (float)KeyIndex + 320, (32 * ((float)i - selector)) + 360 }, data ? name : "*", c);
 	i++;
 }
 
-void _Config::AllDrawKeyData(int& i, int selector, std::vector<int> data) {
+void _Config::AllDrawKeyData(int& i, int selector, std::vector<int> data, std::vector<std::string> name) {
 
 	for (int x = 0; x < data.size(); x++) {
 		unsigned int c = GetColor(255, 255, 255);
 		if (x == KeyIndex && Selector == i) { c = GetColor((1 - inputflag) * 255, (1 - inputflag) * 255, 255); }
-		configptr->Skin.Base->Other.Font.Game.DrawFontString({ 64 * (float)x + 320, (32 * ((float)i - selector)) + 360 }, data[x] ? GetKeyName(data[x]) : "*", c);
+		configptr->Skin.Base->Other.Font.Game.DrawFontString({ 64 * (float)x + 320, (32 * ((float)i - selector)) + 360 }, data[x] ? name[x] : "*", c);
 	}
 	i++;
 }

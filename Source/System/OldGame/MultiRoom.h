@@ -144,20 +144,20 @@ public:
 				Skin->Base->MultiRoom.Image.Crown.Draw({ 0, y }, 3);
 			}
 
-#define DRAWOPTION(Name) \
-        OptionDraw(Skin->Base->MultiRoom.Font.OptionData, {Skin->Base->MultiRoom.Config.Name##Pos.X, Skin->Base->MultiRoom.Config.Name##Pos.Y + y - 10.0f}, #Name, FALSE);\
-		OptionDraw(Skin->Base->MultiRoom.Font.OptionData, {Skin->Base->MultiRoom.Config.Name##Pos.X, Skin->Base->MultiRoom.Config.Name##Pos.Y + y + 10.0f}, std::to_string(data.Option.Name), TRUE);
+#define DRAWOPTION(Name, index) \
+        OptionDraw(Skin->Base->MultiRoom.Font.OptionData, {Skin->Base->MultiRoom.Config.OptionDataPos.X[index], Skin->Base->MultiRoom.Config.OptionDataPos.Y[index] + y - 10.0f}, #Name, FALSE);\
+		OptionDraw(Skin->Base->MultiRoom.Font.OptionData, {Skin->Base->MultiRoom.Config.OptionDataPos.X[index], Skin->Base->MultiRoom.Config.OptionDataPos.Y[index] + y + 10.0f}, std::to_string(data.Option.Name), TRUE);\
 
-			    DRAWOPTION(Hidden)
-				DRAWOPTION(Sudden)
-				DRAWOPTION(Random)
-				DRAWOPTION(Good)
-				DRAWOPTION(Ok)
-				DRAWOPTION(Bad)
-				DRAWOPTION(ChartSpeed)
+			    DRAWOPTION(Hidden, 0)
+				DRAWOPTION(Sudden, 1)
+				DRAWOPTION(Random, 2)
+				DRAWOPTION(Good,   3)
+				DRAWOPTION(Ok,     4)
+				DRAWOPTION(Bad,    5)
+				DRAWOPTION(ChartSpeed, 6)
 
 				if (data.Standby >= HostVal) {
-					DRAWOPTION(SongSpeed)
+					DRAWOPTION(SongSpeed, 7)
 				}
 		}
 #undef DRAWOPTION
