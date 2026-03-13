@@ -43,7 +43,7 @@ void GameSystem::PlayingDraw() {
 	do {
 
 		PlayerData MultiData;
-		if (Private.CountAll > 1) {
+		if (MultiRoom.MultiFlag) {
 			MultiData = MultiDatas[pldx];
 		}
 
