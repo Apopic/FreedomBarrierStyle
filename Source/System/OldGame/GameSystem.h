@@ -54,14 +54,14 @@ struct GameOption {
 
 struct PlayerData {
 	int Standby = 0;
-	std::vector<NoteData> RawNoteDatas = std::vector<NoteData>();
+	std::vector<char> NoteType = std::vector<char>();
 	std::string Name = "\0";
 	GameOption Option = GameOption();
 
 	Packet::bytearray ToBytes() const {
 		Packet::bytearray ret;
 		Packet::StoreBytes(ret, Standby);
-		Packet::StoreBytes(ret, RawNoteDatas);
+		Packet::StoreBytes(ret, NoteType);
 		Packet::StoreBytes(ret, Name);
 		Packet::StoreBytes(ret, Option);
 		return ret;
@@ -69,7 +69,7 @@ struct PlayerData {
 
 	Packet::byte_view FromBytes(Packet::byte_view view) {
 		Packet::LoadBytes(view, Standby);
-		Packet::LoadBytes(view, RawNoteDatas);
+		Packet::LoadBytes(view, NoteType);
 		Packet::LoadBytes(view, Name);
 		Packet::LoadBytes(view, Option);
 		return view;

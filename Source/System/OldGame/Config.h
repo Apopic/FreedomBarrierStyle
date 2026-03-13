@@ -67,11 +67,6 @@ public:
 	std::vector<int> DonInputRight {'J','H',0,0};
 	std::vector<int> KaInputRight  {'K','L',0,0};
 
-	std::vector<std::string> KaLeftStr;
-	std::vector<std::string> DonLeftStr;
-	std::vector<std::string> DonRightStr;
-	std::vector<std::string> KaRightStr;
-
 	int Selector = 0;
 	bool GenreFlag = true;
 	bool GameFlag = false;
@@ -165,10 +160,18 @@ public:
 		}
 	}
 
-	void DrawConfigData(int& i, std::string data);
+	template<typename T>
+	void DrawConfigData(T* configptr, int& i, std::string data) {
+		if (Selector == i) {
+			unsigned int c = GetColor((1 - inputflag) * 255, (1 - inputflag) * 255, 255);
+			if (configptr->MultiRoom.MultiFlag && !(Selector == 1 || Selector >= 4 && Selector <= 12)) { c = GetColor(0, 0, 0); }
+			configptr->Skin.Base->Other.Font.Game.DrawFontString({ 370,360 }, data, c);
+		}
+		i++;
+	}
 
-	void DrawKeyData(int& i, int selector, int data, std::string name);
-	void AllDrawKeyData(int& i, int selector, std::vector<int> data, std::vector<std::string> name);
+	void DrawKeyData(int& i, int selector, int data);
+	void AllDrawKeyData(int& i, int selector, std::vector<int> data);
 
 	template<typename T, typename I>
 	void ProcConfigData(int& i, T& data, I& input) {
@@ -195,32 +198,26 @@ public:
 		i++;
 	}
 
-	std::vector<std::string> GetKeyStr(std::vector<int> Codes) {
+	std::string GetKeyStr(int Code) {
 
-		std::vector<std::string> NameVec;
+		uint scanCode = MapVirtualKey(Code, MAPVK_VK_TO_VSC);
 
-		for (auto Code : Codes) {
-			uint scanCode = MapVirtualKey(Code, MAPVK_VK_TO_VSC);
-
-			switch (Code) {
-			case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN:
-			case VK_PRIOR: case VK_NEXT: case VK_END: case VK_HOME:
-			case VK_INSERT: case VK_DELETE: case VK_DIVIDE:
-			case VK_NUMLOCK:
-				scanCode |= KF_EXTENDED;
-				break;
-			}
-
-			char keyName[128];
-			if (GetKeyNameTextA((scanCode << 16), keyName, sizeof(keyName)) > 0) {
-				NameVec.push_back(std::string(keyName));
-			}
-			else {
-				NameVec.push_back("*");
-			}
+		switch (Code) {
+		case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN:
+		case VK_PRIOR: case VK_NEXT: case VK_END: case VK_HOME:
+		case VK_INSERT: case VK_DELETE: case VK_DIVIDE:
+		case VK_NUMLOCK:
+			scanCode |= KF_EXTENDED;
+			break;
 		}
 
-		return NameVec;
+		char keyName[128];
+		if (GetKeyNameTextA((scanCode << 16), keyName, sizeof(keyName)) > 0) {
+			return std::string(keyName);
+		}
+		else {
+			return "*";
+		}
 	}
 };
 

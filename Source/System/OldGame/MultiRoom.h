@@ -25,7 +25,10 @@ public:
 		InviteFlag = false;
 		ConnectAddress = "";
 		ConnectPort = 8080;
+		Once = false;
 	}
+
+	bool Once = false;
 
 	TCPSocket server = TCPSocket();
 
@@ -148,13 +151,13 @@ public:
         OptionDraw(Skin->Base->MultiRoom.Font.OptionData, {Skin->Base->MultiRoom.Config.OptionDataPos.X[index], Skin->Base->MultiRoom.Config.OptionDataPos.Y[index] + y - 10.0f}, #Name, FALSE);\
 		OptionDraw(Skin->Base->MultiRoom.Font.OptionData, {Skin->Base->MultiRoom.Config.OptionDataPos.X[index], Skin->Base->MultiRoom.Config.OptionDataPos.Y[index] + y + 10.0f}, std::to_string(data.Option.Name), TRUE);\
 
-			    DRAWOPTION(Hidden, 0)
-				DRAWOPTION(Sudden, 1)
-				DRAWOPTION(Random, 2)
-				DRAWOPTION(Good,   3)
-				DRAWOPTION(Ok,     4)
-				DRAWOPTION(Bad,    5)
-				DRAWOPTION(ChartSpeed, 6)
+			DRAWOPTION(Hidden,     0)
+			DRAWOPTION(Sudden,     1)
+			DRAWOPTION(Random,     2)
+			DRAWOPTION(Good,       3)
+			DRAWOPTION(Ok,         4)
+			DRAWOPTION(Bad,        5)
+			DRAWOPTION(ChartSpeed, 6)
 
 				if (data.Standby >= HostVal) {
 					DRAWOPTION(SongSpeed, 7)
@@ -164,7 +167,7 @@ public:
 	}
 
 	template<typename T>
-	bool ConnectProc(_Config* Config, T& data) {
+	bool ConnectProc(_Config* Config, T&& data) {
 
 		MultiFlag = server.Connect(IPAddress::SolveHostName(ConnectAddress)->Port(ConnectPort));
 

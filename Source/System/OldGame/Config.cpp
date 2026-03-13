@@ -66,11 +66,6 @@ void _Config::ConfigLoad() {
 
 #undef JSONDATA
 
-	KaLeftStr   = GetKeyStr(KaInputLeft);
-	DonLeftStr  = GetKeyStr(DonInputLeft);
-	DonRightStr = GetKeyStr(DonInputRight);
-	KaRightStr  = GetKeyStr(KaInputRight);
-
 	//KeyCodeParser(false);
 
 	ifs.close();
@@ -110,10 +105,14 @@ void _Config::ConfigWrite() {
 		JSONDATA(Exclusive),
 		JSONDATA(SampleRate),
 		JSONDATA(BufferSize),
-		JSONDATA(FullScreen),	
+		JSONDATA(FullScreen),
 		JSONDATA(DiscordSDK),
 		JSONDATA(ViewDebugData),
 		JSONDATA(MultiBoot),
+		JSONDATA(KaInputLeft),
+		JSONDATA(DonInputLeft),
+		JSONDATA(DonInputRight),
+		JSONDATA(KaInputRight),
 	};
 #undef JSONDATA
 
@@ -165,22 +164,22 @@ void GameSystem::ConfigDraw() {
 
 			int i = 0;
 
-			Config.DrawConfigData(i, Config.PlayerName);
-			Config.DrawConfigData(i, Config.AutoPlayFlag ? "true" : "false");
-			Config.DrawConfigData(i, Config.ServerAddress);
-			Config.DrawConfigData(i, std::to_string(Config.ServerPort));
-			Config.DrawConfigData(i, std::to_string(Config.HiddenLevel));
-			Config.DrawConfigData(i, std::to_string(Config.SuddenLevel));
-			Config.DrawConfigData(i, std::to_string(Config.RandomRate));
-			Config.DrawConfigData(i, std::to_string(Config.JudgeGood));
-			Config.DrawConfigData(i, std::to_string(Config.JudgeOk));
-			Config.DrawConfigData(i, std::to_string(Config.JudgeBad));
-			Config.DrawConfigData(i, std::to_string(Config.SongOffset));
-			Config.DrawConfigData(i, std::to_string(Config.ChartSpeed));
-			Config.DrawConfigData(i, std::to_string(Config.SongSpeed));
-			Config.DrawConfigData(i, Config.TrainingMode ? "true" : "false");
-			Config.DrawConfigData(i, Config.ScreenFade ? "true" : "false");
-			Config.DrawConfigData(i, Config.SkinName);
+			Config.DrawConfigData(configptr, i, Config.PlayerName);
+			Config.DrawConfigData(configptr, i, Config.AutoPlayFlag ? "true" : "false");
+			Config.DrawConfigData(configptr, i, Config.ServerAddress);
+			Config.DrawConfigData(configptr, i, std::to_string(Config.ServerPort));
+			Config.DrawConfigData(configptr, i, std::to_string(Config.HiddenLevel));
+			Config.DrawConfigData(configptr, i, std::to_string(Config.SuddenLevel));
+			Config.DrawConfigData(configptr, i, std::to_string(Config.RandomRate));
+			Config.DrawConfigData(configptr, i, std::to_string(Config.JudgeGood));
+			Config.DrawConfigData(configptr, i, std::to_string(Config.JudgeOk));
+			Config.DrawConfigData(configptr, i, std::to_string(Config.JudgeBad));
+			Config.DrawConfigData(configptr, i, std::to_string(Config.SongOffset));
+			Config.DrawConfigData(configptr, i, std::to_string(Config.ChartSpeed));
+			Config.DrawConfigData(configptr, i, std::to_string(Config.SongSpeed));
+			Config.DrawConfigData(configptr, i, Config.TrainingMode ? "true" : "false");
+			Config.DrawConfigData(configptr, i, Config.ScreenFade ? "true" : "false");
+			Config.DrawConfigData(configptr, i, Config.SkinName);
 			if (MultiRoom.MultiFlag) { c = GetColor(0, 0, 0); }
 			if (Config.Selector == i) {
 				for (int j = 0; j < Config.SongDirectories.size(); j++) {
@@ -188,23 +187,23 @@ void GameSystem::ConfigDraw() {
 				}
 			}
 			i++;
-			Config.DrawConfigData(i, std::to_string(Config.SongVolume));
-			Config.DrawConfigData(i, std::to_string(Config.SEVolume));
-			Config.DrawConfigData(i, Config.HitNoteDisp ? "true" : "false");
-			Config.DrawConfigData(i, std::to_string(Config.RollSpeed));
-			Config.DrawConfigData(i, Config.WaitVSync ? "true" : "false");
-			Config.DrawConfigData(i, Config.FastInput ? "true" : "false");
-			Config.DrawConfigData(i, std::to_string(Config.FastDrawRate));
-			Config.DrawConfigData(i, Config.FrameCountTimer ? "true" : "false");
-			Config.DrawConfigData(i, std::to_string(Config.FrameExtendRate));
-			Config.DrawConfigData(i, std::to_string(Config.SoundDeviceType));
-			Config.DrawConfigData(i, Config.Exclusive ? "true" : "false");
-			Config.DrawConfigData(i, std::to_string(Config.SampleRate));
-			Config.DrawConfigData(i, std::to_string(Config.BufferSize));
-			Config.DrawConfigData(i, Config.FullScreen ? "true" : "false");
-			Config.DrawConfigData(i, Config.DiscordSDK ? "true" : "false");
-			Config.DrawConfigData(i, Config.ViewDebugData ? "true" : "false");
-			Config.DrawConfigData(i, Config.MultiBoot ? "true" : "false");
+			Config.DrawConfigData(configptr, i, std::to_string(Config.SongVolume));
+			Config.DrawConfigData(configptr, i, std::to_string(Config.SEVolume));
+			Config.DrawConfigData(configptr, i, Config.HitNoteDisp ? "true" : "false");
+			Config.DrawConfigData(configptr, i, std::to_string(Config.RollSpeed));
+			Config.DrawConfigData(configptr, i, Config.WaitVSync ? "true" : "false");
+			Config.DrawConfigData(configptr, i, Config.FastInput ? "true" : "false");
+			Config.DrawConfigData(configptr, i, std::to_string(Config.FastDrawRate));
+			Config.DrawConfigData(configptr, i, Config.FrameCountTimer ? "true" : "false");
+			Config.DrawConfigData(configptr, i, std::to_string(Config.FrameExtendRate));
+			Config.DrawConfigData(configptr, i, std::to_string(Config.SoundDeviceType));
+			Config.DrawConfigData(configptr, i, Config.Exclusive ? "true" : "false");
+			Config.DrawConfigData(configptr, i, std::to_string(Config.SampleRate));
+			Config.DrawConfigData(configptr, i, std::to_string(Config.BufferSize));
+			Config.DrawConfigData(configptr, i, Config.FullScreen ? "true" : "false");
+			Config.DrawConfigData(configptr, i, Config.DiscordSDK ? "true" : "false");
+			Config.DrawConfigData(configptr, i, Config.ViewDebugData ? "true" : "false");
+			Config.DrawConfigData(configptr, i, Config.MultiBoot ? "true" : "false");
 
 		}
 
@@ -218,17 +217,17 @@ void GameSystem::ConfigDraw() {
 
 			int s = 0;
 
-			Config.AllDrawKeyData(s, Config.Selector, Config.KaInputLeft, Config.KaLeftStr);
-			Config.AllDrawKeyData(s, Config.Selector, Config.DonInputLeft, Config.DonLeftStr);
-			Config.AllDrawKeyData(s, Config.Selector, Config.DonInputRight, Config.DonRightStr);
-			Config.AllDrawKeyData(s, Config.Selector, Config.KaInputRight, Config.KaRightStr);
+			Config.AllDrawKeyData(s, Config.Selector, Config.KaInputLeft);
+			Config.AllDrawKeyData(s, Config.Selector, Config.DonInputLeft);
+			Config.AllDrawKeyData(s, Config.Selector, Config.DonInputRight);
+			Config.AllDrawKeyData(s, Config.Selector, Config.KaInputRight);
 
 			int i = 0;
 
-			Config.DrawKeyData(i, Config.Selector, Config.KaInputLeft[Config.KeyIndex], Config.KaLeftStr[Config.KeyIndex]);
-			Config.DrawKeyData(i, Config.Selector, Config.DonInputLeft[Config.KeyIndex], Config.DonLeftStr[Config.KeyIndex]);
-			Config.DrawKeyData(i, Config.Selector, Config.DonInputRight[Config.KeyIndex], Config.DonRightStr[Config.KeyIndex]);
-			Config.DrawKeyData(i, Config.Selector, Config.KaInputRight[Config.KeyIndex], Config.KaRightStr[Config.KeyIndex]);
+			Config.DrawKeyData(i, Config.Selector, Config.KaInputLeft[Config.KeyIndex]);
+			Config.DrawKeyData(i, Config.Selector, Config.DonInputLeft[Config.KeyIndex]);
+			Config.DrawKeyData(i, Config.Selector, Config.DonInputRight[Config.KeyIndex]);
+			Config.DrawKeyData(i, Config.Selector, Config.KaInputRight[Config.KeyIndex]);
 
 			if (Config.inputflag) {
 				Skin.Base->Other.Font.Game.DrawFontString({ 580,360 }, "割り当てるキーを押してください");
@@ -355,7 +354,7 @@ void GameSystem::ConfigProc() {
 			if (Config.GameFlag) {
 				if (!MultiRoom.MultiFlag || (Config.Selector == 1 || Config.Selector >= 4 && Config.Selector <= 12)) {
 					Config.inputflag = 1;
-					Config.KeyInputHandle = MakeKeyInput(255, false, false, false);
+					Config.KeyInputHandle = MakeKeyInput(255, false, true, false);
 					SetActiveKeyInput(Config.KeyInputHandle);
 				}
 			}
@@ -392,7 +391,7 @@ void GameSystem::ConfigProc() {
 				Config.ProcConfigData(i, Config.ScreenFade, Config.inputbool);
 				Config.ProcConfigData(i, Config.SkinName, Config.inputstring);
 				if (Config.Selector == i) {
-					if (Config.inputflag) {
+					if (Config.inputflag)  {
 						Config.SongDirectories.clear();
 						for (auto&& elem : Config.inputvector) {
 							Config.SongDirectories.push_back(elem);
@@ -435,11 +434,6 @@ void GameSystem::ConfigProc() {
 
 		if (Config.inputflag == 2) {
 
-			Config.KaLeftStr = Config.GetKeyStr(Config.KaInputLeft);
-			Config.DonLeftStr = Config.GetKeyStr(Config.DonInputLeft);
-			Config.DonRightStr = Config.GetKeyStr(Config.DonInputRight);
-			Config.KaRightStr = Config.GetKeyStr(Config.KaInputRight);
-
 			Config.ConfigWrite();
 			Config.Key = 0;
 			Config.inputflag = 0;
@@ -464,29 +458,19 @@ void GameSystem::ConfigProc() {
 	}
 }
 
-void _Config::DrawConfigData(int& i, std::string data) {
-
-	if (Selector == i) {
-		unsigned int c = GetColor((1 - inputflag) * 255, (1 - inputflag) * 255, 255);
-		if (configptr->MultiRoom.MultiFlag && !(Selector == 1 || Selector >= 4 && Selector <= 12)) { c = GetColor(0, 0, 0); }
-		configptr->Skin.Base->Other.Font.Game.DrawFontString({ 370,360 }, data, c);
-	}
-	i++;
-}
-
-void _Config::DrawKeyData(int& i, int selector, int data, std::string name) {
+void _Config::DrawKeyData(int& i, int selector, int data) {
 	unsigned int c = GetColor(255, 255, 255);
 	if (Selector == i) { c = GetColor((1 - inputflag) * 255, (1 - inputflag) * 255, inputflag * 255); }
-	configptr->Skin.Base->Other.Font.Game.DrawFontString({ 64 * (float)KeyIndex + 320, (32 * ((float)i - selector)) + 360 }, data ? name : "*", c);
+	configptr->Skin.Base->Other.Font.Game.DrawFontString({ 64 * (float)KeyIndex + 320, (32 * ((float)i - selector)) + 360 }, data ? GetKeyStr(data) : "*", c);
 	i++;
 }
 
-void _Config::AllDrawKeyData(int& i, int selector, std::vector<int> data, std::vector<std::string> name) {
+void _Config::AllDrawKeyData(int& i, int selector, std::vector<int> data) {
 
 	for (int x = 0; x < data.size(); x++) {
 		unsigned int c = GetColor(255, 255, 255);
 		if (x == KeyIndex && Selector == i) { c = GetColor((1 - inputflag) * 255, (1 - inputflag) * 255, 255); }
-		configptr->Skin.Base->Other.Font.Game.DrawFontString({ 64 * (float)x + 320, (32 * ((float)i - selector)) + 360 }, data[x] ? name[x] : "*", c);
+		configptr->Skin.Base->Other.Font.Game.DrawFontString({ 64 * (float)x + 320, (32 * ((float)i - selector)) + 360 }, data[x] ? GetKeyStr(data[x]) : "*", c);
 	}
 	i++;
 }

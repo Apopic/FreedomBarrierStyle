@@ -12,6 +12,13 @@ public:
 
 	int Index = 0;
 
+	std::string GenUID() {
+		unsigned seed = std::chrono::steady_clock::now().time_since_epoch().count();
+		std::mt19937_64 engine(seed);
+		std::uniform_int_distribution<ulonglong> dist(0, ULLONG_MAX);
+		return std::to_string(dist(engine));
+	}
+
 	void ScoreDraw(const Pos2D<float> &Pos, ulonglong Num);
 	void AccuracyDraw(const Pos2D<float> &Pos, double Rate);
 	void JudgesDraw(const Pos2D<float> &Pos, ulonglong Num);

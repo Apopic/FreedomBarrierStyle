@@ -23,12 +23,6 @@ void GameSystem::MultiRoomInit() {
 			MultiRoom.ConnectPort = Config.ServerPort;
 
 		}
-
-		PlayerData data = PlayerData();
-
-		if (MultiRoom.ConnectProc(&Config, data)) {		
-			Send(DataType::List, data);
-		}
 	}
 }
 
@@ -58,20 +52,6 @@ void GameSystem::MultiRoomDraw() {
 }
 
 void GameSystem::MultiRoomProc() {
-
-	Input.HitKeyProcess(VK_ESCAPE, KeyState::Down, [&] {
-		if (MultiRoom.IsStandby) {
-			Private.PlayerDatas[Private.MyIndex].Standby--;
-			Send(DataType::List, Private.PlayerDatas[Private.MyIndex]);
-			return;
-		}
-		MultiRoom.Init();
-		MultiDatas.clear();
-		Public = PublicData();
-		Private = PrivateData();
-		NowScene = Scene::Title;
-		return;
-		});
 
 	if (MultiRoom.MultiFlag) {
 
@@ -182,6 +162,31 @@ void GameSystem::MultiRoomProc() {
 			}
 			};
 
+		if (!MultiRoom.Once) {
+
+			PlayerData data = PlayerData();
+
+			if (MultiRoom.ConnectProc(&Config, data)) {
+				Send(DataType::List, data);
+			}
+
+			MultiRoom.Once = true;
+		}
+
 		Input.HitKeyProcess(VK_TAB, KeyState::Down, ReConnectProc);
 	}
+
+	Input.HitKeyProcess(VK_ESCAPE, KeyState::Down, [&] {
+		if (MultiRoom.IsStandby) {
+			Private.PlayerDatas[Private.MyIndex].Standby--;
+			Send(DataType::List, Private.PlayerDatas[Private.MyIndex]);
+			return;
+		}
+		MultiRoom.Init();
+		MultiDatas.clear();
+		Public = PublicData();
+		Private = PrivateData();
+		NowScene = Scene::Title;
+		return;
+		});
 }

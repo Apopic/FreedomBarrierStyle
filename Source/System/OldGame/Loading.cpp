@@ -99,12 +99,6 @@ void GameSystem::LoadingProc() {
 	bool BarlineLoading = false;
 	bool AddBarline = false;
 
-	NoteData MemNoteData = NoteData();
-	bool BranchFlag = false;
-	double MemBranchStartTime = 0;
-	double BranchAddTime = 0;
-	uint BranchCount = 0;
-
 	bool NowRollFlag = false;
 	uint RollStartIndex = 0;
 	char RollType = '\0';
@@ -148,71 +142,6 @@ void GameSystem::LoadingProc() {
 				Exsubstr(FA[i], "#HBSCROLL", [&](const std::string& data) {
 					Playing.Chart.ScrollType = ScrollType::HBSCROLL;
 					});
-			}
-			Exsubstr(FA[i], "#SECTION", [&](const std::string& data) {
-				MainData.Section = true;
-				});
-			Exsubstr(FA[i], "#LEVELHOLD", [&](const std::string& data) {
-				MainData.LevelHold = true;
-				});
-			Exsubstr(FA[i], "#BRANCHSTART", [&](const std::string& data) {
-				auto sp = split(data, ',');
-				BranchData item;
-				if (sp[0] == "p") {
-					item.Type = BranchType::Accuracy;
-				}
-				else if (sp[0] == "r") {
-				    item.Type = BranchType::Roll;
-				}
-				else if (sp[0] == "s") {
-					item.Type = BranchType::Score;
-				}
-				item.Border[1] = stod(sp[1]);
-				item.Border[2] = stod(sp[2]);
-				item.AbsTime = MainData.AbsTime;
-				item.StartTime = MemBranchStartTime;
-				item.Start = true;
-				Playing.Chart.BranchDatas.push_back(item);
-				Playing.Chart.IsBranchedChart = true;
-				BranchFlag = true;
-				BranchCount = 0;
-				BranchAddTime = 0;
-				});
-			if (BranchFlag) {
-				if (FA[i].find("#N") != std::string::npos && FA[i].find("#NEXTSONG") == std::string::npos) {
-					if (!BranchCount) { MemNoteData = MainData; }
-					MainData = MemNoteData;
-					if (BranchCount) { Playing.Chart.RawNoteDatas.back().RelaTime += -BranchAddTime; }
-					if (!BranchCount) { MainData.BranchStart = true; }
-					MainData.BranchLevel = BranchLevel::Normal;
-					BranchCount++;
-					BranchAddTime = 0;
-				}
-				if (FA[i].find("#E") != std::string::npos && FA[i].find("#END") == std::string::npos) {
-					if (!BranchCount) { MemNoteData = MainData; }
-					MainData = MemNoteData;
-					if (BranchCount) { Playing.Chart.RawNoteDatas.back().RelaTime += -BranchAddTime; }
-					if (!BranchCount) { MainData.BranchStart = true; }
-					MainData.BranchLevel = BranchLevel::Expert;
-					BranchCount++;
-					BranchAddTime = 0;
-				}
-				if (FA[i].find("#M") != std::string::npos && FA[i].find("#MEASURE") == std::string::npos) {
-					if (!BranchCount) { MemNoteData = MainData; }
-					MainData = MemNoteData;
-					if (BranchCount) { Playing.Chart.RawNoteDatas.back().RelaTime += -BranchAddTime; }
-					if (!BranchCount) { MainData.BranchStart = true; }
-					MainData.BranchLevel = BranchLevel::Master;
-					BranchCount++;
-					BranchAddTime = 0;
-				}
-				if (FA[i].find("#BRANCHEND") != std::string::npos) {
-					if (!BranchCount) { MainData.BranchStart = true; }
-					MainData.BranchLevel = BranchLevel::None;
-					BranchFlag = false;
-					BranchCount = 0;
-					BranchAddTime = 0;
-				}
 			}
 			Exsubstr(FA[i], "#SCROLL", [&](const std::string& data) {
 				if (data.find("i") != std::string::npos) {
@@ -324,7 +253,6 @@ void GameSystem::LoadingProc() {
 
 				if (!AddBarline) {
 					AddBarline = true;
-					MemBranchStartTime = MainData.AbsTime - divtime + 150;
 					if (BarlineDisplay) {
 						MainData.BarlineDisplay = true;
 					}
@@ -392,12 +320,9 @@ RollType = '\0'
 					!MainData.GoGoStart &&
 					!MainData.GoGoEnd &&
 					!MainData.BpmChangeFlag &&
-					!MainData.BarlineDisplay &&
-					!MainData.BranchStart &&
-					!MainData.Section &&
-					!MainData.LevelHold;
+					!MainData.BarlineDisplay;
 
-				if (MainData.NoteType >= '1' && MainData.NoteType <= '4' && MainData.BranchLevel <= BranchLevel::Normal) {
+				if (MainData.NoteType >= '1' && MainData.NoteType <= '4') {
 					++NoteCount;
 					++Playing.Chart.AllNoteCount;
 				}
@@ -445,17 +370,11 @@ RollType = '\0'
 					Playing.Chart.RawNoteDatas.back().BalloonCount = ballooncount;
 					++BalloonIndex;
 				}
-				if (BranchFlag) {
-					BranchAddTime += MainData.RelaTime * (std::signbit(MainData.BPM) || std::signbit(MainData.Measure) ? -1 : 1);
-				}
 
 				MainData.HitFlag = false;
 				MainData.GoGoStart = false;
 				MainData.GoGoEnd = false;
 				MainData.BpmChangeFlag = false;
-				MainData.BranchStart = false;
-				MainData.Section = false;
-				MainData.LevelHold = false;
 
 				MainData.AbsTime += divtime;
 				MainData.PosTime += MainData.RelaTime * (std::signbit(MainData.BPM) || std::signbit(MainData.Measure) ? -1 : 1);
@@ -482,15 +401,21 @@ RollType = '\0'
 	double SongSpeed = Config.SongSpeed;
 	if (MultiRoom.MultiFlag) {
 
-		int findval = MultiRoom.HostVal;
-		auto it = std::find_if(Private.PlayerDatas.begin(), Private.PlayerDatas.end(), [findval](PlayerData n) { return n.Standby >= findval; });
-		SongSpeed = Private.PlayerDatas[std::distance(Private.PlayerDatas.begin(), it)].Option.SongSpeed;
-
 		while (!ProcessMessage()) {
 			if (Private.PlayerDatas[Private.MyIndex].Standby % MultiRoom.HostVal == 1) {
-				Private.PlayerDatas[Private.MyIndex].RawNoteDatas = Playing.Chart.RawNoteDatas;
+
+				int findval = MultiRoom.HostVal;
+				auto it = std::find_if(Private.PlayerDatas.begin(), Private.PlayerDatas.end(), [findval](PlayerData n) { return n.Standby >= findval; });
+				SongSpeed = Private.PlayerDatas[std::distance(Private.PlayerDatas.begin(), it)].Option.SongSpeed;
+				for (auto&& data : Playing.Chart.RawNoteDatas | std::views::reverse) {
+					if (data.NoteType >= '1' && data.NoteType <= '4') {
+						Private.PlayerDatas[Private.MyIndex].NoteType.push_back(data.NoteType);
+					}
+				}
+
 				Private.PlayerDatas[Private.MyIndex].Standby++;
 				Send(DataType::List, Private.PlayerDatas[Private.MyIndex]);
+
 			}
 			if (CheckStandby(Private.PlayerDatas, 2)) {
 				break;

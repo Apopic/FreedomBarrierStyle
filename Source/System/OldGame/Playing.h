@@ -41,16 +41,6 @@ enum class HitType : int {
 	Back
 };
 
-struct BranchData {
-
-	double AbsTime = 0;
-	double StartTime = 0;
-	double Border[3] = { 0,0,0 };
-	bool Start = false;
-	BranchType Type = BranchType::Null;
-
-};
-
 struct NoteData {
 
 	double AbsTime = 0;
@@ -82,11 +72,6 @@ struct NoteData {
 
 	bool HitFlag = false;
 
-	BranchLevel BranchLevel = BranchLevel::None;
-	bool BranchStart = false;
-	bool Section = false;
-	bool LevelHold = false;
-
 	Packet::bytearray ToBytes() const {
 		Packet::bytearray ret;
 		Packet::StoreBytes(ret, AbsTime);
@@ -111,10 +96,6 @@ struct NoteData {
 		Packet::StoreBytes(ret, BalloonCount);
 		Packet::StoreBytes(ret, BarlineDisplay);
 		Packet::StoreBytes(ret, HitFlag);
-		Packet::StoreBytes(ret, BranchLevel);
-		Packet::StoreBytes(ret, BranchStart);
-		Packet::StoreBytes(ret, Section);
-		Packet::StoreBytes(ret, LevelHold);
 		return ret;
 	}
 
@@ -141,10 +122,6 @@ struct NoteData {
 		Packet::LoadBytes(view, BalloonCount);
 		Packet::LoadBytes(view, BarlineDisplay);
 		Packet::LoadBytes(view, HitFlag);
-		Packet::LoadBytes(view, BranchLevel);
-		Packet::LoadBytes(view, BranchStart);
-		Packet::LoadBytes(view, Section);
-		Packet::LoadBytes(view, LevelHold);
 		return view;
 	}
 };
@@ -285,15 +262,11 @@ struct ChartStreamData {
 
 	void Init() {
 		RawNoteDatas.clear();
-		BranchDatas.clear();
 		SongData.Delete();
 		FrameNowTime.End();
 		NowTime.End();
 		ScrollType = ScrollType::Normal;
 		OriginalData = ChartData();
-		BranchJudge = JudgeData();
-		IsBranchedChart = false;
-		LevelHold = false;
 		AutoPlayLR = false;
 		NowGoGo = false;
 		BalloonCount = 0;
@@ -308,8 +281,6 @@ struct ChartStreamData {
 	}
 
 	std::vector<NoteData> RawNoteDatas = std::vector<NoteData>();
-	std::vector<NoteData> RefNoteDatas = std::vector<NoteData>();
-	std::vector<BranchData> BranchDatas = std::vector<BranchData>();
 
 	SoundData SongData;
 
@@ -330,10 +301,6 @@ struct ChartStreamData {
 	Timer<microsecond> WaitRollTime;
 
 	JudgeData Judge[4];
-	JudgeData BranchJudge;
-
-	bool IsBranchedChart = false;
-	bool LevelHold = false;
 
 	int BalloonCount = 0;
 	uint AllNoteCount = 0;
@@ -357,7 +324,6 @@ public:
 	ChartStreamData Chart;
 	JudgeData HighScore[5];
 
-	Timer<millisecond> BranchLaneMove;
 	Timer<millisecond> MiniTaikoFlash[16];
 	double MiniTaikoFlashTime = 160;
 
@@ -367,9 +333,6 @@ public:
 	Timer<millisecond> MeasureJump;
 	double MeasureJumpTime = 60;
 	double MemNowTime = 0;
-
-	Timer<millisecond> KeyViewFlash[16];
-	double KeyViewFlashTime = 160;
 
 	std::string ExamList[8] = { "Accuracy", "Good", "Ok", "Bad", "Score", "Roll", "HitNote", "MaxCombo" };
 
@@ -439,7 +402,8 @@ public:
 		SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha);
 	}
 
-	void NoteDraw(_Skin* Skin, _Config* Config, std::vector<NoteData>& NoteDatas, double NowTime, const Pos2D<float>& add, bool MultiFlag, int pldx, double Hidden, double Sudden) {
+	template<typename T>
+	void NoteDraw(T&& MultiData, _Skin* Skin, _Config* Config, std::vector<NoteData>& NoteDatas, double NowTime, const Pos2D<float>& add, bool MultiFlag, int pldx, double Hidden, double Sudden) {
 
 		const Pos2D<double>& NoteOrigin = {
 	Skin->Base->Playing.Image.Note.Pos.X,
@@ -469,24 +433,9 @@ public:
 				Skin->Base->Playing.Image.Lane.Size.Height
 			};
 
-			JudgeData Judge = Chart.Judge[pldx];
-			BranchLevel level = Judge.Level > BranchLevel::None ? Judge.Level : BranchLevel::Normal;
-			int Dir = Judge.Level < Judge.PrevLevel ? 1 : -1;
-			double Offset = 0.0f;
-			if (Skin->Base->Playing.Config.BranchSlideAnimation) {
-				if (BranchLaneMove.GetNowRecording() && data.BranchLevel != BranchLevel::None) {
-					Offset = SkinPos.Y * -(float)data.BranchLevel + SkinPos.Y * (((int)level + Dir) - GetEasingRate(BranchLaneMove.GetRecordingTime() / Skin->Base->Playing.Config.BranchSlideTime, ease::Base::In, ease::Line::Sine) * Dir);
-				}
-			}
-			else {
-				if (data.BranchLevel != BranchLevel::None) {
-					Offset = SkinPos.Y * -(float)data.BranchLevel + SkinPos.Y * (float)Judge.Level;
-				}
-			}
-
 			_ret = {
 				_ret.X + NoteOrigin.X,
-				_ret.Y + NoteOrigin.Y + Offset
+				_ret.Y + NoteOrigin.Y
 			};
 
 			return _ret;
@@ -511,8 +460,7 @@ public:
 			std::arg(std::complex<double>{ n0.real() * -1, n0.imag() * 1 })
 		};
 
-		BranchLaneClip(Skin, Chart.IsBranchedChart, add);
-		for (auto&& data : NoteDatas | std::ranges::views::reverse) {
+		for (int i = 0; auto&& data : NoteDatas | std::ranges::views::reverse) {
 
 			double NoteTheta = atan2(data.Scrolli, data.Scroll);
 
@@ -526,7 +474,7 @@ public:
 						NotePos.Y - 65,
 						NotePos.X,
 						NotePos.Y + 65,
-						GetColor(255, 255, 255 * !data.BranchStart)
+						GetColor(255, 255, 255)
 					);
 				}
 			}
@@ -559,14 +507,17 @@ public:
 						}
 					}
 
+					auto&& note = !pldx ? data.NoteType : MultiData.NoteType[i];
+
 					Skin->Base->Playing.Image.Note.Draw(
 						{
 							(float)(NotePos.X - NoteOrigin.X),
 							(float)(NotePos.Y - NoteOrigin.Y) + add.Y
 						},
-						data.NoteType - 48
+						note - 48
 					);
 				}
+				i++;
 				continue;
 			}
 			SetDrawBlendMode(0, 0);
@@ -683,7 +634,6 @@ public:
 				}
 			}
 		}
-		BranchLaneClip(Skin, false, add);
 
 #undef InRange
 	}
@@ -696,47 +646,6 @@ public:
 		for (auto&& data : NoteDatas) {
 
 			bool HitFlag = data.AbsTime < nowtime;
-
-			if (data.Section && HitFlag) {
-				Chart.BranchJudge = JudgeData();
-				data.Section = false;
-			}
-
-			if (!Chart.LevelHold) {
-				for (auto&& branchdata : Chart.BranchDatas) {
-					if (branchdata.StartTime < nowtime && branchdata.Start) {
-
-						if (Chart.Judge[0].Level != BranchLevel::None) {
-							Chart.Judge[0].PrevLevel = Chart.Judge[0].Level;
-						}
-
-#define BRANCHCHECK(type) if (Chart.BranchJudge.type >= branchdata.Border[i] && BranchType::type == branchdata.Type) { Chart.Judge[0].Level = (BranchLevel)i; }
-
-						for (int i = 0; i < (int)BranchLevel::Count; i++) {
-							BRANCHCHECK(Accuracy);
-							BRANCHCHECK(Roll);
-							BRANCHCHECK(Score);
-						}
-
-#undef BRANCHCHECK
-
-						if (Chart.Judge[0].PrevLevel != Chart.Judge[0].Level) {
-							BranchLaneMove.Start();
-						}
-
-						branchdata.Start = false;
-					}
-				}
-			}
-
-			if (data.BranchLevel != BranchLevel::None) {
-				if (data.BranchLevel != Chart.Judge[0].Level) { continue; }
-			}
-
-			if (data.LevelHold && HitFlag) {
-				Chart.LevelHold = true;
-				data.LevelHold = false;
-			}
 
 			if (data.GoGoStart && HitFlag) {
 				Chart.NowGoGo = true;
@@ -760,7 +669,6 @@ public:
 				data.BigNoteTime == 0 &&
 				_HitError < -Config->JudgeBad) {
 				Chart.Judge[0].Hit(JudgeType::Bad, 0, '\0');
-				Chart.BranchJudge.Hit(JudgeType::Bad, 0, '\0');
 				Action(HitType::Empty);
 				data.HitFlag = true;
 			}
@@ -803,10 +711,6 @@ public:
 			bool HitFlag = data.AbsTime < NowTime;
 			bool IsHitNote = (data.NoteType >= '1' && data.NoteType <= '4');
 
-			if (data.BranchLevel != BranchLevel::None) {
-				if (data.BranchLevel != Chart.Judge[0].Level) { continue; }
-			}
-
 			if (data.RollFlag == 1) {
 				++RollCount;
 				NextImage = data.NoteType == '6';
@@ -819,27 +723,32 @@ public:
 			if (HitFlag && !data.HitFlag && IsHitNote) {
 				HitNote[0].Add(HitNoteData(data.NoteType, JudgeType::Good));
 				Chart.Judge[0].Hit(JudgeType::Good, 0, data.NoteType);
-				Chart.BranchJudge.Hit(JudgeType::Good, 0, '\0');
 				switch (data.NoteType) {
 				case '1':
 					Skin->Base->Playing.SE.Don.Play();
+					MiniTaikoFlash[0 + Chart.AutoPlayLR * 2].Start();
 					Chart.AutoPlayLR = !Chart.AutoPlayLR;
 					Action((HitType)(0 + Chart.AutoPlayLR * 2));
 					break;
 				case '2':
 					Skin->Base->Playing.SE.Ka.Play();
+					MiniTaikoFlash[1 + Chart.AutoPlayLR * 2].Start();
 					Chart.AutoPlayLR = !Chart.AutoPlayLR;
 					Action((HitType)(1 + Chart.AutoPlayLR * 2));
 					break;
 				case '3':
 					Skin->Base->Playing.SE.Don.Play();
 					Skin->Base->Playing.SE.Don.Play();
+					MiniTaikoFlash[(int)HitType::DonLeft].Start();
+					MiniTaikoFlash[(int)HitType::DonRight].Start();
 					Action(HitType::DonLeft);
 					Action(HitType::DonRight);
 					break;
 				case '4':
 					Skin->Base->Playing.SE.Ka.Play();
 					Skin->Base->Playing.SE.Ka.Play();
+					MiniTaikoFlash[(int)HitType::KaLeft].Start();
+					MiniTaikoFlash[(int)HitType::KaRight].Start();
 					Action(HitType::KaLeft);
 					Action(HitType::KaRight);
 					break;
@@ -855,7 +764,6 @@ public:
 			Skin->Base->Playing.SE.Don.Play();
 			Chart.AutoPlayLR = !Chart.AutoPlayLR;
 			Chart.Judge[0].Roll++;
-			Chart.BranchJudge.Roll++;
 			HitNote[0].Add(HitNoteData(NextImage ? '6' : '5', JudgeType::Roll));
 			Chart.WaitRollTime.Start();
 		}
@@ -863,7 +771,6 @@ public:
 			Skin->Base->Playing.SE.Don.Play();
 			Chart.AutoPlayLR = !Chart.AutoPlayLR;
 			Chart.Judge[0].Roll++;
-			Chart.BranchJudge.Roll++;
 			--BalloonData->BalloonCount;
 			Chart.WaitRollTime.Start();
 			if (BalloonData->BalloonCount <= 0) {
@@ -881,23 +788,27 @@ public:
 
 		Input.HitKeyesProcess(Config->DonInputLeft, KeyState::Down, [&] {
 			Skin->Base->Playing.SE.Don.Play();
+			MiniTaikoFlash[(int)HitType::DonLeft].Start();
 			JudgeNote(Skin, Config, NowTime, '1');
-			Action(HitType::DonLeft, Config->DonInputLeft);
+			Action(HitType::DonLeft);
 			});
 		Input.HitKeyesProcess(Config->DonInputRight, KeyState::Down, [&] {
 			Skin->Base->Playing.SE.Don.Play();
+			MiniTaikoFlash[(int)HitType::DonRight].Start();
 			JudgeNote(Skin, Config, NowTime, '1');
-			Action(HitType::DonRight, Config->DonInputRight);
+			Action(HitType::DonRight);
 			});
 		Input.HitKeyesProcess(Config->KaInputLeft, KeyState::Down, [&] {
 			Skin->Base->Playing.SE.Ka.Play();
+			MiniTaikoFlash[(int)HitType::KaLeft].Start();
 			JudgeNote(Skin, Config, NowTime, '2');
-			Action(HitType::KaLeft, Config->KaInputLeft);
+			Action(HitType::KaLeft);
 			});
 		Input.HitKeyesProcess(Config->KaInputRight, KeyState::Down, [&] {
 			Skin->Base->Playing.SE.Ka.Play();
+			MiniTaikoFlash[(int)HitType::KaRight].Start();
 			JudgeNote(Skin, Config, NowTime, '2');
-			Action(HitType::KaRight, Config->KaInputRight);
+			Action(HitType::KaRight);
 			});
 	}
 
@@ -920,23 +831,6 @@ public:
 				MeasureJump.Start();
 				};
 
-			static auto BranchChangeProc = [&](bool direction) {
-				Chart.Judge[0].PrevLevel = Chart.Judge[0].Level;
-				if (!direction) {
-					if (Chart.Judge[0].Level < BranchLevel::Master) {
-						bool IsNone = Chart.Judge[0].Level == BranchLevel::None;
-						Chart.Judge[0].Level = (BranchLevel)((int)Chart.Judge[0].Level + 1 + IsNone);
-						BranchLaneMove.Start();
-					}
-				}
-				else {
-					if (Chart.Judge[0].Level > BranchLevel::Normal) {
-						Chart.Judge[0].Level = (BranchLevel)((int)Chart.Judge[0].Level - 1);
-						BranchLaneMove.Start();
-					}
-				}
-				};
-
 			static auto StartInputProc = [&] {
 				Chart.NowTime.Start();
 				Chart.FrameNowTime.Start();
@@ -950,11 +844,6 @@ public:
 			Input.HitKeyesProcess(Config->KaInputRight, KeyState::Down, [&] { MoveInputProc(true); });
 			Input.HitKeyProcess(VK_NEXT, KeyState::Down, [&] { MoveInputProc(false); });
 			Input.HitKeyProcess(VK_PRIOR, KeyState::Down, [&] { MoveInputProc(true); });
-
-			if (Chart.IsBranchedChart) {
-				Input.HitKeyProcess(VK_UP, KeyState::Down, [&] { BranchChangeProc(false); });
-				Input.HitKeyProcess(VK_DOWN, KeyState::Down, [&] { BranchChangeProc(true); });
-			}
 
 			Input.HitKeyesProcess(Config->DonInputLeft, KeyState::Down, StartInputProc);
 			Input.HitKeyesProcess(Config->DonInputRight, KeyState::Down, StartInputProc);
@@ -1022,7 +911,6 @@ break;\
 	void JudgeNote(_Skin* Skin, _Config* Config, double nowtime, char type) {
 
 		auto&& NoteDatas = Chart.RawNoteDatas;
-		auto& BranchJudge = Chart.BranchJudge;
 		auto& Judge = Chart.Judge[0];
 
 		int rollcount = 0;
@@ -1032,10 +920,6 @@ break;\
 		bool NextImage = false;
 
 		for (auto&& data : NoteDatas) {
-
-			if (data.BranchLevel != BranchLevel::None) {
-				if (data.BranchLevel != Judge.Level) { continue; }
-			}
 
 			if (data.HitFlag) {
 				continue;
@@ -1088,17 +972,14 @@ break;\
 			if (GoodHit) {
 				HitNote[0].Add(HitNoteData(data.NoteType, JudgeType::Good));
 				Judge.Hit(JudgeType::Good, addscore, type);
-				BranchJudge.Hit(JudgeType::Good, addscore, '\0');
 			}
 			else if (OkHit) {
 				HitNote[0].Add(HitNoteData(data.NoteType, JudgeType::Ok));
 				Judge.Hit(JudgeType::Ok, addscore, type);
-				BranchJudge.Hit(JudgeType::Ok, addscore, '\0');
 			}
 			else if (BadHit) {
 				HitNote[0].Add(HitNoteData('\0', JudgeType::Bad));
 				Judge.Hit(JudgeType::Bad, 0, '\0');
-				BranchJudge.Hit(JudgeType::Bad, 0, '\0');
 			}
 
 			data.HitFlag = true;
@@ -1110,13 +991,11 @@ break;\
 		if (rollcount > 0) {
 			HitNote[0].Add(HitNoteData(NextImage ? '6' : '5', JudgeType::Roll));
 			Judge.Hit(JudgeType::Roll, 100, NextImage ? '6' : '5');
-			BranchJudge.Hit(JudgeType::Roll, 100, '\0');
 		}
 
 		if (type == '1' && balloondata != nullptr) {
 			--balloondata->BalloonCount;
 			Judge.Hit(JudgeType::Roll, 100, '\0');
-			BranchJudge.Hit(JudgeType::Roll, 100, '\0');
 			if (balloondata->BalloonCount <= 0) {
 				Skin->Base->Playing.SE.Balloon.Play();
 				HitNote[0].Add(HitNoteData('3', JudgeType::Roll));
@@ -1310,66 +1189,6 @@ break;\
 #undef TAIKOFLASH
 	}
 
-	void BranchLaneClip(_Skin* Skin, bool isclip, Pos2D<float> pos) {
-
-		float clip[4] = {
-			Skin->Base->Playing.Image.Lane.Pos.X,
-			Skin->Base->Playing.Image.Lane.Pos.Y + pos.Y,
-			Skin->Base->Playing.Image.Lane.Size.Width / 2,
-			Skin->Base->Playing.Image.Lane.Size.Height / 2
-		};
-
-		if (isclip) {
-			SetDrawArea(
-				clip[0] - clip[2],
-				clip[1] - clip[3],
-				clip[0] + clip[2],
-				clip[1] + clip[3]
-			);
-		}
-		else {
-			SetDrawArea(0, 0, Skin->Info.Resolution.X, Skin->Info.Resolution.Y);
-		}
-	};
-
-	void BranchLaneDraw(_Skin* Skin, int index, Pos2D<float> pos) {
-
-		if (!Chart.IsBranchedChart) { return; }
-
-		auto&& Judge = Chart.Judge[index];
-
-		Pos2D<float> SkinPos = {
-				Skin->Base->Playing.Image.Lane.Size.Width,
-				Skin->Base->Playing.Image.Lane.Size.Height
-		};
-
-		for (int i = 0; i < (int)BranchLevel::Count; i++) {
-
-
-			Judge.Level = Judge.Level > BranchLevel::None ? Judge.Level : BranchLevel::Normal;
-			int Dir = Judge.Level < Judge.PrevLevel ? 1 : -1;
-			float Offset = 0.0f;
-			if (BranchLaneMove.GetNowRecording()) {
-				Offset = SkinPos.Y * -i + SkinPos.Y * (((int)Judge.Level + Dir) - GetEasingRate(BranchLaneMove.GetRecordingTime() / Skin->Base->Playing.Config.BranchSlideTime, ease::Base::In, ease::Line::Sine) * Dir);
-			}
-
-			BranchLaneClip(Skin, true, pos);
-			switch ((BranchLevel)i) {
-			case BranchLevel::Normal:
-				Skin->Base->Playing.Image.NormalLane.Draw({ pos.X, pos.Y + Offset }, 0);
-				break;
-			case BranchLevel::Expert:
-				Skin->Base->Playing.Image.ExpertLane.Draw({ pos.X, pos.Y + Offset }, 0);
-				break;
-			case BranchLevel::Master:
-				Skin->Base->Playing.Image.MasterLane.Draw({ pos.X, pos.Y + Offset }, 0);
-				break;
-			}
-			BranchLaneClip(Skin, false, pos);
-
-		}
-	}
-
 	void TitleDraw(_Skin* Skin, std::string str, int strlen) {
 		Skin->Base->Playing.Font.Title.Draw(
 			Skin->Base->Playing.Config.TitlePos,
@@ -1515,41 +1334,5 @@ break;\
 		}
 	}
 
-	void KeyAlpha(int index) {
-		double alpha = 255 * (1 - GetEasingRate(KeyViewFlash[index].GetRecordingTime() / KeyViewFlashTime, ease::Base::In, ease::Line::Cubic));
-		if (alpha < 0) { KeyViewFlash[index].End(); }
-		SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha);
-	}
-
-	void KeyViewDraw(_Skin* Skin, std::vector<std::string> Keys, int x) {
-		
-		Pos2D<float> Size = {
-			Skin->Base->Playing.Image.KeyViewBack.Size.Width,
-			Skin->Base->Playing.Image.KeyViewBack.Size.Height
-		};
-
-		for (int y = 0, i = 0; i < Keys.size(); i++) {
-
-			if (Keys[i] == "*") { continue; }
-
-			Skin->Base->Playing.Image.KeyViewBack.Draw({ Size.X * x, Size.Y * y });
-
-			if (KeyViewFlash[x * 4 + y].GetNowRecording()) {
-				KeyAlpha(x * 4 + y);
-				Skin->Base->Playing.Image.KeyViewFlash.Draw({ Size.X * x, Size.Y * y });
-				SetDrawBlendMode(0, 0);
-			}
-
-			Skin->Base->Playing.Font.KeyStr.Draw({
-				Skin->Base->Playing.Image.KeyViewBack.Pos.X + Size.X * x,
-				Skin->Base->Playing.Image.KeyViewBack.Pos.Y + Size.Y * y },
-				GetColor(255, 255, 255),
-				GetColor(0, 0, 0),
-				Keys[i]);
-
-			y++;
-		}
-	}
-
-	void Action(HitType type, std::vector<int> keys);
+	void Action(HitType type);
 };

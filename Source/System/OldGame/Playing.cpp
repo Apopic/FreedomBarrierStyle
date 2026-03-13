@@ -24,10 +24,6 @@ void GameSystem::PlayingInit() {
 	for (auto&& taiko : Playing.MiniTaikoFlash) {
 		taiko.End();
 	}
-
-	for (auto&& key : Playing.KeyViewFlash) {
-		key.End();
-	}
 }
 
 void GameSystem::PlayingEnd() {
@@ -59,8 +55,6 @@ void GameSystem::PlayingDraw() {
 		Skin.Base->Playing.Image.LaneFrame.Draw(add, 0);
 		Skin.Base->Playing.Image.Lane.Draw(add, 0);
 
-		Playing.BranchLaneDraw(&Skin, pldx, add);
-
 		if (!SongSelect.IsDanMode) {
 			Playing.ProgressBarDraw(&Skin, pldx, add);
 		}
@@ -72,9 +66,9 @@ void GameSystem::PlayingDraw() {
 
 		Playing.JudgeUnderExplosionDraw(&Skin, add, HitNote);
 
-		auto&& NoteDatas = !pldx ? Playing.Chart.RawNoteDatas : MultiData.RawNoteDatas;
+		auto&& NoteDatas = Playing.Chart.RawNoteDatas;
 		Playing.NoteDrawData(NoteDatas, NowTime);
-		Playing.NoteDraw(&Skin, &Config, NoteDatas, NowTime, add, MultiRoom.MultiFlag, pldx, MultiData.Option.Hidden, MultiData.Option.Sudden);
+		Playing.NoteDraw(MultiData, &Skin, &Config, NoteDatas, NowTime, add, MultiRoom.MultiFlag, pldx, MultiData.Option.Hidden, MultiData.Option.Sudden);
 
 		Skin.Base->Playing.Image.Base.Draw(add, 0);
 		Skin.Base->Playing.Image.NamePlate.Draw(add, 0);
@@ -115,13 +109,6 @@ void GameSystem::PlayingDraw() {
 		Skin.Base->Playing.Image.Box.Draw({ 0,0 });
 		Playing.ExamProgressBarDraw(&Skin);
 		Playing.ExamValDraw(&Skin);
-	}
-
-	if (Skin.Base->Playing.Config.KeyInputView && !MultiRoom.MultiFlag) {
-		Playing.KeyViewDraw(&Skin, Config.KaLeftStr,   (int)HitType::KaLeft);
-		Playing.KeyViewDraw(&Skin, Config.DonLeftStr,  (int)HitType::DonLeft);
-		Playing.KeyViewDraw(&Skin, Config.DonRightStr, (int)HitType::DonRight);
-		Playing.KeyViewDraw(&Skin, Config.KaRightStr,  (int)HitType::KaRight);
 	}
 
 	if (Config.ViewDebugData) {
@@ -185,10 +172,11 @@ void GameSystem::PlayingProc() {
 				Private.PlayerDatas[Private.MyIndex].Standby++;
 				Send(DataType::List, Private.PlayerDatas[Private.MyIndex]);
 			}
+		}
+		if (!MultiRoom.MultiFlag) {
+			NowScene = Scene::Loading;
 			return;
 		}
-		NowScene = Scene::Loading;
-		return;
 	}
 
 	Playing.NoteProc(&Skin, &Config, NoteDatas, NowTime);
@@ -209,19 +197,7 @@ void GameSystem::PlayingProc() {
 	}
 }
 
-void _Playing::Action(HitType type, std::vector<int> keys = std::vector<int>()) {
-
-	if (gameptr->Skin.Base->Playing.Config.KeyInputView) {
-		for (int i = 0; i < keys.size(); i++) {
-			Input.HitKeyProcess(keys[i], KeyState::Hold, [&] {
-				KeyViewFlash[i + (int)type * 4].Start();
-			});
-		}
-	}
-
-	if ((int)type >= 0) {
-		MiniTaikoFlash[(int)type].Start();
-	}
+void _Playing::Action(HitType type) {
 
 	if (gameptr->Config.AutoPlayFlag) {
 		Chart.Judge[0].Score = 0;

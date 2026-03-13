@@ -16,7 +16,6 @@ void GameSystem::ResultInit() {
 
 	SetState("Result");
 	Playing.Chart.IsDanPlay = false;
-
 }
 
 void GameSystem::ResultEnd() {
@@ -29,9 +28,9 @@ void GameSystem::ResultEnd() {
 		Playing.Chart.Init();
 		MultiRoom.IsSelected = false;
 
-		for (auto&& data : Private.PlayerDatas) { 
+		for (auto&& data : Private.PlayerDatas) {
 			data.Standby = 0;
-			data.RawNoteDatas.clear();
+			data.NoteType.clear();
 		}
 		if (MultiRoom.IsHost) {
 			Private.PlayerDatas[Private.MyIndex].Standby = MultiRoom.HostVal;
@@ -49,10 +48,7 @@ void GameSystem::ResultEnd() {
 			if (Playing.Chart.OriginalData.ChartID == 0) {
 				std::ofstream ofs(Playing.Chart.OriginalData.FilePath, std::ios::app);
 				if (ofs.is_open()) {
-					unsigned seed = std::chrono::steady_clock::now().time_since_epoch().count();
-					std::mt19937_64 engine(seed);
-					std::uniform_int_distribution<ulonglong> dist(0, ULLONG_MAX);
-					UID = std::to_string(dist(engine));
+					UID = Result.GenUID();
 					SongSelect.BoxDatas[SongSelect.BoxDataIndex]->GetChart()->ChartID = stoull(UID);
 					ofs << "\nCHARTID:" + UID << std::endl;
 					ofs.close();
