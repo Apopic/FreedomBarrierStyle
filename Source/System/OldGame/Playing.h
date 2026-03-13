@@ -4,21 +4,6 @@
 #include "Config.h"
 #include "Skin.h"
 
-enum class BranchLevel : int {
-	None = -1,
-	Normal,
-	Expert,
-	Master,
-	Count
-};
-
-enum class BranchType : int {
-	Null = -1,
-	Accuracy,
-	Roll,
-	Score
-};
-
 enum class AlphaType {
 	Hidden,
 	Sudden
@@ -150,8 +135,6 @@ struct JudgeData {
 	double Accuracy = 0;
 	char NoteType = '\0';
 	JudgeType HitJudge = JudgeType::None;
-	BranchLevel Level = BranchLevel::None;
-	BranchLevel PrevLevel = BranchLevel::Normal;
 
 	void Hit(JudgeType type, int addscore, char note) {
 
