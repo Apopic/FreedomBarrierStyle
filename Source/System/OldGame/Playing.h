@@ -136,7 +136,7 @@ struct JudgeData {
 	char NoteType = '\0';
 	JudgeType HitJudge = JudgeType::None;
 
-	void Hit(JudgeType type, int addscore, char note) {
+	void Hit(_Config* Config, JudgeType type, int addscore, char note) {
 
 		HitJudge = type;
 		NoteType = note;
@@ -170,6 +170,8 @@ struct JudgeData {
 		}
 
 		if (Combo > MaxCombo) { ++MaxCombo; }
+
+		Score *= !Config->AutoPlayFlag;
 	}
 };
 
@@ -386,7 +388,7 @@ public:
 	}
 
 	template<typename T>
-	void NoteDraw(T&& MultiData, _Skin* Skin, _Config* Config, std::vector<NoteData>& NoteDatas, double NowTime, const Pos2D<float>& add, bool MultiFlag, int pldx, double Hidden, double Sudden) {
+	void NoteDraw(T&& MultiData, _Skin* Skin, _Config* Config, std::vector<NoteData>& NoteDatas, double NowTime, const Pos2D<float>& add, bool MultiFlag, int pldx) {
 
 		const Pos2D<double>& NoteOrigin = {
 	Skin->Base->Playing.Image.Note.Pos.X,
@@ -470,8 +472,8 @@ public:
 				data.NoteType <= '4') {
 				if (InRange(NotePos.X, NotePos.Y)) {
 					int Alpha = 255;
-					double hidden = Config->HiddenLevel > 0 ? Config->HiddenLevel : MultiFlag ? Hidden : 0;
-					double sudden = Config->SuddenLevel > 0 ? Config->SuddenLevel : MultiFlag ? Sudden : 0;
+					double hidden = Config->HiddenLevel > 0 ? Config->HiddenLevel : MultiFlag ? MultiData.Option.Hidden : 0;
+					double sudden = Config->SuddenLevel > 0 ? Config->SuddenLevel : MultiFlag ? MultiData.Option.Sudden : 0;
 					bool hiddenflag = hidden > 0;
 					bool suddenflag = sudden > 0;
 					bool multiflag = pldx;
@@ -651,7 +653,7 @@ public:
 				(data.NoteType >= '1' && data.NoteType <= '4') &&
 				data.BigNoteTime == 0 &&
 				_HitError < -Config->JudgeBad) {
-				Chart.Judge[0].Hit(JudgeType::Bad, 0, '\0');
+				Chart.Judge[0].Hit(Config, JudgeType::Bad, 0, '\0');
 				Action(HitType::Empty);
 				data.HitFlag = true;
 			}
@@ -705,7 +707,7 @@ public:
 
 			if (HitFlag && !data.HitFlag && IsHitNote) {
 				HitNote[0].Add(HitNoteData(data.NoteType, JudgeType::Good));
-				Chart.Judge[0].Hit(JudgeType::Good, 0, data.NoteType);
+				Chart.Judge[0].Hit(Config, JudgeType::Good, 0, data.NoteType);
 				switch (data.NoteType) {
 				case '1':
 					Skin->Base->Playing.SE.Don.Play();
@@ -954,15 +956,15 @@ break;\
 			const int addscore = Chart.AddScore;
 			if (GoodHit) {
 				HitNote[0].Add(HitNoteData(data.NoteType, JudgeType::Good));
-				Judge.Hit(JudgeType::Good, addscore, type);
+				Judge.Hit(Config, JudgeType::Good, addscore, type);
 			}
 			else if (OkHit) {
 				HitNote[0].Add(HitNoteData(data.NoteType, JudgeType::Ok));
-				Judge.Hit(JudgeType::Ok, addscore, type);
+				Judge.Hit(Config, JudgeType::Ok, addscore, type);
 			}
 			else if (BadHit) {
 				HitNote[0].Add(HitNoteData('\0', JudgeType::Bad));
-				Judge.Hit(JudgeType::Bad, 0, '\0');
+				Judge.Hit(Config, JudgeType::Bad, 0, '\0');
 			}
 
 			data.HitFlag = true;
@@ -973,12 +975,12 @@ break;\
 
 		if (rollcount > 0) {
 			HitNote[0].Add(HitNoteData(NextImage ? '6' : '5', JudgeType::Roll));
-			Judge.Hit(JudgeType::Roll, 100, NextImage ? '6' : '5');
+			Judge.Hit(Config, JudgeType::Roll, 100, NextImage ? '6' : '5');
 		}
 
 		if (type == '1' && balloondata != nullptr) {
 			--balloondata->BalloonCount;
-			Judge.Hit(JudgeType::Roll, 100, '\0');
+			Judge.Hit(Config, JudgeType::Roll, 100, '\0');
 			if (balloondata->BalloonCount <= 0) {
 				Skin->Base->Playing.SE.Balloon.Play();
 				HitNote[0].Add(HitNoteData('3', JudgeType::Roll));

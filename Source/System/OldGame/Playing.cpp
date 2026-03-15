@@ -52,8 +52,8 @@ void GameSystem::PlayingDraw() {
 
 		auto& HitNote = Playing.HitNote[pldx];
 
-		Skin.Base->Playing.Image.LaneFrame.Draw(add, 0);
-		Skin.Base->Playing.Image.Lane.Draw(add, 0);
+		Skin.Base->Playing.Image.LaneFrame.Draw(add);
+		Skin.Base->Playing.Image.Lane.Draw(add);
 
 		if (!SongSelect.IsDanMode) {
 			Playing.ProgressBarDraw(&Skin, pldx, add);
@@ -68,11 +68,11 @@ void GameSystem::PlayingDraw() {
 
 		auto&& NoteDatas = Playing.Chart.RawNoteDatas;
 		Playing.NoteDrawData(NoteDatas, NowTime);
-		Playing.NoteDraw(MultiData, &Skin, &Config, NoteDatas, NowTime, add, MultiRoom.MultiFlag, pldx, MultiData.Option.Hidden, MultiData.Option.Sudden);
+		Playing.NoteDraw(MultiData, &Skin, &Config, NoteDatas, NowTime, add, MultiRoom.MultiFlag, pldx);
 
-		Skin.Base->Playing.Image.Base.Draw(add, 0);
-		Skin.Base->Playing.Image.NamePlate.Draw(add, 0);
-		Skin.Base->Playing.Image.MiniTaiko.Draw(add, 0);
+		Skin.Base->Playing.Image.Base.Draw(add);
+		Skin.Base->Playing.Image.NamePlate.Draw(add);
+		Skin.Base->Playing.Image.MiniTaiko.Draw(add);
 
 		if (!MultiRoom.MultiFlag) { Playing.NameDraw(&Skin, Config.PlayerName, add); }
 		else { Playing.NameDraw(&Skin, MultiData.Name, add); }
@@ -95,13 +95,16 @@ void GameSystem::PlayingDraw() {
 	} while (pldx < Private.CountAll);
 
 	if (Private.CountAll < 4) {
+
+		auto&& ChartData = Playing.Chart.OriginalData;
+
 		if (!SongSelect.IsDanMode) {
-			Playing.TitleDraw(&Skin, Playing.Chart.OriginalData.Title, Playing.Chart.OriginalData.PlayingTitleStrlen);
-			Playing.SubTitleDraw(&Skin, Playing.Chart.OriginalData.SubTitle, Playing.Chart.OriginalData.PlayingSubTitleStrlen);
+			Playing.TitleDraw(&Skin, ChartData.Title, ChartData.PlayingTitleStrlen);
+			Playing.SubTitleDraw(&Skin, ChartData.SubTitle, ChartData.PlayingSubTitleStrlen);
 		}
 		else {
-			Playing.TitleDraw(&Skin, Playing.Chart.OriginalData.DanTitle, Playing.Chart.OriginalData.DanTitleStrlen);
-			Playing.SubTitleDraw(&Skin, Playing.Chart.OriginalData.DanSubTitle, Playing.Chart.OriginalData.DanSubTitleStrlen);
+			Playing.TitleDraw(&Skin, ChartData.DanTitle, ChartData.DanTitleStrlen);
+			Playing.SubTitleDraw(&Skin, ChartData.DanSubTitle, ChartData.DanSubTitleStrlen);
 		}
 	}
 
@@ -198,10 +201,6 @@ void GameSystem::PlayingProc() {
 }
 
 void _Playing::Action(HitType type) {
-
-	if (gameptr->Config.AutoPlayFlag) {
-		Chart.Judge[0].Score = 0;
-	}
 
 	if (gameptr->MultiRoom.MultiFlag) {
 		gameptr->Public.HitKey = type;

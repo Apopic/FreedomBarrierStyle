@@ -12,18 +12,6 @@ _MultiRoom::~_MultiRoom() {
 void GameSystem::MultiRoomInit() {
 
 	SetState("MultiRoom");
-
-	if (!MultiRoom.MultiFlag) {
-
-		MultiRoom.server = TCPSocket();
-
-		if (!MultiRoom.InviteFlag) {
-
-			MultiRoom.ConnectAddress = Config.ServerAddress;
-			MultiRoom.ConnectPort = Config.ServerPort;
-
-		}
-	}
 }
 
 void GameSystem::MultiRoomEnd() {
@@ -163,6 +151,13 @@ void GameSystem::MultiRoomProc() {
 			};
 
 		if (!MultiRoom.Once) {
+
+			MultiRoom.server = TCPSocket();
+
+			if (!MultiRoom.InviteFlag) {
+				MultiRoom.ConnectAddress = Config.ServerAddress;
+				MultiRoom.ConnectPort = Config.ServerPort;
+			}
 
 			PlayerData data = PlayerData();
 

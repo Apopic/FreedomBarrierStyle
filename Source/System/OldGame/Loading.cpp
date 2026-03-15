@@ -402,6 +402,7 @@ RollType = '\0'
 	if (MultiRoom.MultiFlag) {
 
 		while (!ProcessMessage()) {
+
 			if (Private.PlayerDatas[Private.MyIndex].Standby % MultiRoom.HostVal == 1) {
 
 				int findval = MultiRoom.HostVal;
@@ -421,6 +422,7 @@ RollType = '\0'
 				break;
 			}
 			Recv();
+
 		}
 	}
 
