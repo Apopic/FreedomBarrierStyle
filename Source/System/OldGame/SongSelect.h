@@ -595,7 +595,7 @@ public:
 
 	bool CourseSelect = false;
 	int CourseIndex = 0;
-	std::string CourseList[5]{ "Easy","Normal","Hard","Oni","Edit" };
+	std::string CourseList[7]{ "Easy","Normal","Hard","Oni","Edit","Tower","Dan" };
 
 	bool IsDanMode = false;
 

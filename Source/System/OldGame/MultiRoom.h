@@ -167,7 +167,7 @@ public:
 	}
 
 	template<typename T>
-	bool ConnectProc(_Config* Config, T&& data) {
+	bool ConnectTry(_Config* Config, T&& data) {
 
 		MultiFlag = server.Connect(IPAddress::SolveHostName(ConnectAddress)->Port(ConnectPort));
 

@@ -25,7 +25,7 @@ void GameSystem::MultiRoomDraw() {
 
 	Skin.Base->MultiRoom.Image.BackGround.Draw({ 0, 0 });
 
-	if (!MultiRoom.MultiFlag) {
+	if (Private.CountAll <= 0) {
 		Skin.Base->Other.Font.Game.DrawFontString({ 0,8 }, "サーバーに接続中…\n(長時間繋がらない場合はTabキーで再接続)");
 		return;
 	}
@@ -41,7 +41,7 @@ void GameSystem::MultiRoomDraw() {
 
 void GameSystem::MultiRoomProc() {
 
-	if (MultiRoom.MultiFlag) {
+	if (Private.CountAll > 0) {
 
 		if (Config.DiscordSDK && !MultiRoom.InviteFlag) {
 			SetState("MultiRoom");
@@ -140,31 +140,29 @@ void GameSystem::MultiRoomProc() {
 		Input.HitKeyProcess(VK_TAB, KeyState::Down, TABInputProc);
 	}
 
-	else {
+	else {	
 
-		static auto ReConnectProc = [&]() {
-			Skin.Base->Title.SE.Don.Play();
-			PlayerData data = PlayerData();
-			if (MultiRoom.ConnectProc(&Config, data)) {
-				Send(DataType::List, data);
-			}
-			};
-
-		if (!MultiRoom.Once) {
-
+		static auto ConnectProc = [&]() {
 			MultiRoom.server = TCPSocket();
-
 			if (!MultiRoom.InviteFlag) {
 				MultiRoom.ConnectAddress = Config.ServerAddress;
 				MultiRoom.ConnectPort = Config.ServerPort;
 			}
-
 			PlayerData data = PlayerData();
-
-			if (MultiRoom.ConnectProc(&Config, data)) {
+			if (MultiRoom.ConnectTry(&Config, data)) {
 				Send(DataType::List, data);
 			}
+			};
 
+		static auto ReConnectProc = [&]() {
+			Skin.Base->Title.SE.Don.Play();
+			MultiRoom.MultiFlag = false;
+			MultiRoom.server.Close();
+			ConnectProc();
+			};
+
+		if (!MultiRoom.Once) {
+			ConnectProc();
 			MultiRoom.Once = true;
 		}
 
