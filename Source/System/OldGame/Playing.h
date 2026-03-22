@@ -453,6 +453,7 @@ public:
 
 			if (data.BarlineDisplay) {
 
+				SetDrawBlendMode(0, 0);
 				if (InRange(NotePos.X, NotePos.Y)) {
 					DrawLineAA(
 						NotePos.X,
