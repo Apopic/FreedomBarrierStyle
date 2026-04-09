@@ -16,6 +16,7 @@ void GameSystem::ResultInit() {
 
 	SetState("Result");
 	Playing.Chart.IsDanPlay = false;
+
 }
 
 void GameSystem::ResultEnd() {

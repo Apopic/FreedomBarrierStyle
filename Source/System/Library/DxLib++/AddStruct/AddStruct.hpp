@@ -159,6 +159,7 @@ struct GraphData {
 
 	std::vector<int> Handles;
 };
+
 struct FontData {
 
 	float Size = 0;

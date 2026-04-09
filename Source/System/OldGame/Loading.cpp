@@ -69,8 +69,8 @@ void GameSystem::LoadingProc() {
 		MainData.RelaTime = _offset;
 	}
 	else {
-		_offset = LoadData.Offset * -1000 - Config.SongOffset;
-		Playing.Chart.SongBlankTime = 0;
+		_offset = (LoadData.Offset * -2000) - Config.SongOffset;
+		Playing.Chart.SongBlankTime = LoadData.Offset * -1000;
 		MainData.RelaTime = _offset;
 	}
 
@@ -430,6 +430,10 @@ RollType = '\0'
 	Playing.Chart.SongData.Load(LoadData.WaveData.data(), LoadData.WaveData.size(), 1);
 	SetCreateSoundDataType(DX_SOUNDDATATYPE_MEMNOPRESS);
 
+	if (!LoadData.BGMoviePath.empty()) {
+		Playing.Chart.BGMovieHandle = LoadGraph(LoadData.BGMoviePath.c_str());
+	}
+
 	Playing.Chart.SongData.SetVolume(Playing.Chart.OriginalData.SongVolume * (Config.SongVolume / 100));
 	int freq = Playing.Chart.SongData.Frequency * SongSpeed;
 	Playing.Chart.SongData.SetFrequency(freq);
@@ -449,6 +453,7 @@ RollType = '\0'
 	Playing.Chart.FrameNowTime.ExtendRate = Config.FrameExtendRate;
 
 	WaitVSync(2);
+
 	if (!Config.TrainingMode || MultiRoom.MultiFlag || SongSelect.IsDanMode) {
 		Playing.Chart.NowTime.Start();
 		Playing.Chart.FrameNowTime.Start();

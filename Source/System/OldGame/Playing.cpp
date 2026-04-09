@@ -5,6 +5,8 @@ GameSystem* gameptr;
 
 _Playing::_Playing(GameSystem* ptr) {
 	::gameptr = ptr;
+	__SkinPtr = &ptr->Skin;
+	__ConfigPtr = &ptr->Config;
 }
 
 _Playing::~_Playing() {
@@ -14,10 +16,10 @@ _Playing::~_Playing() {
 void GameSystem::PlayingInit() {
 
 	SetState(
-		"Playing:" + 
-		Playing.Chart.OriginalData.Title + 
-		"[" + 
-		SongSelect.CourseList[SongSelect.CourseIndex] + 
+		"Playing:" +
+		Playing.Chart.OriginalData.Title +
+		"[" +
+		SongSelect.CourseList[SongSelect.CourseIndex] +
 		"]"
 	);
 
@@ -29,6 +31,8 @@ void GameSystem::PlayingInit() {
 void GameSystem::PlayingEnd() {
 
 	Playing.Chart.SongData.Delete();
+	PauseMovieToGraph(Playing.Chart.BGMovieHandle);
+	DeleteGraph(Playing.Chart.BGMovieHandle);
 
 }
 
@@ -37,6 +41,7 @@ void GameSystem::PlayingDraw() {
 	const double NowTime = Playing.ChartNowTime(Config.FrameCountTimer, Config.FastDrawRate, Config.FrameExtendRate) + Playing.TrainingOffset;
 
 	Skin.Base->Playing.Image.BackGround.Draw({ 0,0 });
+	Playing.MovieDraw(NowTime);
 
 	int pldx = 0;
 
@@ -53,42 +58,45 @@ void GameSystem::PlayingDraw() {
 		auto& HitNote = Playing.HitNote[pldx];
 
 		Skin.Base->Playing.Image.LaneFrame.Draw(add);
+		if (Playing.Chart.BGMovieHandle != 0) {
+			SetDrawBlendMode(DX_BLENDMODE_ALPHA, Skin.Base->Playing.Config.LaneAlpha);
+		}
 		Skin.Base->Playing.Image.Lane.Draw(add);
+		SetDrawBlendMode(0, 0);
 
 		if (!SongSelect.IsDanMode) {
-			Playing.ProgressBarDraw(&Skin, pldx, add);
+			Playing.ProgressBarDraw(pldx, add);
 		}
 		Skin.Base->Playing.Image.Note.Draw(add, 0);
 
 		if (Playing.Chart.NowGoGo) {
-			Playing.GoGoFireDraw(&Skin, add, NowTime);
+			Playing.GoGoFireDraw(add, NowTime);
 		}
 
 		Playing.JudgeUnderExplosionDraw(&Skin, add, HitNote);
 
-		auto&& NoteDatas = Playing.Chart.RawNoteDatas;
-		Playing.NoteDrawData(NoteDatas, NowTime);
-		Playing.NoteDraw(MultiData, &Skin, &Config, NoteDatas, NowTime, add, MultiRoom.MultiFlag, pldx);
+		Playing.NoteDrawData(NowTime);
+		Playing.NoteDraw(MultiData, NowTime, add, MultiRoom.MultiFlag, pldx);
 
 		Skin.Base->Playing.Image.Base.Draw(add);
 		Skin.Base->Playing.Image.NamePlate.Draw(add);
 		Skin.Base->Playing.Image.MiniTaiko.Draw(add);
 
-		if (!MultiRoom.MultiFlag) { Playing.NameDraw(&Skin, Config.PlayerName, add); }
-		else { Playing.NameDraw(&Skin, MultiData.Name, add); }
+		if (!MultiRoom.MultiFlag) { Playing.NameDraw(Config.PlayerName, add); }
+		else { Playing.NameDraw(MultiData.Name, add); }
 
-		Playing.HitNoteDraw(&Skin, &Config, HitNote, add, Private.CountAll, pldx);
+		Playing.HitNoteDraw(HitNote, add, Private.CountAll, pldx);
 
-		Playing.MiniTaikoFlashDraw(&Skin, add, pldx);
+		Playing.MiniTaikoFlashDraw(add, pldx);
 
 		if (Playing.Chart.BalloonCount > 0) {
-			Playing.BalloonDraw(&Skin, Playing.Chart.BalloonCount, add);
+			Playing.BalloonDraw(Playing.Chart.BalloonCount, add);
 		}
 		if (Playing.Chart.Judge[pldx].Combo >= 3) {
-			Playing.ComboDraw(&Skin, pldx, add);
+			Playing.ComboDraw(pldx, add);
 		}
 
-		Playing.ScoreDraw(&Skin, pldx, add);
+		Playing.ScoreDraw(pldx, add);
 
 		pldx++;
 
@@ -99,19 +107,19 @@ void GameSystem::PlayingDraw() {
 		auto&& ChartData = Playing.Chart.OriginalData;
 
 		if (!SongSelect.IsDanMode) {
-			Playing.TitleDraw(&Skin, ChartData.Title, ChartData.PlayingTitleStrlen);
-			Playing.SubTitleDraw(&Skin, ChartData.SubTitle, ChartData.PlayingSubTitleStrlen);
+			Playing.TitleDraw(ChartData.Title, ChartData.PlayingTitleStrlen);
+			Playing.SubTitleDraw(ChartData.SubTitle, ChartData.PlayingSubTitleStrlen);
 		}
 		else {
-			Playing.TitleDraw(&Skin, ChartData.DanTitle, ChartData.DanTitleStrlen);
-			Playing.SubTitleDraw(&Skin, ChartData.DanSubTitle, ChartData.DanSubTitleStrlen);
+			Playing.TitleDraw(ChartData.DanTitle, ChartData.DanTitleStrlen);
+			Playing.SubTitleDraw(ChartData.DanSubTitle, ChartData.DanSubTitleStrlen);
 		}
 	}
 
 	if (SongSelect.IsDanMode) {
 		Skin.Base->Playing.Image.Box.Draw({ 0,0 });
-		Playing.ExamProgressBarDraw(&Skin);
-		Playing.ExamValDraw(&Skin);
+		Playing.ExamProgressBarDraw();
+		Playing.ExamValDraw();
 	}
 
 	if (Config.ViewDebugData) {
@@ -156,7 +164,7 @@ void GameSystem::PlayingProc() {
 
 			}
 			else if (!Playing.Chart.NowTime.GetNowRecording()) {
-				Playing.TraningModeProc(&Config, NowTime);
+				Playing.TraningModeProc(NowTime);
 				return;
 			}
 		}
@@ -182,17 +190,17 @@ void GameSystem::PlayingProc() {
 		}
 	}
 
-	Playing.NoteProc(&Skin, &Config, NoteDatas, NowTime);
+	Playing.NoteProc(NowTime);
 
 	if (Config.AutoPlayFlag) { 
-		Playing.AutoPlayProc(&Skin, &Config, NoteDatas, NowTime);
+		Playing.AutoPlayProc(NowTime);
 	}
 	else {
-		Playing.PlayProc(&Skin, &Config, NowTime);
+		Playing.PlayProc(NowTime);
 	}
 
 	if (SongSelect.IsDanMode) {
-		Playing.DanProc(&Skin);
+		Playing.DanProc();
 	}
 
 	if (MultiRoom.MultiFlag) {

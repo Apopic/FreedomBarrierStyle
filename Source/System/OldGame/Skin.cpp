@@ -161,6 +161,7 @@ void _Skin::SkinLoad(const std::string& name) {
 	ValLoad(Playing, Config, ExamNamePos);
 	ValLoad(Playing, Config, ExamValPos);
 	ValLoad(Playing, Config, LaneExtendRate);
+	ValLoad(Playing, Config, LaneAlpha);
 	ValLoad(Playing, Config, JudgeUpperExplosionFrameTime);
 	ValLoad(Playing, Config, GoGoFireFrameTime);
 	ValLoad(Playing, Config, BranchSlideAnimation);

@@ -113,6 +113,7 @@ public:
 				Pos2D<float> ExamNamePos = { 160, 380 };
 				Pos2D<float> ExamValPos = { 160, 420 };
 				double LaneExtendRate = 0.948;
+				double LaneAlpha = 255;
 				double JudgeUpperExplosionFrameTime = 12;
 				double GoGoFireFrameTime = 60;
 				bool BranchSlideAnimation = true;

@@ -136,7 +136,7 @@ struct JudgeData {
 	char NoteType = '\0';
 	JudgeType HitJudge = JudgeType::None;
 
-	void Hit(_Config* Config, JudgeType type, int addscore, char note) {
+	void Hit(JudgeType type, int addscore, char note, bool autoflag) {
 
 		HitJudge = type;
 		NoteType = note;
@@ -171,7 +171,7 @@ struct JudgeData {
 
 		if (Combo > MaxCombo) { ++MaxCombo; }
 
-		Score *= !Config->AutoPlayFlag;
+		Score *= !autoflag;
 	}
 };
 
@@ -256,6 +256,7 @@ struct ChartStreamData {
 		NowGoGo = false;
 		BalloonCount = 0;
 		AllNoteCount = 0;
+		BGMovieHandle = 0;
 		if (!IsDanPlay) {
 			for (auto&& judge : Judge) { judge = JudgeData(); }
 			ExamDatas.clear();
@@ -290,6 +291,8 @@ struct ChartStreamData {
 	int BalloonCount = 0;
 	uint AllNoteCount = 0;
 
+	int BGMovieHandle = 0;
+
 	uint DanPlayCount = 0;
 	uint DanBalloonIndex = 0;
 
@@ -305,6 +308,9 @@ public:
 
 	_Playing(GameSystem* ptr);
 	~_Playing();
+
+	_Skin* __SkinPtr = nullptr;
+	_Config* __ConfigPtr = nullptr;
 
 	ChartStreamData Chart;
 	JudgeData HighScore[5];
@@ -360,39 +366,47 @@ public:
 		}
 	} HitNote[4];
 
-	void NoteAlpha(int& Alpha, double _one, AlphaType Type) {
-
-		if (_one > 1) {
-			_one = 1;
+	void MovieDraw(double nowtime) {
+		if (Chart.BGMovieHandle != 0) {
+			DrawBox(0, 0, __SkinPtr->Info.Resolution.X, __SkinPtr->Info.Resolution.Y, GetColor(0, 0, 0), TRUE);
+			if (GetMovieStateToGraph(Chart.BGMovieHandle)) {
+				DrawExtendGraph(0, 0, __SkinPtr->Info.Resolution.X, __SkinPtr->Info.Resolution.Y, Chart.BGMovieHandle, FALSE);
+				return;
+			}
+			else if (nowtime > 128) {
+				SetMovieVolumeToGraph(0, Chart.BGMovieHandle);
+				PlayMovieToGraph(Chart.BGMovieHandle);
+			}
 		}
-		if (_one < 0) {
-			_one = 0;
-		}
-
-		switch (Type) {
-		case AlphaType::Hidden:
-			Alpha = 255 * _one;
-			break;
-		case AlphaType::Sudden:
-			Alpha = Alpha * (1 - _one);
-			break;
-		}
-
-		SetDrawBlendMode(DX_BLENDMODE_ALPHA, Alpha);
-	}
-
-	void TaikoAlpha(int index) {
-		double alpha = 255 * (1 - GetEasingRate(MiniTaikoFlash[index].GetRecordingTime() / MiniTaikoFlashTime, ease::Base::In, ease::Line::Cubic));
-		if (alpha < 0) { MiniTaikoFlash[index].End(); }
-		SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha);
 	}
 
 	template<typename T>
-	void NoteDraw(T&& MultiData, _Skin* Skin, _Config* Config, std::vector<NoteData>& NoteDatas, double NowTime, const Pos2D<float>& add, bool MultiFlag, int pldx) {
+	void NoteDraw(T&& MultiData, double NowTime, const Pos2D<float>& add, bool MultiFlag, int pldx) {
 
-		const Pos2D<double>& NoteOrigin = {
-	Skin->Base->Playing.Image.Note.Pos.X,
-	Skin->Base->Playing.Image.Note.Pos.Y + add.Y
+		static auto NoteAlpha = [&](int& Alpha, double _one, AlphaType Type) {
+
+			if (_one > 1) {
+				_one = 1;
+			}
+			if (_one < 0) {
+				_one = 0;
+			}
+
+			switch (Type) {
+			case AlphaType::Hidden:
+				Alpha = 255 * _one;
+				break;
+			case AlphaType::Sudden:
+				Alpha = Alpha * (1 - _one);
+				break;
+			}
+
+			SetDrawBlendMode(DX_BLENDMODE_ALPHA, Alpha);
+			};
+
+			const Pos2D<double>&NoteOrigin = {
+		__SkinPtr->Base->Playing.Image.Note.Pos.X,
+		__SkinPtr->Base->Playing.Image.Note.Pos.Y + add.Y
 		};
 
 		auto GetNotePos = [&](NoteData& data)->Pos2D<double> {
@@ -409,13 +423,13 @@ public:
 			}
 
 			_ret = {
-				_ret.X *= Skin->Base->Playing.Config.LaneExtendRate * (BMScroll ? 1 : data.Scroll),
-				_ret.Y *= Skin->Base->Playing.Config.LaneExtendRate * (BMScroll ? 0 : data.Scrolli)
+				_ret.X *= __SkinPtr->Base->Playing.Config.LaneExtendRate * (BMScroll ? 1 : data.Scroll),
+				_ret.Y *= __SkinPtr->Base->Playing.Config.LaneExtendRate * (BMScroll ? 0 : data.Scrolli)
 			};
 
 			Pos2D<float> SkinPos = {
-				Skin->Base->Playing.Image.Lane.Size.Width,
-				Skin->Base->Playing.Image.Lane.Size.Height
+				__SkinPtr->Base->Playing.Image.Lane.Size.Width,
+				__SkinPtr->Base->Playing.Image.Lane.Size.Height
 			};
 
 			_ret = {
@@ -427,7 +441,7 @@ public:
 
 			};
 
-#define InRange(x, y) (x > Skin->SimulationRect.Left && x < Skin->SimulationRect.Right && y > Skin->SimulationRect.Top && y < Skin->SimulationRect.Bottom)
+#define InRange(x, y) (x > __SkinPtr->SimulationRect.Left && x < __SkinPtr->SimulationRect.Right && y > __SkinPtr->SimulationRect.Top && y < __SkinPtr->SimulationRect.Bottom)
 
 		std::complex<double> n1{};
 		std::complex<double> n2{};
@@ -436,7 +450,7 @@ public:
 		std::complex<double> facing{};
 		Pos2D<double> NotePos{};
 
-		const std::complex<double> n0 = { Skin->Base->Playing.Image.Note.Size.Width / 2, Skin->Base->Playing.Image.Note.Size.Height / 2 };
+		const std::complex<double> n0 = { __SkinPtr->Base->Playing.Image.Note.Size.Width / 2, __SkinPtr->Base->Playing.Image.Note.Size.Height / 2 };
 		const double n0r = std::abs(n0);
 		const double narr[4] = {
 			std::arg(std::complex<double>{ n0.real() * -1, n0.imag() * -1 }),
@@ -445,7 +459,7 @@ public:
 			std::arg(std::complex<double>{ n0.real() * -1, n0.imag() * 1 })
 		};
 
-		for (int i = 0; auto&& data : NoteDatas | std::ranges::views::reverse) {
+		for (int i = 0; auto&& data : Chart.RawNoteDatas | std::ranges::views::reverse) {
 
 			double NoteTheta = atan2(data.Scrolli, data.Scroll);
 
@@ -473,15 +487,15 @@ public:
 				data.NoteType <= '4') {
 				if (InRange(NotePos.X, NotePos.Y)) {
 					int Alpha = 255;
-					double hidden = Config->HiddenLevel > 0 ? Config->HiddenLevel : MultiFlag ? MultiData.Option.Hidden : 0;
-					double sudden = Config->SuddenLevel > 0 ? Config->SuddenLevel : MultiFlag ? MultiData.Option.Sudden : 0;
+					double hidden = __ConfigPtr->HiddenLevel > 0 ? __ConfigPtr->HiddenLevel : MultiFlag ? MultiData.Option.Hidden : 0;
+					double sudden = __ConfigPtr->SuddenLevel > 0 ? __ConfigPtr->SuddenLevel : MultiFlag ? MultiData.Option.Sudden : 0;
 					bool hiddenflag = hidden > 0;
 					bool suddenflag = sudden > 0;
 					bool multiflag = pldx;
 					if (hiddenflag || suddenflag || multiflag) {
 						double _abs = std::abs(std::complex<double>{ NotePos.X - NoteOrigin.X, NotePos.Y - NoteOrigin.Y })* (data.AbsTime < NowTime ? -1 : 1);
-						double leveling = (Skin->Base->Playing.Image.Lane.Size.Width / DX_PI);
-						double feedrange = (Skin->Base->Playing.Image.Lane.Size.Width / DX_TWO_PI);
+						double leveling = (__SkinPtr->Base->Playing.Image.Lane.Size.Width / DX_PI);
+						double feedrange = (__SkinPtr->Base->Playing.Image.Lane.Size.Width / DX_TWO_PI);
 						if (multiflag) {
 							NoteAlpha(Alpha, (_abs - (leveling * 0.025)) / feedrange, AlphaType::Hidden);
 						}
@@ -489,13 +503,13 @@ public:
 							NoteAlpha(Alpha, (_abs - (leveling * hidden)) / feedrange, AlphaType::Hidden);
 						}
 						if (suddenflag) {
-							NoteAlpha(Alpha, ((_abs - (Skin->Base->Playing.Image.Lane.Size.Width)) + (leveling * sudden)) / feedrange, AlphaType::Sudden);
+							NoteAlpha(Alpha, ((_abs - (__SkinPtr->Base->Playing.Image.Lane.Size.Width)) + (leveling * sudden)) / feedrange, AlphaType::Sudden);
 						}
 					}
 
 					auto&& note = !pldx ? data.NoteType : MultiData.NoteType[i];
 
-					Skin->Base->Playing.Image.Note.Draw(
+					__SkinPtr->Base->Playing.Image.Note.Draw(
 						{
 							(float)(NotePos.X - NoteOrigin.X),
 							(float)(NotePos.Y - NoteOrigin.Y) + add.Y
@@ -511,7 +525,7 @@ public:
 			if (data.NoteType >= '5' &&
 				data.NoteType <= '6') {
 				const Pos2D<double>& cnote = NotePos;
-				const Pos2D<double>& dnote = GetNotePos(NoteDatas[data.RollEndIndex]);
+				const Pos2D<double>& dnote = GetNotePos(Chart.RawNoteDatas[data.RollEndIndex]);
 
 				bool DispFlag =
 					InRange(cnote.X, cnote.Y) ||
@@ -541,7 +555,7 @@ public:
 						dnote.Y - facing.imag() + n3.imag(),
 						cnote.X + facing.real() + n4.real(),
 						cnote.Y + facing.imag() + n4.imag(),
-						Skin->Base->Playing.Image.Note.Handles[BigRollFlag ? 9 : 6],
+						__SkinPtr->Base->Playing.Image.Note.Handles[BigRollFlag ? 9 : 6],
 						TRUE
 					);
 					DrawModiGraphF(
@@ -553,7 +567,7 @@ public:
 						dnote.Y + n3.imag(),
 						dnote.X + n4.real(),
 						dnote.Y + n4.imag(),
-						Skin->Base->Playing.Image.Note.Handles[BigRollFlag ? 10 : 7],
+						__SkinPtr->Base->Playing.Image.Note.Handles[BigRollFlag ? 10 : 7],
 						TRUE
 					);
 					DrawModiGraphF(
@@ -565,7 +579,7 @@ public:
 						cnote.Y + n3.imag(),
 						cnote.X + n4.real(),
 						cnote.Y + n4.imag(),
-						Skin->Base->Playing.Image.Note.Handles[BigRollFlag ? 8 : 5],
+						__SkinPtr->Base->Playing.Image.Note.Handles[BigRollFlag ? 8 : 5],
 						TRUE
 					);
 
@@ -579,7 +593,7 @@ public:
 					NotePos = NoteOrigin;
 				}
 				if (data.BalloonFlag == 2) {
-					NotePos = GetNotePos(NoteDatas[data.RollEndIndex]);
+					NotePos = GetNotePos(Chart.RawNoteDatas[data.RollEndIndex]);
 				}
 
 				if (InRange(NotePos.X, NotePos.Y)) {
@@ -602,7 +616,7 @@ public:
 						NotePos.Y + n3.imag(),
 						NotePos.X + n4.real(),
 						NotePos.Y + n4.imag(),
-						Skin->Base->Playing.Image.Note.Handles[KusudamaFlag ? 13 : 11],
+						__SkinPtr->Base->Playing.Image.Note.Handles[KusudamaFlag ? 13 : 11],
 						TRUE
 					);
 					DrawModiGraphF(
@@ -614,7 +628,7 @@ public:
 						NotePos.Y + facing.imag() + n3.imag(),
 						NotePos.X + facing.real() + n4.real(),
 						NotePos.Y + facing.imag() + n4.imag(),
-						Skin->Base->Playing.Image.Note.Handles[KusudamaFlag ? 14 : 12],
+						__SkinPtr->Base->Playing.Image.Note.Handles[KusudamaFlag ? 14 : 12],
 						TRUE
 					);
 				}
@@ -624,12 +638,11 @@ public:
 #undef InRange
 	}
 
-	template<typename T>
-	void NoteProc(_Skin* Skin, _Config* Config, T&& NoteDatas, double nowtime) {
+	void NoteProc(double nowtime) {
 
 		Chart.BalloonCount = 0;
 
-		for (auto&& data : NoteDatas) {
+		for (auto&& data : Chart.RawNoteDatas) {
 
 			bool HitFlag = data.AbsTime < nowtime;
 
@@ -640,21 +653,21 @@ public:
 				Chart.NowGoGo = false;
 			}
 
-			if (data.AbsTime - Config->JudgeBad > nowtime) { continue; }
+			if (data.AbsTime - __ConfigPtr->JudgeBad > nowtime) { continue; }
 			if (data.HitFlag) { continue; }
 
 			const double _HitError = data.AbsTime - nowtime;
-			const bool BadHit = _HitError > -Config->JudgeBad && _HitError < Config->JudgeBad;
+			const bool BadHit = _HitError > -__ConfigPtr->JudgeBad && _HitError < __ConfigPtr->JudgeBad;
 
-			if (data.BigNoteTime != 0 && Config->JudgeGood < nowtime - data.BigNoteTime) {
-				JudgeNote(Skin, Config, nowtime, data.NoteType - 2);
+			if (data.BigNoteTime != 0 && __ConfigPtr->JudgeGood < nowtime - data.BigNoteTime) {
+				JudgeNote(nowtime, data.NoteType - 2);
 			}
 
 			if (!data.HitFlag &&
 				(data.NoteType >= '1' && data.NoteType <= '4') &&
 				data.BigNoteTime == 0 &&
-				_HitError < -Config->JudgeBad) {
-				Chart.Judge[0].Hit(Config, JudgeType::Bad, 0, '\0');
+				_HitError < -__ConfigPtr->JudgeBad) {
+				Chart.Judge[0].Hit(JudgeType::Bad, 0, '\0', __ConfigPtr->AutoPlayFlag);
 				Action(HitType::Empty);
 				data.HitFlag = true;
 			}
@@ -684,15 +697,14 @@ public:
 		}
 	}
 
-	template<typename T>
-	void AutoPlayProc(_Skin* Skin, _Config* Config, T&& NoteDatas, double NowTime) {
+	void AutoPlayProc(double NowTime) {
 
 		int RollCount = 0;
 		NoteData* BalloonData = nullptr;
 
 		bool NextImage = false;
 
-		for (auto&& data : NoteDatas) {
+		for (auto&& data : Chart.RawNoteDatas) {
 
 			bool HitFlag = data.AbsTime < NowTime;
 			bool IsHitNote = (data.NoteType >= '1' && data.NoteType <= '4');
@@ -708,31 +720,31 @@ public:
 
 			if (HitFlag && !data.HitFlag && IsHitNote) {
 				HitNote[0].Add(HitNoteData(data.NoteType, JudgeType::Good));
-				Chart.Judge[0].Hit(Config, JudgeType::Good, 0, data.NoteType);
+				Chart.Judge[0].Hit(JudgeType::Good, 0, data.NoteType, __ConfigPtr->AutoPlayFlag);
 				switch (data.NoteType) {
 				case '1':
-					Skin->Base->Playing.SE.Don.Play();
+					__SkinPtr->Base->Playing.SE.Don.Play();
 					MiniTaikoFlash[0 + Chart.AutoPlayLR * 2].Start();
 					Chart.AutoPlayLR = !Chart.AutoPlayLR;
 					Action((HitType)(0 + Chart.AutoPlayLR * 2));
 					break;
 				case '2':
-					Skin->Base->Playing.SE.Ka.Play();
+					__SkinPtr->Base->Playing.SE.Ka.Play();
 					MiniTaikoFlash[1 + Chart.AutoPlayLR * 2].Start();
 					Chart.AutoPlayLR = !Chart.AutoPlayLR;
 					Action((HitType)(1 + Chart.AutoPlayLR * 2));
 					break;
 				case '3':
-					Skin->Base->Playing.SE.Don.Play();
-					Skin->Base->Playing.SE.Don.Play();
+					__SkinPtr->Base->Playing.SE.Don.Play();
+					__SkinPtr->Base->Playing.SE.Don.Play();
 					MiniTaikoFlash[(int)HitType::DonLeft].Start();
 					MiniTaikoFlash[(int)HitType::DonRight].Start();
 					Action(HitType::DonLeft);
 					Action(HitType::DonRight);
 					break;
 				case '4':
-					Skin->Base->Playing.SE.Ka.Play();
-					Skin->Base->Playing.SE.Ka.Play();
+					__SkinPtr->Base->Playing.SE.Ka.Play();
+					__SkinPtr->Base->Playing.SE.Ka.Play();
 					MiniTaikoFlash[(int)HitType::KaLeft].Start();
 					MiniTaikoFlash[(int)HitType::KaRight].Start();
 					Action(HitType::KaLeft);
@@ -745,22 +757,22 @@ public:
 		}
 
 		const double WaitRollTimer = Chart.WaitRollTime.GetRecordingTime() / TimerType::microsecond;
-		const double WaitRollTime = 1 / Config->RollSpeed;
+		const double WaitRollTime = 1 / __ConfigPtr->RollSpeed;
 		if (RollCount > 0 && WaitRollTimer > WaitRollTime) {
-			Skin->Base->Playing.SE.Don.Play();
+			__SkinPtr->Base->Playing.SE.Don.Play();
 			Chart.AutoPlayLR = !Chart.AutoPlayLR;
 			Chart.Judge[0].Roll++;
 			HitNote[0].Add(HitNoteData(NextImage ? '6' : '5', JudgeType::Roll));
 			Chart.WaitRollTime.Start();
 		}
 		if (BalloonData != nullptr && WaitRollTimer > WaitRollTime) {
-			Skin->Base->Playing.SE.Don.Play();
+			__SkinPtr->Base->Playing.SE.Don.Play();
 			Chart.AutoPlayLR = !Chart.AutoPlayLR;
 			Chart.Judge[0].Roll++;
 			--BalloonData->BalloonCount;
 			Chart.WaitRollTime.Start();
 			if (BalloonData->BalloonCount <= 0) {
-				Skin->Base->Playing.SE.Balloon.Play();
+				__SkinPtr->Base->Playing.SE.Balloon.Play();
 				HitNote[0].Add(HitNoteData('3', JudgeType::Roll));
 				BalloonData->NoteType = '0';
 				BalloonData->HitFlag = true;
@@ -770,35 +782,35 @@ public:
 		}
 	}
 
-	void PlayProc(_Skin* Skin, _Config* Config, double NowTime) {
+	void PlayProc(double NowTime) {
 
-		Input.HitKeyesProcess(Config->DonInputLeft, KeyState::Down, [&] {
-			Skin->Base->Playing.SE.Don.Play();
+		Input.HitKeyesProcess(__ConfigPtr->DonInputLeft, KeyState::Down, [&] {
+			__SkinPtr->Base->Playing.SE.Don.Play();
 			MiniTaikoFlash[(int)HitType::DonLeft].Start();
-			JudgeNote(Skin, Config, NowTime, '1');
+			JudgeNote(NowTime, '1');
 			Action(HitType::DonLeft);
 			});
-		Input.HitKeyesProcess(Config->DonInputRight, KeyState::Down, [&] {
-			Skin->Base->Playing.SE.Don.Play();
+		Input.HitKeyesProcess(__ConfigPtr->DonInputRight, KeyState::Down, [&] {
+			__SkinPtr->Base->Playing.SE.Don.Play();
 			MiniTaikoFlash[(int)HitType::DonRight].Start();
-			JudgeNote(Skin, Config, NowTime, '1');
+			JudgeNote(NowTime, '1');
 			Action(HitType::DonRight);
 			});
-		Input.HitKeyesProcess(Config->KaInputLeft, KeyState::Down, [&] {
-			Skin->Base->Playing.SE.Ka.Play();
+		Input.HitKeyesProcess(__ConfigPtr->KaInputLeft, KeyState::Down, [&] {
+			__SkinPtr->Base->Playing.SE.Ka.Play();
 			MiniTaikoFlash[(int)HitType::KaLeft].Start();
-			JudgeNote(Skin, Config, NowTime, '2');
+			JudgeNote(NowTime, '2');
 			Action(HitType::KaLeft);
 			});
-		Input.HitKeyesProcess(Config->KaInputRight, KeyState::Down, [&] {
-			Skin->Base->Playing.SE.Ka.Play();
+		Input.HitKeyesProcess(__ConfigPtr->KaInputRight, KeyState::Down, [&] {
+			__SkinPtr->Base->Playing.SE.Ka.Play();
 			MiniTaikoFlash[(int)HitType::KaRight].Start();
-			JudgeNote(Skin, Config, NowTime, '2');
+			JudgeNote(NowTime, '2');
 			Action(HitType::KaRight);
 			});
 	}
 
-	void TraningModeProc(_Config* Config, double nowtime) {
+	void TraningModeProc(double nowtime) {
 
 		if (!MeasureJump.GetNowRecording()) {
 
@@ -826,13 +838,13 @@ public:
 				}
 				};
 
-			Input.HitKeyesProcess(Config->KaInputLeft, KeyState::Down, [&] { MoveInputProc(false); });
-			Input.HitKeyesProcess(Config->KaInputRight, KeyState::Down, [&] { MoveInputProc(true); });
+			Input.HitKeyesProcess(__ConfigPtr->KaInputLeft, KeyState::Down, [&] { MoveInputProc(false); });
+			Input.HitKeyesProcess(__ConfigPtr->KaInputRight, KeyState::Down, [&] { MoveInputProc(true); });
 			Input.HitKeyProcess(VK_NEXT, KeyState::Down, [&] { MoveInputProc(false); });
 			Input.HitKeyProcess(VK_PRIOR, KeyState::Down, [&] { MoveInputProc(true); });
 
-			Input.HitKeyesProcess(Config->DonInputLeft, KeyState::Down, StartInputProc);
-			Input.HitKeyesProcess(Config->DonInputRight, KeyState::Down, StartInputProc);
+			Input.HitKeyesProcess(__ConfigPtr->DonInputLeft, KeyState::Down, StartInputProc);
+			Input.HitKeyesProcess(__ConfigPtr->DonInputRight, KeyState::Down, StartInputProc);
 			Input.HitKeyProcess(VK_RETURN, KeyState::Down, StartInputProc);
 		}
 		else {
@@ -845,7 +857,7 @@ public:
 		}
 	}
 
-	void DanProc(_Skin* Skin) {
+	void DanProc() {
 
 		for (uint i = 0; i < Chart.OriginalData.ExamDatas.size(); i++) {
 
@@ -868,7 +880,7 @@ break;\
 
 			if (ExamData.Range == ExamRange::Less && Chart.ExamDatas[i].ExamVals <= 0) {
 				if (!Chart.ExamDatas[i].IsFall) {
-					Skin->Base->Playing.SE.DanFall.Play();
+					__SkinPtr->Base->Playing.SE.DanFall.Play();
 					Chart.ExamDatas[i].IsFall = true;
 					Chart.IsFall = true;
 				}
@@ -894,7 +906,7 @@ break;\
 		}
 	}
 
-	void JudgeNote(_Skin* Skin, _Config* Config, double nowtime, char type) {
+	void JudgeNote(double nowtime, char type) {
 
 		auto&& NoteDatas = Chart.RawNoteDatas;
 		auto& Judge = Chart.Judge[0];
@@ -921,7 +933,7 @@ break;\
 			}
 
 			if (data.BigNoteTime != 0) {
-				if (Config->JudgeGood < nowtime - data.BigNoteTime) {
+				if (__ConfigPtr->JudgeGood < nowtime - data.BigNoteTime) {
 					data.NoteType -= 2;
 				}
 				nowtime = data.BigNoteTime;
@@ -929,11 +941,11 @@ break;\
 
 			const double _HitError = data.AbsTime - nowtime;
 			const bool GoodHit =
-				_HitError > -Config->JudgeGood && _HitError < Config->JudgeGood;
+				_HitError > -__ConfigPtr->JudgeGood && _HitError < __ConfigPtr->JudgeGood;
 			const bool OkHit =
-				_HitError > -Config->JudgeOk && _HitError < Config->JudgeOk;
+				_HitError > -__ConfigPtr->JudgeOk && _HitError < __ConfigPtr->JudgeOk;
 			const bool BadHit =
-				_HitError > -Config->JudgeBad && _HitError < Config->JudgeBad;
+				_HitError > -__ConfigPtr->JudgeBad && _HitError < __ConfigPtr->JudgeBad;
 			bool TypeMatch = type == data.NoteType;
 
 			switch (data.NoteType) {
@@ -957,15 +969,15 @@ break;\
 			const int addscore = Chart.AddScore;
 			if (GoodHit) {
 				HitNote[0].Add(HitNoteData(data.NoteType, JudgeType::Good));
-				Judge.Hit(Config, JudgeType::Good, addscore, type);
+				Judge.Hit(JudgeType::Good, addscore, type, __ConfigPtr->AutoPlayFlag);
 			}
 			else if (OkHit) {
 				HitNote[0].Add(HitNoteData(data.NoteType, JudgeType::Ok));
-				Judge.Hit(Config, JudgeType::Ok, addscore, type);
+				Judge.Hit(JudgeType::Ok, addscore, type, __ConfigPtr->AutoPlayFlag);
 			}
 			else if (BadHit) {
 				HitNote[0].Add(HitNoteData('\0', JudgeType::Bad));
-				Judge.Hit(Config, JudgeType::Bad, 0, '\0');
+				Judge.Hit(JudgeType::Bad, 0, '\0', __ConfigPtr->AutoPlayFlag);
 			}
 
 			data.HitFlag = true;
@@ -976,14 +988,14 @@ break;\
 
 		if (rollcount > 0) {
 			HitNote[0].Add(HitNoteData(NextImage ? '6' : '5', JudgeType::Roll));
-			Judge.Hit(Config, JudgeType::Roll, 100, NextImage ? '6' : '5');
+			Judge.Hit(JudgeType::Roll, 100, NextImage ? '6' : '5', __ConfigPtr->AutoPlayFlag);
 		}
 
 		if (type == '1' && balloondata != nullptr) {
 			--balloondata->BalloonCount;
-			Judge.Hit(Config, JudgeType::Roll, 100, '\0');
+			Judge.Hit(JudgeType::Roll, 100, '\0', __ConfigPtr->AutoPlayFlag);
 			if (balloondata->BalloonCount <= 0) {
-				Skin->Base->Playing.SE.Balloon.Play();
+				__SkinPtr->Base->Playing.SE.Balloon.Play();
 				HitNote[0].Add(HitNoteData('3', JudgeType::Roll));
 				balloondata->NoteType = '0';
 				balloondata->HitFlag = true;
@@ -993,7 +1005,9 @@ break;\
 		}
 	}
 
-	void NoteDrawData(std::vector<NoteData>& ProcNotes, double NowTime) {
+	void NoteDrawData(double NowTime) {
+
+		auto&& ProcNotes = Chart.RawNoteDatas;
 		double _addms = ProcNotes[0].AbsTime;
 		for (int i = 0, size = ProcNotes.size(); i < size; ++i) {
 			NoteData& data = ProcNotes[i];
@@ -1042,22 +1056,22 @@ break;\
 		}
 	}
 
-	void GoGoFireDraw(_Skin* Skin, Pos2D<float> add, double NowTime) {
+	void GoGoFireDraw(Pos2D<float> add, double NowTime) {
 
-		uint drawindex = NowTime / Skin->Base->Playing.Config.GoGoFireFrameTime;
+		uint drawindex = NowTime / __SkinPtr->Base->Playing.Config.GoGoFireFrameTime;
 
-		Skin->Base->Playing.Image.GoGoFire.Draw(
+		__SkinPtr->Base->Playing.Image.GoGoFire.Draw(
 			{
-			Skin->Base->Playing.Image.GoGoFire.Pos.X,
-			Skin->Base->Playing.Image.GoGoFire.Pos.Y + add.Y
+			__SkinPtr->Base->Playing.Image.GoGoFire.Pos.X,
+			__SkinPtr->Base->Playing.Image.GoGoFire.Pos.Y + add.Y
 			},
-			drawindex % Skin->Base->Playing.Image.GoGoFire.Div.X);
+			drawindex % __SkinPtr->Base->Playing.Image.GoGoFire.Div.X);
 	}
 
 	void JudgeUnderExplosionDraw(_Skin* Skin, const Pos2D<float> add, _HitNote& HitNote) {
 
 		int i = HitNote.Index;
-		const double JudgeUnderExplosionTime = Skin->Base->Playing.Config.JudgeUpperExplosionFrameTime * Skin->Base->Playing.Image.JudgeUnderExplosion.Div.X;
+		const double JudgeUnderExplosionTime = __SkinPtr->Base->Playing.Config.JudgeUpperExplosionFrameTime * __SkinPtr->Base->Playing.Image.JudgeUnderExplosion.Div.X;
 
 		for (int c = 0; c < HitNote.Size(); ++c) {
 			auto&& data = HitNote.Datas[i];
@@ -1069,15 +1083,15 @@ break;\
 
 			if (data.JudgeUnderExplosion.IsActive && data.MoveElapsedTime < JudgeUnderExplosionTime) {
 
-				uint drawindex = data.MoveElapsedTime / Skin->Base->Playing.Config.JudgeUpperExplosionFrameTime;
+				uint drawindex = data.MoveElapsedTime / __SkinPtr->Base->Playing.Config.JudgeUpperExplosionFrameTime;
 
-				drawindex += (2 * Skin->Base->Playing.Image.JudgeUnderExplosion.Div.X) * data.JudgeUnderExplosion.Big;
+				drawindex += (2 * __SkinPtr->Base->Playing.Image.JudgeUnderExplosion.Div.X) * data.JudgeUnderExplosion.Big;
 
 				if (data.JudgeUnderExplosion.Type == JudgeType::Ok) {
-					drawindex += Skin->Base->Playing.Image.JudgeUnderExplosion.Div.X;
+					drawindex += __SkinPtr->Base->Playing.Image.JudgeUnderExplosion.Div.X;
 				}
 
-				Skin->Base->Playing.Image.JudgeUnderExplosion.Draw(add, drawindex);
+				__SkinPtr->Base->Playing.Image.JudgeUnderExplosion.Draw(add, drawindex);
 
 			}
 			else {
@@ -1091,7 +1105,7 @@ break;\
 		}
 	}
 
-	void HitNoteDraw(_Skin* Skin, _Config* Config, _HitNote& HitNote, Pos2D<float> add, int CountAll, int pldx) {
+	void HitNoteDraw(_HitNote& HitNote, Pos2D<float> add, int CountAll, int pldx) {
 
 		int i = HitNote.Index;
 
@@ -1101,7 +1115,7 @@ break;\
 				data.MoveTimer.Start();
 			}
 
-			if (data.FlyingNote.IsActive && Config->HitNoteDisp && data.MoveElapsedTime < data.FlyingNote.MoveTime()) {
+			if (data.FlyingNote.IsActive && __ConfigPtr->HitNoteDisp && data.MoveElapsedTime < data.FlyingNote.MoveTime()) {
 
 				float _one = (data.MoveElapsedTime / data.FlyingNote.MoveTime());
 
@@ -1123,7 +1137,7 @@ break;\
 				};
 
 				if (CountAll < 3) {
-					Skin->Base->Playing.Image.Note.Draw(Pos, data.FlyingNote.Type - 48);
+					__SkinPtr->Base->Playing.Image.Note.Draw(Pos, data.FlyingNote.Type - 48);
 				}
 			}
 			else {
@@ -1133,7 +1147,7 @@ break;\
 			if (data.JudgeString.IsActive && data.MoveElapsedTime < data.JudgeString.MoveTime()) {
 				double alpha = 255 * (1 - GetEasingRate(data.MoveElapsedTime / data.JudgeString.MoveTime(), ease::Base::In, ease::Line::Cubic));
 				SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha);
-				Skin->Base->Playing.Image.JudgeString.Draw(add, (int)data.JudgeString.Type);
+				__SkinPtr->Base->Playing.Image.JudgeString.Draw(add, (int)data.JudgeString.Type);
 				SetDrawBlendMode(0, 0);
 			}
 			else {
@@ -1151,33 +1165,39 @@ break;\
 		}
 	}
 
-	void MiniTaikoFlashDraw(_Skin* Skin, Pos2D<float> add, int pldx) {
+	void MiniTaikoFlashDraw(Pos2D<float> add, int pldx) {
+
+		static auto TaikoAlpha = [&](int index) {
+			double alpha = 255 * (1 - GetEasingRate(MiniTaikoFlash[index].GetRecordingTime() / MiniTaikoFlashTime, ease::Base::In, ease::Line::Cubic));
+			if (alpha < 0) { MiniTaikoFlash[index].End(); }
+			SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha);
+			};
 
 #define TAIKOFLASH(type, dir, x) { type.Draw({type.Size.Width * dir, add.Y}, x); }
 
 		if (MiniTaikoFlash[0 + 4 * pldx].GetNowRecording()) {
 			TaikoAlpha(0 + 4 * pldx);
-			TAIKOFLASH(Skin->Base->Playing.Image.MiniTaiko_Don, -0.5f, 0)
+			TAIKOFLASH(__SkinPtr->Base->Playing.Image.MiniTaiko_Don, -0.5f, 0)
 		}
 		if (MiniTaikoFlash[1 + 4 * pldx].GetNowRecording()) {
 			TaikoAlpha(1 + 4 * pldx);
-			TAIKOFLASH(Skin->Base->Playing.Image.MiniTaiko_Ka, -0.5f, 0)
+			TAIKOFLASH(__SkinPtr->Base->Playing.Image.MiniTaiko_Ka, -0.5f, 0)
 		}
 		if (MiniTaikoFlash[2 + 4 * pldx].GetNowRecording()) {
 			TaikoAlpha(2 + 4 * pldx);
-			TAIKOFLASH(Skin->Base->Playing.Image.MiniTaiko_Don, 0.5f, 1)
+			TAIKOFLASH(__SkinPtr->Base->Playing.Image.MiniTaiko_Don, 0.5f, 1)
 		}
 		if (MiniTaikoFlash[3 + 4 * pldx].GetNowRecording()) {
 			TaikoAlpha(3 + 4 * pldx);
-			TAIKOFLASH(Skin->Base->Playing.Image.MiniTaiko_Ka, 0.5f, 1)
+			TAIKOFLASH(__SkinPtr->Base->Playing.Image.MiniTaiko_Ka, 0.5f, 1)
 		}
 		SetDrawBlendMode(0, 0);
 #undef TAIKOFLASH
 	}
 
-	void TitleDraw(_Skin* Skin, std::string str, int strlen) {
-		Skin->Base->Playing.Font.Title.Draw(
-			Skin->Base->Playing.Config.TitlePos,
+	void TitleDraw(std::string str, int strlen) {
+		__SkinPtr->Base->Playing.Font.Title.Draw(
+			__SkinPtr->Base->Playing.Config.TitlePos,
 			GetColor(255, 255, 255),
 			GetColor(0, 0, 0),
 			strlen,
@@ -1185,9 +1205,9 @@ break;\
 		);
 	}
 
-	void SubTitleDraw(_Skin* Skin, std::string str, int strlen) {
-		Skin->Base->Playing.Font.SubTitle.Draw(
-			Skin->Base->Playing.Config.SubTitlePos,
+	void SubTitleDraw(std::string str, int strlen) {
+		__SkinPtr->Base->Playing.Font.SubTitle.Draw(
+		__SkinPtr->Base->Playing.Config.SubTitlePos,
 			GetColor(255, 255, 255),
 			GetColor(0, 0, 0),
 			strlen,
@@ -1195,102 +1215,102 @@ break;\
 		);
 	}
 
-	void ComboDraw(_Skin* Skin, int index, Pos2D<float> pos) {
+	void ComboDraw(int index, Pos2D<float> pos) {
 		ulonglong combo = Chart.Judge[index].Combo;
 
 		int digit = std::digit(combo);
 
-		float offset = Skin->Base->Playing.Image.ComboNumber.Size.Width * (digit - 1) / 2;
+		float offset = __SkinPtr->Base->Playing.Image.ComboNumber.Size.Width * (digit - 1) / 2;
 		int i = 0;
 		do {
-			Skin->Base->Playing.Image.ComboNumber.Draw({ offset, pos.Y }, combo % 10);
+			__SkinPtr->Base->Playing.Image.ComboNumber.Draw({ offset, pos.Y }, combo % 10);
 			combo /= 10;
 			++i;
-			offset -= Skin->Base->Playing.Image.ComboNumber.Size.Width;
+			offset -= __SkinPtr->Base->Playing.Image.ComboNumber.Size.Width;
 		} while (i < digit);
 	}
 
-	void ScoreDraw(_Skin* Skin, int index, Pos2D<float> pos) {
+	void ScoreDraw(int index, Pos2D<float> pos) {
 		ulonglong score = Chart.Judge[index].Score;
 
 		int digit = std::digit(score);
 
-		float offset = Skin->Base->Playing.Image.ScoreNumber.Size.Width - (digit - 1) + digit;
+		float offset = __SkinPtr->Base->Playing.Image.ScoreNumber.Size.Width - (digit - 1) + digit;
 		int i = 0;
 		do {
-			Skin->Base->Playing.Image.ScoreNumber.Draw({ offset, pos.Y }, score % 10);
+			__SkinPtr->Base->Playing.Image.ScoreNumber.Draw({ offset, pos.Y }, score % 10);
 			score /= 10;
 			++i;
-			offset -= Skin->Base->Playing.Image.ScoreNumber.Size.Width;
+			offset -= __SkinPtr->Base->Playing.Image.ScoreNumber.Size.Width;
 		} while (i < digit);
 	}
 
-	void BalloonDraw(_Skin* Skin, int val, Pos2D<float> pos) {
+	void BalloonDraw(int val, Pos2D<float> pos) {
 		int c = val;
 		int digit = std::digit(c);
 
-		float offset = Skin->Base->Playing.Image.BalloonNumber.Size.Width - (digit - 1) + digit;
+		float offset = __SkinPtr->Base->Playing.Image.BalloonNumber.Size.Width - (digit - 1) + digit;
 		int i = 0;
 		do {
-			Skin->Base->Playing.Image.BalloonNumber.Draw({ offset, pos.Y }, c % 10);
+			__SkinPtr->Base->Playing.Image.BalloonNumber.Draw({ offset, pos.Y }, c % 10);
 			c /= 10;
 			++i;
-			offset -= Skin->Base->Playing.Image.BalloonNumber.Size.Width;
+			offset -= __SkinPtr->Base->Playing.Image.BalloonNumber.Size.Width;
 		} while (i < digit);
 	}
 
-	void NameDraw(_Skin* Skin, std::string name, Pos2D<float> pos) {
+	void NameDraw(std::string name, Pos2D<float> pos) {
 
-		Skin->Base->Playing.Font.PlayerName.Draw({
-			Skin->Base->Playing.Config.PlayerNamePos.X,
-			Skin->Base->Playing.Config.PlayerNamePos.Y + pos.Y },
+		__SkinPtr->Base->Playing.Font.PlayerName.Draw({
+			__SkinPtr->Base->Playing.Config.PlayerNamePos.X,
+			__SkinPtr->Base->Playing.Config.PlayerNamePos.Y + pos.Y },
 			GetColor(255, 255, 255),
 			GetColor(0, 0, 0),
-			GetStrlen(name, Skin->Base->Playing.Font.PlayerName.Handle),
+			GetStrlen(name, __SkinPtr->Base->Playing.Font.PlayerName.Handle),
 			name
 			);
 	}
 
-	void ProgressBarDraw(_Skin* Skin, int index, Pos2D<float> pos) {
+	void ProgressBarDraw(int index, Pos2D<float> pos) {
 
-		Skin->Base->Playing.Image.ProgressBar.Draw(pos, 0);
+		__SkinPtr->Base->Playing.Image.ProgressBar.Draw(pos, 0);
 
 		if (!Chart.Judge[index].HitNote) { return; }
 
 		double Ratio = ((double)Chart.Judge[index].Good + (double)Chart.Judge[index].Ok * 0.5) / Chart.AllNoteCount;
-		float Width = Skin->Base->Playing.Image.ProgressBar.Size.Width * Ratio;
+		float Width = __SkinPtr->Base->Playing.Image.ProgressBar.Size.Width * Ratio;
 
-		Skin->Base->Playing.Image.ProgressBar.RectDraw(
+		__SkinPtr->Base->Playing.Image.ProgressBar.RectDraw(
 			pos,
-			{ 0,Skin->Base->Playing.Image.ProgressBar.Size.Height },
-			{ std::min(Skin->Base->Playing.Image.ProgressBar.Size.Width, Width),
-			Skin->Base->Playing.Image.ProgressBar.Size.Height },
+			{ 0,__SkinPtr->Base->Playing.Image.ProgressBar.Size.Height },
+			{ std::min(__SkinPtr->Base->Playing.Image.ProgressBar.Size.Width, Width),
+			__SkinPtr->Base->Playing.Image.ProgressBar.Size.Height },
 			1
 		);
 	}
 
-	void ExamProgressBarDraw(_Skin* Skin) {
+	void ExamProgressBarDraw() {
 
 		for (uint i = 0; i < Chart.ExamDatas.size(); i++) {
 
-			Skin->Base->Playing.Image.ExamProgressBar.Draw({ 0,120.0f * i }, 0);
+			__SkinPtr->Base->Playing.Image.ExamProgressBar.Draw({ 0,120.0f * i }, 0);
 
 			double Ratio = (double)Chart.ExamDatas[i].ExamVals / (double)Chart.OriginalData.ExamDatas[i].PassVal[0];
-			float Width = Skin->Base->Playing.Image.ExamProgressBar.Size.Width * Ratio;
+			float Width = __SkinPtr->Base->Playing.Image.ExamProgressBar.Size.Width * Ratio;
 
 			if (!Chart.ExamDatas[i].IsFall) {
-				Skin->Base->Playing.Image.ExamProgressBar.RectDraw(
+				__SkinPtr->Base->Playing.Image.ExamProgressBar.RectDraw(
 					{ 0,120.0f * i },
-					{ 0, Skin->Base->Playing.Image.ExamProgressBar.Size.Height },
-					{ std::min(Skin->Base->Playing.Image.ExamProgressBar.Size.Width, Width),
-					Skin->Base->Playing.Image.ExamProgressBar.Size.Height },
+					{ 0, __SkinPtr->Base->Playing.Image.ExamProgressBar.Size.Height },
+					{ std::min(__SkinPtr->Base->Playing.Image.ExamProgressBar.Size.Width, Width),
+					__SkinPtr->Base->Playing.Image.ExamProgressBar.Size.Height },
 					1
 				);
 			}
 		}
 	}
 
-	void ExamValDraw(_Skin* Skin) {
+	void ExamValDraw() {
 
 		for (uint i = 0; i < Chart.ExamDatas.size(); i++) {
 
@@ -1301,20 +1321,20 @@ break;\
 			std::string valstr = !IsFall ? std::to_string(ExamVal) : "0";
 			std::string examname = ExamList[(int)ExamData.ExamType];
 
-			Skin->Base->Playing.Font.ExamName.Draw(
-				{ Skin->Base->Playing.Config.ExamNamePos.X,
-				Skin->Base->Playing.Config.ExamNamePos.Y + (120.0f * i) },
+			__SkinPtr->Base->Playing.Font.ExamName.Draw(
+				{ __SkinPtr->Base->Playing.Config.ExamNamePos.X,
+				__SkinPtr->Base->Playing.Config.ExamNamePos.Y + (120.0f * i) },
 				GetColor(255, 255, 255),
 				GetColor(0, 0, 0),
-				GetStrlen(examname, Skin->Base->Playing.Font.ExamName.Handle),
+				GetStrlen(examname, __SkinPtr->Base->Playing.Font.ExamName.Handle),
 				examname
 			);
-			Skin->Base->Playing.Font.ExamVal.Draw(
-				{ Skin->Base->Playing.Config.ExamValPos.X,
-				Skin->Base->Playing.Config.ExamValPos.Y + (120.0f * i) },
+			__SkinPtr->Base->Playing.Font.ExamVal.Draw(
+				{ __SkinPtr->Base->Playing.Config.ExamValPos.X,
+				__SkinPtr->Base->Playing.Config.ExamValPos.Y + (120.0f * i) },
 				GetColor(255, 255 * !IsFall, 255 * !IsFall * !IsPass),
 				GetColor(0, 0, 0),
-				GetStrlen(valstr, Skin->Base->Playing.Font.ExamVal.Handle),
+				GetStrlen(valstr, __SkinPtr->Base->Playing.Font.ExamVal.Handle),
 				valstr
 			);
 		}

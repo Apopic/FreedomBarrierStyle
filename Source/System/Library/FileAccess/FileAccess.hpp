@@ -76,7 +76,7 @@ public:
 
 			if (option != FAO::rc_all) {
 				if (option == FAO::rc_slash) {
-					if (line.find("SONGLINK:") == std::string::npos) {
+					if (line.find("SONGLINK:") == std::string::npos && line.find("MOVIELINK:") == std::string::npos) {
 						line = line.find("//") != std::string::npos ? line.substr(0, line.find("//")) : line;
 					}
 				}

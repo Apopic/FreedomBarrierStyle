@@ -99,7 +99,9 @@ struct ChartData {
 
 	std::string FilePath = "";
 	std::string WavePath = "";
-	std::string SongLink = "";
+	std::string SongLink;
+	std::string MovieLink;
+	std::string BGMoviePath;
 
 	std::string Title = "";
 	std::string SubTitle = "";
@@ -112,6 +114,7 @@ struct ChartData {
 	bool TitleDisplay = true;
 	bool SubTitleDisplay = true;
 	double Offset = 0;
+	double BGMovieOffset = 0;
 	double DemoStart = 0;
 	double BPM = 0;
 	int SongVolume = 100;
@@ -139,6 +142,8 @@ struct ChartData {
 		Packet::StoreBytes(ret, FilePath);
 		Packet::StoreBytes(ret, WavePath);
 		Packet::StoreBytes(ret, SongLink);
+		Packet::StoreBytes(ret, MovieLink);
+		Packet::StoreBytes(ret, BGMoviePath);
 		Packet::StoreBytes(ret, Title);
 		Packet::StoreBytes(ret, SubTitle);
 		Packet::StoreBytes(ret, TitleStrlen);
@@ -150,6 +155,7 @@ struct ChartData {
 		Packet::StoreBytes(ret, TitleDisplay);
 		Packet::StoreBytes(ret, SubTitleDisplay);
 		Packet::StoreBytes(ret, Offset);
+		Packet::StoreBytes(ret, BGMovieOffset);
 		Packet::StoreBytes(ret, DemoStart);
 		Packet::StoreBytes(ret, BPM);
 		Packet::StoreBytes(ret, SongVolume);
@@ -175,6 +181,8 @@ struct ChartData {
 		Packet::LoadBytes(view, FilePath);
 		Packet::LoadBytes(view, WavePath);
 		Packet::LoadBytes(view, SongLink);
+		Packet::LoadBytes(view, MovieLink);
+		Packet::LoadBytes(view, BGMoviePath);
 		Packet::LoadBytes(view, Title);
 		Packet::LoadBytes(view, SubTitle);
 		Packet::LoadBytes(view, TitleStrlen);
@@ -186,6 +194,7 @@ struct ChartData {
 		Packet::LoadBytes(view, TitleDisplay);
 		Packet::LoadBytes(view, SubTitleDisplay);
 		Packet::LoadBytes(view, Offset);
+		Packet::LoadBytes(view, BGMovieOffset);
 		Packet::LoadBytes(view, DemoStart);
 		Packet::LoadBytes(view, BPM);
 		Packet::LoadBytes(view, SongVolume);
@@ -300,17 +309,35 @@ struct ChartData {
 				}
 				this->WavePath = std::filesystem::path(path).parent_path().string() + "\\" + data;
 				});
+			Exsubstr(FA[i], "BGMOVIE:", [&](const std::string& data) {
+				if (data.empty()) {
+					return;
+				}
+				this->BGMoviePath = std::filesystem::path(path).parent_path().string() + "\\" + data;
+				});
 			Exsubstr(FA[i], "SONGLINK:", [&](const std::string& data) {
 				if (data.empty()) {
 					return;
 				}
 				this->SongLink = data;
 				});
+			Exsubstr(FA[i], "MOVIELINK:", [&](const std::string& data) {
+				if (data.empty()) {
+					return;
+				}
+				this->MovieLink = data;
+				});
 			Exsubstr(FA[i], "OFFSET:", [&](const std::string& data) {
 				if (data.empty()) {
 					return;
 				}
 				this->Offset = stod(data);
+				});
+			Exsubstr(FA[i], "MOVIEOFFSET:", [&](const std::string& data) {
+				if (data.empty()) {
+					return;
+				}
+				this->BGMovieOffset = stod(data);
 				});
 			Exsubstr(FA[i], "DEMOSTART:", [&](const std::string& data) {
 				if (data.empty()) {
@@ -703,59 +730,96 @@ public:
 		}
 	}
 
-	void SongDownload(const std::string link, const fs::path path) {
+	ChartData ChartDataGet(ChartData Chart) {
 
-		static auto IsInstalled = [](const std::string& packageName) {
+		static auto SongDownload = [&](const std::string link, const fs::path path) {
+
+			static auto IsInstalled = [](const std::string& packageName) {
 				std::string command = "winget list \"" + packageName + "\" > nul 2>&1";
 				int result = std::system(command.c_str());
 				return (bool)(result == 0);
+				};
+
+			if (!IsInstalled("yt-dlp")) {
+				std::system("winget install yt-dlp");
+			}
+			else {
+				std::system("winget upgrade yt-dlp");
+			}
+
+			if (fs::exists("song.ogg")) {
+				fs::remove("song.ogg");
+			}
+
+			{
+
+				std::string command = "yt-dlp -x --audio-format mp3 -o \"song\" " + link;
+
+				int result = std::system(command.c_str());
+
+				if (result != 0) {
+					std::string error = "音源のダウンロードに失敗しました";
+					MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
+					return;
+				}
+			}
+
+			{
+				std::string command = "ffmpeg -i \"song.mp3\" \"song.ogg\"";
+				int result = std::system(command.c_str());
+
+				if (fs::exists("song.mp3")) {
+					fs::remove("song.mp3");
+				}
+
+				if (result != 0) {
+					std::string error = "音源の変換に失敗しました";
+					MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
+					return;
+				}
+			}
+
+			if (fs::exists("song.ogg")) {
+				fs::rename("song.ogg", path);
+			}
 			};
 
-		if (!IsInstalled("yt-dlp")) {
-			std::system("winget install yt-dlp");
-		}
-		else {
-			std::system("winget upgrade yt-dlp");
-		}
+		static auto MovieDownload = [&](const std::string link, const fs::path path) {
 
-		if (fs::exists("song.ogg")) {
-			fs::remove("song.ogg");
-		}
+			static auto IsInstalled = [](const std::string& packageName) {
+				std::string command = "winget list \"" + packageName + "\" > nul 2>&1";
+				int result = std::system(command.c_str());
+				return (bool)(result == 0);
+				};
 
-		{
-			
-			std::string command = "yt-dlp -x --audio-format mp3 -o \"song\" " + link;
-
-			int result = std::system(command.c_str());
-
-			if (result != 0) {
-				std::string error = "音源のダウンロードに失敗しました";
-				MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
-				return;
+			if (!IsInstalled("yt-dlp")) {
+				std::system("winget install yt-dlp");
 			}
-		}
-
-		{
-			std::string command = "ffmpeg -i \"song.mp3\" \"song.ogg\"";
-			int result = std::system(command.c_str());
-
-			if (fs::exists("song.mp3")) {
-				fs::remove("song.mp3");
+			else {
+				std::system("winget upgrade yt-dlp");
 			}
 
-			if (result != 0) {
-				std::string error = "音源の変換に失敗しました";
-				MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
-				return;
+			if (fs::exists("movie")) {
+				fs::remove("movie");
 			}
-		}
 
-		if (fs::exists("song.ogg")) {
-			fs::rename("song.ogg", path);
-		}
-	}
+			{
 
-	ChartData ChartDataGet(ChartData Chart) {
+				std::string command = "yt-dlp -f bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[vcodec^=avc1]/best --merge-output-format mp4 -o \"movie\" " + link;
+
+				int result = std::system(command.c_str());
+
+				if (result != 0) {
+					std::string error = "動画のダウンロードに失敗しました";
+					MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
+					return;
+				}
+			}
+
+			if (fs::exists("movie")) {
+				fs::rename("movie", path);
+			}
+			};
 
 		ChartData& Dest = Chart;
 
@@ -767,10 +831,17 @@ public:
 		}
 
 		if (!Chart.SongLink.empty() && !fs::exists(Chart.WavePath)) {
-			std::string info = "音源ファイルがありません。ダウンロードしますか？";
-			switch (MessageBox(NULL, TEXT(info.c_str()), "", MB_OKCANCEL)) {
+			switch (MessageBox(NULL, TEXT("音源ファイルがありません。ダウンロードしますか？"), "", MB_OKCANCEL)) {
 			case IDOK:
 				SongDownload(Chart.SongLink, Chart.WavePath);
+				break;
+			}
+		}
+
+		if (!Chart.MovieLink.empty() && !fs::exists(Chart.BGMoviePath)) {
+			switch (MessageBox(NULL, TEXT("動画ファイルがありません。ダウンロードしますか？"), "", MB_OKCANCEL)) {
+			case IDOK:
+				MovieDownload(Chart.MovieLink, Chart.BGMoviePath);
 				break;
 			}
 		}
