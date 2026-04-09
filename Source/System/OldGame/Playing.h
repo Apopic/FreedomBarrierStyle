@@ -373,7 +373,7 @@ public:
 				DrawExtendGraph(0, 0, __SkinPtr->Info.Resolution.X, __SkinPtr->Info.Resolution.Y, Chart.BGMovieHandle, FALSE);
 				return;
 			}
-			else if (nowtime > 128) {
+			else if ((nowtime + (Chart.OriginalData.BGMovieOffset * 1000)) > 128) {
 				SetMovieVolumeToGraph(0, Chart.BGMovieHandle);
 				PlayMovieToGraph(Chart.BGMovieHandle);
 			}
