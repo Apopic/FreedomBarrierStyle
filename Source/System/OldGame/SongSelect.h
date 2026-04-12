@@ -820,8 +820,23 @@ public:
 				}
 			}
 
-			if (fs::exists("movie.mp4")) {
-				fs::rename("movie.mp4", path);
+			{
+				std::string command = "ffmpeg -i \"movie.mp4\" \"movie" + fs::path(path).extension().string() + "\"";
+				int result = std::system((powershell + "\"" + command + "\"").c_str());
+
+				if (fs::exists("movie.mp4")) {
+					fs::remove("movie.mp4");
+				}
+
+				if (result != 0) {
+					std::string error = "動画の変換に失敗しました";
+					MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
+					return;
+				}
+			}
+
+			if (fs::exists("movie" + fs::path(path).extension().string())) {
+				fs::rename("movie" + fs::path(path).extension().string(), path);
 			}
 			};
 
