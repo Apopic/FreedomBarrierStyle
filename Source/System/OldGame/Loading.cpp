@@ -69,8 +69,8 @@ void GameSystem::LoadingProc() {
 		MainData.RelaTime = _offset;
 	}
 	else {
-		_offset = (LoadData.Offset * -2000) - Config.SongOffset;
-		Playing.Chart.SongBlankTime = LoadData.Offset * -1000;
+		_offset = LoadData.Offset * -1000 - Config.SongOffset;
+		Playing.Chart.SongBlankTime = 0;
 		MainData.RelaTime = _offset;
 	}
 

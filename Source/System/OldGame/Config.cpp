@@ -4,6 +4,19 @@
 GameSystem* configptr;
 
 _Config::_Config(GameSystem* ptr) {
+
+	Lock[1] = true;
+	Lock[4] = true;
+	Lock[5] = true;
+	Lock[6] = true;
+	Lock[7] = true;
+	Lock[8] = true;
+	Lock[9] = true;
+	Lock[10] = true;
+	Lock[11] = true;
+	Lock[12] = true;
+	Lock[13] = true;
+
 	ConfigLoad();
 	::configptr = ptr;
 }
@@ -13,6 +26,7 @@ _Config::~_Config() {
 }
 
 void _Config::ConfigLoad() {
+
 	std::ifstream ifs("config.json");
 
 	if (!ifs.is_open()) {
@@ -38,6 +52,7 @@ void _Config::ConfigLoad() {
 	JSONDATA(SongOffset);
 	JSONDATA(ChartSpeed);
 	JSONDATA(SongSpeed);
+	JSONDATA(BGBrightness);
 	JSONDATA(TrainingMode);
 	JSONDATA(ScreenFade);
 	JSONDATA(SkinName);
@@ -88,6 +103,7 @@ void _Config::ConfigWrite() {
 		JSONDATA(SongOffset),
 		JSONDATA(ChartSpeed),
 		JSONDATA(SongSpeed),
+		JSONDATA(BGBrightness),
 		JSONDATA(TrainingMode),
 		JSONDATA(ScreenFade),
 		JSONDATA(SkinName),
@@ -154,7 +170,7 @@ void GameSystem::ConfigDraw() {
 			for (int i = 0; i < Config.GameSize; ++i) {
 				c = GetColor(255, 255, 255);
 				float y = (32 * (i - Config.Selector)) + 360;
-				if (MultiRoom.MultiFlag && !(i == 1 || i >= 4 && i <= 12)) { c = GetColor(0, 0, 0); }
+				if (MultiRoom.MultiFlag && !Config.Lock[i]) { c = GetColor(0, 0, 0); }
 				Skin.Base->Other.Font.Game.DrawFontString({ 144,y }, Config.GameConfig[i], c);
 			}
 
@@ -177,6 +193,7 @@ void GameSystem::ConfigDraw() {
 			Config.DrawConfigData(configptr, i, std::to_string(Config.SongOffset));
 			Config.DrawConfigData(configptr, i, std::to_string(Config.ChartSpeed));
 			Config.DrawConfigData(configptr, i, std::to_string(Config.SongSpeed));
+			Config.DrawConfigData(configptr, i, std::to_string(Config.BGBrightness));
 			Config.DrawConfigData(configptr, i, Config.TrainingMode ? "true" : "false");
 			Config.DrawConfigData(configptr, i, Config.ScreenFade ? "true" : "false");
 			Config.DrawConfigData(configptr, i, Config.SkinName);
@@ -352,7 +369,7 @@ void GameSystem::ConfigProc() {
 		else if (Config.inputflag == 0) {
 
 			if (Config.GameFlag) {
-				if (!MultiRoom.MultiFlag || (Config.Selector == 1 || Config.Selector >= 4 && Config.Selector <= 12)) {
+				if (!MultiRoom.MultiFlag || Config.Lock[Config.Selector]) {
 					Config.inputflag = 1;
 					Config.KeyInputHandle = MakeKeyInput(255, false, true, false);
 					SetActiveKeyInput(Config.KeyInputHandle);
@@ -387,6 +404,7 @@ void GameSystem::ConfigProc() {
 				Config.ProcConfigData(i, Config.SongOffset, Config.inputdouble);
 				Config.ProcConfigData(i, Config.ChartSpeed, Config.inputdouble);
 				Config.ProcConfigData(i, Config.SongSpeed, Config.inputdouble);
+				Config.ProcConfigData(i, Config.BGBrightness, Config.inputdouble);
 				Config.ProcConfigData(i, Config.TrainingMode, Config.inputbool);
 				Config.ProcConfigData(i, Config.ScreenFade, Config.inputbool);
 				Config.ProcConfigData(i, Config.SkinName, Config.inputstring);

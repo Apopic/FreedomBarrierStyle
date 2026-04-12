@@ -33,6 +33,7 @@ public:
 	double SongOffset = 0;
 	double ChartSpeed = 1;
 	double SongSpeed = 1;
+	double BGBrightness = 100;
 
 	bool TrainingMode = false;
 	bool ScreenFade = true;
@@ -91,7 +92,7 @@ public:
 		"KeyConfig",
 	};
 
-	std::string GameConfig[34]{
+	std::string GameConfig[35]{
 	"PlayerName",
 	"AutoPlayFlag",
 	"ServerAddress",
@@ -105,6 +106,7 @@ public:
 	"SongOffset",
 	"ChartSpeed",
 	"SongSpeed",
+	"BGBrightness",
 	"TrainingMode",
 	"ScreenFade",
 	"SkinName",
@@ -135,6 +137,8 @@ public:
 		"KaInputRight",
 	};
 
+	bool Lock[35];
+
 	int GenreSize = sizeof(ConfigGenre) / sizeof(ConfigGenre[0]);
 	int GameSize = sizeof(GameConfig) / sizeof(GameConfig[0]);
 	int KeySize = sizeof(KeyConfig) / sizeof(KeyConfig[0]);
@@ -164,7 +168,7 @@ public:
 	void DrawConfigData(T* configptr, int& i, std::string data) {
 		if (Selector == i) {
 			unsigned int c = GetColor((1 - inputflag) * 255, (1 - inputflag) * 255, 255);
-			if (configptr->MultiRoom.MultiFlag && !(Selector == 1 || Selector >= 4 && Selector <= 12)) { c = GetColor(0, 0, 0); }
+			if (configptr->MultiRoom.MultiFlag && !Lock[Selector]) { c = GetColor(0, 0, 0); }
 			configptr->Skin.Base->Other.Font.Game.DrawFontString({ 370,360 }, data, c);
 		}
 		i++;

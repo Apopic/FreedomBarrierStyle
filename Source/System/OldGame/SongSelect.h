@@ -734,17 +734,19 @@ public:
 
 		static auto SongDownload = [&](const std::string link, const fs::path path) {
 
-			static auto IsInstalled = [](const std::string& packageName) {
+			std::string powershell = "powershell -Command ";
+
+			static auto IsInstalled = [&](const std::string& packageName) {
 				std::string command = "winget list \"" + packageName + "\" > nul 2>&1";
-				int result = std::system(command.c_str());
+				int result = std::system((powershell + "\"" + command + "\"").c_str());
 				return (bool)(result == 0);
 				};
 
 			if (!IsInstalled("yt-dlp")) {
-				std::system("winget install yt-dlp");
+				std::system((powershell + "\"" + "winget install yt-dlp" + "\"").c_str());
 			}
 			else {
-				std::system("winget upgrade yt-dlp");
+				std::system((powershell + "\"" + "winget upgrade yt-dlp" + "\"").c_str());
 			}
 
 			if (fs::exists("song.ogg")) {
@@ -755,7 +757,7 @@ public:
 
 				std::string command = "yt-dlp -x --audio-format mp3 -o \"song\" " + link;
 
-				int result = std::system(command.c_str());
+				int result = std::system((powershell + "\"" + command + "\"").c_str());
 
 				if (result != 0) {
 					std::string error = "音源のダウンロードに失敗しました";
@@ -766,7 +768,7 @@ public:
 
 			{
 				std::string command = "ffmpeg -i \"song.mp3\" \"song.ogg\"";
-				int result = std::system(command.c_str());
+				int result = std::system((powershell + "\"" + command + "\"").c_str());
 
 				if (fs::exists("song.mp3")) {
 					fs::remove("song.mp3");
@@ -786,17 +788,19 @@ public:
 
 		static auto MovieDownload = [&](const std::string link, const fs::path path) {
 
-			static auto IsInstalled = [](const std::string& packageName) {
+			std::string powershell = "powershell -Command ";
+
+			static auto IsInstalled = [&](const std::string& packageName) {
 				std::string command = "winget list \"" + packageName + "\" > nul 2>&1";
-				int result = std::system(command.c_str());
+				int result = std::system((powershell + "\"" + command + "\"").c_str());
 				return (bool)(result == 0);
 				};
 
 			if (!IsInstalled("yt-dlp")) {
-				std::system("winget install yt-dlp");
+				std::system((powershell + "\"" + "winget install yt-dlp" + "\"").c_str());
 			}
 			else {
-				std::system("winget upgrade yt-dlp");
+				std::system((powershell + "\"" + "winget upgrade yt-dlp" + "\"").c_str());
 			}
 
 			if (fs::exists("movie")) {
@@ -807,7 +811,7 @@ public:
 
 				std::string command = "yt-dlp -f bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[vcodec^=avc1]/best --merge-output-format mp4 -o \"movie\" " + link;
 
-				int result = std::system(command.c_str());
+				int result = std::system((powershell + "\"" + command + "\"").c_str());
 
 				if (result != 0) {
 					std::string error = "動画のダウンロードに失敗しました";
@@ -816,8 +820,8 @@ public:
 				}
 			}
 
-			if (fs::exists("movie")) {
-				fs::rename("movie", path);
+			if (fs::exists("movie.mp4")) {
+				fs::rename("movie.mp4", path);
 			}
 			};
 
@@ -846,9 +850,9 @@ public:
 			}
 		}
 
-		std::ifstream file(Chart.WavePath, std::ios::binary);
-		Dest.WaveData = std::string((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
-		file.close();
+		std::ifstream wave(Chart.WavePath, std::ios::binary);
+		Dest.WaveData = std::string((std::istreambuf_iterator<char>(wave)), (std::istreambuf_iterator<char>()));
+		wave.close();
 
 		return Dest;
 	}

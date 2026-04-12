@@ -56,59 +56,6 @@ struct NoteData {
 	bool BarlineDisplay = false;
 
 	bool HitFlag = false;
-
-	Packet::bytearray ToBytes() const {
-		Packet::bytearray ret;
-		Packet::StoreBytes(ret, AbsTime);
-		Packet::StoreBytes(ret, RelaTime);
-		Packet::StoreBytes(ret, BMTime);
-		Packet::StoreBytes(ret, PosTime);
-		Packet::StoreBytes(ret, BMFlag);
-		Packet::StoreBytes(ret, BpmChangeFlag);
-		Packet::StoreBytes(ret, BpmSpawnFlag);
-		Packet::StoreBytes(ret, BigNoteTime);
-		Packet::StoreBytes(ret, BPM);
-		Packet::StoreBytes(ret, Measure);
-		Packet::StoreBytes(ret, Scroll);
-		Packet::StoreBytes(ret, Scrolli);
-		Packet::StoreBytes(ret, GoGoStart);
-		Packet::StoreBytes(ret, GoGoEnd);
-		Packet::StoreBytes(ret, NoteType);
-		Packet::StoreBytes(ret, RollEndTime);
-		Packet::StoreBytes(ret, RollEndIndex);
-		Packet::StoreBytes(ret, RollFlag);
-		Packet::StoreBytes(ret, BalloonFlag);
-		Packet::StoreBytes(ret, BalloonCount);
-		Packet::StoreBytes(ret, BarlineDisplay);
-		Packet::StoreBytes(ret, HitFlag);
-		return ret;
-	}
-
-	Packet::byte_view FromBytes(Packet::byte_view view) {
-		Packet::LoadBytes(view, AbsTime);
-		Packet::LoadBytes(view, RelaTime);
-		Packet::LoadBytes(view, BMTime);
-		Packet::LoadBytes(view, PosTime);
-		Packet::LoadBytes(view, BMFlag);
-		Packet::LoadBytes(view, BpmChangeFlag);
-		Packet::LoadBytes(view, BpmSpawnFlag);
-		Packet::LoadBytes(view, BigNoteTime);
-		Packet::LoadBytes(view, BPM);
-		Packet::LoadBytes(view, Measure);
-		Packet::LoadBytes(view, Scroll);
-		Packet::LoadBytes(view, Scrolli);
-		Packet::LoadBytes(view, GoGoStart);
-		Packet::LoadBytes(view, GoGoEnd);
-		Packet::LoadBytes(view, NoteType);
-		Packet::LoadBytes(view, RollEndTime);
-		Packet::LoadBytes(view, RollEndIndex);
-		Packet::LoadBytes(view, RollFlag);
-		Packet::LoadBytes(view, BalloonFlag);
-		Packet::LoadBytes(view, BalloonCount);
-		Packet::LoadBytes(view, BarlineDisplay);
-		Packet::LoadBytes(view, HitFlag);
-		return view;
-	}
 };
 
 enum class JudgeType : int {
@@ -368,15 +315,14 @@ public:
 
 	void MovieDraw(double nowtime) {
 		if (Chart.BGMovieHandle != 0) {
-			DrawBox(0, 0, __SkinPtr->Info.Resolution.X, __SkinPtr->Info.Resolution.Y, GetColor(0, 0, 0), TRUE);
-			if (GetMovieStateToGraph(Chart.BGMovieHandle)) {
-				DrawExtendGraph(0, 0, __SkinPtr->Info.Resolution.X, __SkinPtr->Info.Resolution.Y, Chart.BGMovieHandle, FALSE);
-				return;
-			}
-			else if ((nowtime + (Chart.OriginalData.BGMovieOffset * 1000)) > 128) {
+			DrawExtendGraph(0, 0, __SkinPtr->Info.Resolution.X, __SkinPtr->Info.Resolution.Y, Chart.BGMovieHandle, FALSE);
+			if ((nowtime + (Chart.OriginalData.BGMovieOffset * -1000)) > 128 && Chart.NowTime.GetNowRecording()) {
 				SetMovieVolumeToGraph(0, Chart.BGMovieHandle);
 				PlayMovieToGraph(Chart.BGMovieHandle);
 			}
+			SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255 * (1 - (__ConfigPtr->BGBrightness / 100)));
+			DrawFillBox(0, 0, __SkinPtr->Info.Resolution.X, __SkinPtr->Info.Resolution.Y, GetColor(0, 0, 0));
+			SetDrawBlendMode(0,0);
 		}
 	}
 
@@ -852,6 +798,9 @@ public:
 			TrainingOffset = std::lerp(MemNowTime, Chart.RawNoteDatas[MeasureIndex].AbsTime, GetEasingRate(MeasureJump.GetRecordingTime() / MeasureJumpTime, ease::Base::In, ease::Line::Linear));
 
 			if (MeasureJump.GetRecordingTime() >= MeasureJumpTime) {
+				if (Chart.BGMovieHandle != 0) {
+					SeekMovieToGraph(Chart.BGMovieHandle, TrainingOffset - Chart.SongBlankTime);
+				}
 				MeasureJump.End();
 			}
 		}

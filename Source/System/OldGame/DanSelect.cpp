@@ -19,9 +19,8 @@ void GameSystem::DanSelectInit() {
 }
 
 void GameSystem::DanSelectEnd() {
-;
-	SongSelect.CourseSelect = false;
 
+	SongSelect.CourseSelect = false;
 }
 
 void GameSystem::DanSelectDraw() {
