@@ -172,9 +172,6 @@ void _Skin::SkinLoad(const std::string& name) {
 	DataLoad(Playing, Image, BackGround);
 	DataLoad(Playing, Image, LaneFrame);
 	DataLoad(Playing, Image, Lane);
-	DataLoad(Playing, Image, NormalLane);
-	DataLoad(Playing, Image, ExpertLane);
-	DataLoad(Playing, Image, MasterLane);
 	DataLoad(Playing, Image, Base);
 	DataLoad(Playing, Image, NamePlate);
 	DataLoad(Playing, Image, MiniTaiko);
@@ -190,8 +187,6 @@ void _Skin::SkinLoad(const std::string& name) {
 	DataLoad(Playing, Image, JudgeString);
 	DataLoad(Playing, Image, ProgressBar);
 	DataLoad(Playing, Image, ExamProgressBar);
-	DataLoad(Playing, Image, KeyViewBack);
-	DataLoad(Playing, Image, KeyViewFlash);
 
 	DataLoad(Playing, Font, Title);
 	DataLoad(Playing, Font, SubTitle);

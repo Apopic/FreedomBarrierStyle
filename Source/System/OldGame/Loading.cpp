@@ -432,6 +432,7 @@ RollType = '\0'
 
 	if (!LoadData.BGMoviePath.empty()) {
 		Playing.Chart.BGMovieHandle = LoadGraph(LoadData.BGMoviePath.c_str());
+		GetGraphSizeF(Playing.Chart.BGMovieHandle, &Playing.Chart.BGMovieSize.Width, &Playing.Chart.BGMovieSize.Height);
 	}
 
 	Playing.Chart.SongData.SetVolume(Playing.Chart.OriginalData.SongVolume * (Config.SongVolume / 100));

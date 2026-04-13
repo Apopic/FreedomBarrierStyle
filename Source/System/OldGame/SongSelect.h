@@ -820,7 +820,8 @@ public:
 				}
 			}
 
-			{
+			if (fs::path(path).extension() != ".mp4") {
+
 				std::string command = "ffmpeg -i \"movie.mp4\" \"movie" + fs::path(path).extension().string() + "\"";
 				int result = std::system((powershell + "\"" + command + "\"").c_str());
 

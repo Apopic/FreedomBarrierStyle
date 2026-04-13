@@ -239,6 +239,7 @@ struct ChartStreamData {
 	uint AllNoteCount = 0;
 
 	int BGMovieHandle = 0;
+	Size2D<float> BGMovieSize = { 1280,720 };
 
 	uint DanPlayCount = 0;
 	uint DanBalloonIndex = 0;
@@ -314,12 +315,23 @@ public:
 	} HitNote[4];
 
 	void MovieDraw(double nowtime) {
+		
 		if (Chart.BGMovieHandle != 0) {
-			DrawExtendGraph(0, 0, __SkinPtr->Info.Resolution.X, __SkinPtr->Info.Resolution.Y, Chart.BGMovieHandle, FALSE);
+			
+			DrawFillBox(0, 0, __SkinPtr->Info.Resolution.X, __SkinPtr->Info.Resolution.Y, GetColor(0, 0, 0));
+			DrawExtendGraphF(
+				__SkinPtr->Info.Resolution.X / 2 - Chart.BGMovieSize.Width / 2,
+				__SkinPtr->Info.Resolution.Y / 2 - Chart.BGMovieSize.Height / 2,
+				__SkinPtr->Info.Resolution.X / 2 + Chart.BGMovieSize.Width / 2,
+				__SkinPtr->Info.Resolution.Y / 2 + Chart.BGMovieSize.Height / 2,
+				Chart.BGMovieHandle, 
+				FALSE);
+
 			if ((nowtime + (Chart.OriginalData.BGMovieOffset * -1000)) > 128 && Chart.NowTime.GetNowRecording()) {
 				SetMovieVolumeToGraph(0, Chart.BGMovieHandle);
 				PlayMovieToGraph(Chart.BGMovieHandle);
 			}
+
 			SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255 * (1 - (__ConfigPtr->BGBrightness / 100)));
 			DrawFillBox(0, 0, __SkinPtr->Info.Resolution.X, __SkinPtr->Info.Resolution.Y, GetColor(0, 0, 0));
 			SetDrawBlendMode(0,0);

@@ -125,9 +125,6 @@ public:
 				GraphData BackGround;
 				GraphData LaneFrame;
 				GraphData Lane;
-				GraphData NormalLane;
-				GraphData ExpertLane;
-				GraphData MasterLane;
 				GraphData Base;
 				GraphData NamePlate;
 				GraphData MiniTaiko;
@@ -143,8 +140,6 @@ public:
 				GraphData JudgeString;
 				GraphData ProgressBar;
 				GraphData ExamProgressBar;
-				GraphData KeyViewBack;
-				GraphData KeyViewFlash;
 			} Image;
 			struct _Font {
 				FontData Title;

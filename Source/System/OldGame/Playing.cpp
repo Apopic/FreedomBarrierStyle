@@ -150,7 +150,10 @@ void GameSystem::PlayingProc() {
 
 			Input.HitKeyProcess(VK_SHIFT, KeyState::Hold, [&] {
 				Input.HitKeyProcess('Q', KeyState::Down, [&] {
+					Playing.Chart.Init();
+					Playing.Chart.OriginalData = SongSelect.ChartDataGet(*SongSelect.BoxDatas[SongSelect.BoxDataIndex]->GetChart());
 					NowScene = Scene::Loading;
+					return;
 					});
 				});
 
