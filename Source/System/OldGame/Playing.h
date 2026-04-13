@@ -247,6 +247,7 @@ struct ChartStreamData {
 	bool IsDanPlay = false;
 	bool IsFall = true;
 	std::vector<ExamStreamData> ExamDatas = std::vector<ExamStreamData>();
+
 };
 
 extern class GameSystem* gameptr;
@@ -266,14 +267,16 @@ public:
 	Timer<millisecond> MiniTaikoFlash[16];
 	double MiniTaikoFlashTime = 160;
 
-	double TrainingOffset = 0;
-	ulonglong MeasureIndex = 0;
-
 	Timer<millisecond> MeasureJump;
 	double MeasureJumpTime = 60;
 	double MemNowTime = 0;
 
 	std::string ExamList[8] = { "Accuracy", "Good", "Ok", "Bad", "Score", "Roll", "HitNote", "MaxCombo" };
+
+	double TrainingOffset = 0;
+	ulonglong NoteDataIndex = 0;
+	ulonglong MeasureIndex = 0;
+	ulonglong AllMeasureCount = 0;
 
 	double ChartNowTime(bool FrameCounter = false, double fastdrawrate = 0, double extendrate = 1) const {
 		double ret = 0;
@@ -775,12 +778,18 @@ public:
 			static auto MoveInputProc = [&](bool direction) {
 				while (!ProcessMessage()) {
 					if (direction) {
-						MeasureIndex < Chart.RawNoteDatas.size() - 1 ? MeasureIndex++ : MeasureIndex;
-						if (Chart.RawNoteDatas[MeasureIndex].BarlineDisplay || MeasureIndex == Chart.RawNoteDatas.size() - 1) { break; }
+						NoteDataIndex < Chart.RawNoteDatas.size() - 1 ? NoteDataIndex++ : NoteDataIndex;
+						if (Chart.RawNoteDatas[NoteDataIndex].BarlineDisplay || NoteDataIndex == Chart.RawNoteDatas.size() - 1) {
+							MeasureIndex < AllMeasureCount ? MeasureIndex++ : MeasureIndex;
+							break;
+						}
 					}
 					else {
-						MeasureIndex > 0 ? MeasureIndex-- : MeasureIndex;
-						if (Chart.RawNoteDatas[MeasureIndex].BarlineDisplay || MeasureIndex == 0) { break; }
+						NoteDataIndex > 0 ? NoteDataIndex-- : NoteDataIndex;
+						if (Chart.RawNoteDatas[NoteDataIndex].BarlineDisplay || NoteDataIndex == 0) {
+							MeasureIndex > 0 ? MeasureIndex-- : MeasureIndex;
+							break;
+						}
 					}
 				}
 				MemNowTime = nowtime;
@@ -807,7 +816,7 @@ public:
 		}
 		else {
 
-			TrainingOffset = std::lerp(MemNowTime, Chart.RawNoteDatas[MeasureIndex].AbsTime, GetEasingRate(MeasureJump.GetRecordingTime() / MeasureJumpTime, ease::Base::In, ease::Line::Linear));
+			TrainingOffset = std::lerp(MemNowTime, Chart.RawNoteDatas[NoteDataIndex].AbsTime, GetEasingRate(MeasureJump.GetRecordingTime() / MeasureJumpTime, ease::Base::In, ease::Line::Linear));
 
 			if (MeasureJump.GetRecordingTime() >= MeasureJumpTime) {
 				if (Chart.BGMovieHandle != 0) {

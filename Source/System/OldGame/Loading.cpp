@@ -23,6 +23,7 @@ void GameSystem::LoadingDraw() {
 
 void GameSystem::LoadingProc() {
 
+	Playing.AllMeasureCount = 0;
 	ChartData LoadData = ChartData();
 
 	if (SongSelect.IsDanMode) {
@@ -255,6 +256,7 @@ void GameSystem::LoadingProc() {
 					AddBarline = true;
 					if (BarlineDisplay) {
 						MainData.BarlineDisplay = true;
+						Playing.AllMeasureCount++;
 					}
 					else {
 						MainData.BarlineDisplay = false;

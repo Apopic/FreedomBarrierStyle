@@ -25,6 +25,10 @@ void GameSystem::SongSelectInit() {
 		NowScene = Scene::Title;
 		return;
 	}
+
+	Playing.TrainingOffset = 0;
+	Playing.NoteDataIndex = 0;
+	Playing.MeasureIndex = 0;
 }
 
 void GameSystem::SongSelectEnd() {
