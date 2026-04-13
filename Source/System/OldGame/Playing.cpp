@@ -27,6 +27,11 @@ void GameSystem::PlayingInit() {
 		taiko.End();
 	}
 
+	for (int i = 0; i < 5; i++) {
+		for (int j = 0; j < 5; j++) {
+			Playing.KeyFlash[i][j].End();
+		}
+	}
 }
 
 void GameSystem::PlayingEnd() {
@@ -45,7 +50,6 @@ void GameSystem::PlayingDraw() {
 	Playing.MovieDraw(NowTime);
 
 	int pldx = 0;
-
 	do {
 
 		PlayerData MultiData;
@@ -104,16 +108,13 @@ void GameSystem::PlayingDraw() {
 	} while (pldx < Private.CountAll);
 
 	if (Private.CountAll < 4) {
-
-		auto&& ChartData = Playing.Chart.OriginalData;
-
 		if (!SongSelect.IsDanMode) {
-			Playing.TitleDraw(ChartData.Title, ChartData.PlayingTitleStrlen);
-			Playing.SubTitleDraw(ChartData.SubTitle, ChartData.PlayingSubTitleStrlen);
+			Playing.TitleDraw(Playing.Chart.OriginalData.Title, Playing.Chart.OriginalData.PlayingTitleStrlen);
+			Playing.SubTitleDraw(Playing.Chart.OriginalData.SubTitle, Playing.Chart.OriginalData.PlayingSubTitleStrlen);
 		}
 		else {
-			Playing.TitleDraw(ChartData.DanTitle, ChartData.DanTitleStrlen);
-			Playing.SubTitleDraw(ChartData.DanSubTitle, ChartData.DanSubTitleStrlen);
+			Playing.TitleDraw(Playing.Chart.OriginalData.DanTitle, Playing.Chart.OriginalData.DanTitleStrlen);
+			Playing.SubTitleDraw(Playing.Chart.OriginalData.DanSubTitle, Playing.Chart.OriginalData.DanSubTitleStrlen);
 		}
 	}
 
@@ -124,12 +125,21 @@ void GameSystem::PlayingDraw() {
 	}
 
 	if (!MultiRoom.MultiFlag) {
+
+		if (Skin.Base->Playing.Config.KeyInputView) {
+			Playing.KeyCharDraw(0, Config.KaInputLeft, Config.KeyCharKaLeft);
+			Playing.KeyCharDraw(1, Config.DonInputLeft, Config.KeyCharDonLeft);
+			Playing.KeyCharDraw(2, Config.DonInputRight, Config.KeyCharDonRight);
+			Playing.KeyCharDraw(3, Config.KaInputRight, Config.KeyCharKaRight);
+		}
+
 		if (Config.TrainingMode) {
 			if (!Playing.Chart.NowTime.GetNowRecording()) {
 				DrawFormatString(
 					Skin.Base->Playing.Image.Note.Pos.X,
 					Skin.Base->Playing.Image.Note.Pos.Y - 100,
-					GetColor(255, 255, 255), "(%d/%d)",
+					GetColor(255, 255, 255), 
+					"(%d/%d)",
 					Playing.MeasureIndex, Playing.AllMeasureCount
 				);
 			}

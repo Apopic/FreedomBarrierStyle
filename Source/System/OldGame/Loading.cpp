@@ -433,8 +433,16 @@ RollType = '\0'
 	SetCreateSoundDataType(DX_SOUNDDATATYPE_MEMNOPRESS);
 
 	if (!LoadData.BGMoviePath.empty()) {
+
 		Playing.Chart.BGMovieHandle = LoadGraph(LoadData.BGMoviePath.c_str());
+
 		GetGraphSizeF(Playing.Chart.BGMovieHandle, &Playing.Chart.BGMovieSize.Width, &Playing.Chart.BGMovieSize.Height);
+		float ExtendRate = Playing.Chart.BGMovieSize.Height / 720.0f;
+		Playing.Chart.BGMovieSize = { Playing.Chart.BGMovieSize.Width / ExtendRate, Playing.Chart.BGMovieSize.Height / ExtendRate };
+	
+		if (Playing.Chart.OriginalData.BGMovieOffset < 0) {
+			SeekMovieToGraph(Playing.Chart.BGMovieHandle, Playing.TrainingOffset + Playing.Chart.OriginalData.BGMovieOffset * -1000);
+		}
 	}
 
 	Playing.Chart.SongData.SetVolume(Playing.Chart.OriginalData.SongVolume * (Config.SongVolume / 100));

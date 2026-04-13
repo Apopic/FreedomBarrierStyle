@@ -6,16 +6,9 @@ GameSystem* configptr;
 _Config::_Config(GameSystem* ptr) {
 
 	Lock[1] = true;
-	Lock[4] = true;
-	Lock[5] = true;
-	Lock[6] = true;
-	Lock[7] = true;
-	Lock[8] = true;
-	Lock[9] = true;
-	Lock[10] = true;
-	Lock[11] = true;
-	Lock[12] = true;
-	Lock[13] = true;
+	for (int i = 4; i < 14; i++) {
+		Lock[i] = true;
+	}
 
 	ConfigLoad();
 	::configptr = ptr;
@@ -84,6 +77,11 @@ void _Config::ConfigLoad() {
 	//KeyCodeParser(false);
 
 	ifs.close();
+
+	GetKeyChar(KaInputLeft, KeyCharKaLeft);
+	GetKeyChar(DonInputLeft, KeyCharDonLeft);
+	GetKeyChar(DonInputRight, KeyCharDonRight);
+	GetKeyChar(KaInputRight, KeyCharKaRight);
 }
 
 void _Config::ConfigWrite() {
@@ -137,6 +135,11 @@ void _Config::ConfigWrite() {
 	ofs << data.dump(4) << "\n";
 
 	ofs.close();
+
+	GetKeyChar(KaInputLeft, KeyCharKaLeft);
+	GetKeyChar(DonInputLeft, KeyCharDonLeft);
+	GetKeyChar(DonInputRight, KeyCharDonRight);
+	GetKeyChar(KaInputRight, KeyCharKaRight);
 }
 
 void GameSystem::ConfigInit() {
@@ -234,17 +237,17 @@ void GameSystem::ConfigDraw() {
 
 			int s = 0;
 
-			Config.AllDrawKeyData(s, Config.Selector, Config.KaInputLeft);
-			Config.AllDrawKeyData(s, Config.Selector, Config.DonInputLeft);
-			Config.AllDrawKeyData(s, Config.Selector, Config.DonInputRight);
-			Config.AllDrawKeyData(s, Config.Selector, Config.KaInputRight);
+			Config.AllDrawKeyData(s, Config.Selector, Config.KeyCharKaLeft);
+			Config.AllDrawKeyData(s, Config.Selector, Config.KeyCharDonLeft);
+			Config.AllDrawKeyData(s, Config.Selector, Config.KeyCharDonRight);
+			Config.AllDrawKeyData(s, Config.Selector, Config.KeyCharKaRight);
 
 			int i = 0;
 
-			Config.DrawKeyData(i, Config.Selector, Config.KaInputLeft[Config.KeyIndex]);
-			Config.DrawKeyData(i, Config.Selector, Config.DonInputLeft[Config.KeyIndex]);
-			Config.DrawKeyData(i, Config.Selector, Config.DonInputRight[Config.KeyIndex]);
-			Config.DrawKeyData(i, Config.Selector, Config.KaInputRight[Config.KeyIndex]);
+			Config.DrawKeyData(i, Config.Selector, Config.KeyCharKaLeft[Config.KeyIndex]);
+			Config.DrawKeyData(i, Config.Selector, Config.KeyCharDonLeft[Config.KeyIndex]);
+			Config.DrawKeyData(i, Config.Selector, Config.KeyCharDonRight[Config.KeyIndex]);
+			Config.DrawKeyData(i, Config.Selector, Config.KeyCharKaRight[Config.KeyIndex]);
 
 			if (Config.inputflag) {
 				Skin.Base->Other.Font.Game.DrawFontString({ 580,360 }, "割り当てるキーを押してください");
@@ -476,19 +479,19 @@ void GameSystem::ConfigProc() {
 	}
 }
 
-void _Config::DrawKeyData(int& i, int selector, int data) {
+void _Config::DrawKeyData(int& i, int selector, std::string data) {
 	unsigned int c = GetColor(255, 255, 255);
 	if (Selector == i) { c = GetColor((1 - inputflag) * 255, (1 - inputflag) * 255, inputflag * 255); }
-	configptr->Skin.Base->Other.Font.Game.DrawFontString({ 64 * (float)KeyIndex + 320, (32 * ((float)i - selector)) + 360 }, data ? GetKeyStr(data) : "*", c);
+	configptr->Skin.Base->Other.Font.Game.DrawFontString({ 64 * (float)KeyIndex + 320, (32 * ((float)i - selector)) + 360 }, data, c);
 	i++;
 }
 
-void _Config::AllDrawKeyData(int& i, int selector, std::vector<int> data) {
+void _Config::AllDrawKeyData(int& i, int selector, std::vector<std::string> data) {
 
 	for (int x = 0; x < data.size(); x++) {
 		unsigned int c = GetColor(255, 255, 255);
 		if (x == KeyIndex && Selector == i) { c = GetColor((1 - inputflag) * 255, (1 - inputflag) * 255, 255); }
-		configptr->Skin.Base->Other.Font.Game.DrawFontString({ 64 * (float)x + 320, (32 * ((float)i - selector)) + 360 }, data[x] ? GetKeyStr(data[x]) : "*", c);
+		configptr->Skin.Base->Other.Font.Game.DrawFontString({ 64 * (float)x + 320, (32 * ((float)i - selector)) + 360 }, data[x], c);
 	}
 	i++;
 }

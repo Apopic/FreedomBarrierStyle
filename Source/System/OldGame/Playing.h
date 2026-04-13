@@ -204,6 +204,7 @@ struct ChartStreamData {
 		BalloonCount = 0;
 		AllNoteCount = 0;
 		BGMovieHandle = 0;
+		BGMovieSize = { 1280, 720 };
 		if (!IsDanPlay) {
 			for (auto&& judge : Judge) { judge = JudgeData(); }
 			ExamDatas.clear();
@@ -278,6 +279,9 @@ public:
 	ulonglong MeasureIndex = 0;
 	ulonglong AllMeasureCount = 0;
 
+	Timer<millisecond> KeyFlash[4][4];
+	double KeyFlashTime = 160;
+
 	double ChartNowTime(bool FrameCounter = false, double fastdrawrate = 0, double extendrate = 1) const {
 		double ret = 0;
 		if (FrameCounter) {
@@ -320,7 +324,7 @@ public:
 	void MovieDraw(double nowtime) {
 		
 		if (Chart.BGMovieHandle != 0) {
-			
+
 			DrawFillBox(0, 0, __SkinPtr->Info.Resolution.X, __SkinPtr->Info.Resolution.Y, GetColor(0, 0, 0));
 			DrawExtendGraphF(
 				__SkinPtr->Info.Resolution.X / 2 - Chart.BGMovieSize.Width / 2,
@@ -745,30 +749,22 @@ public:
 
 	void PlayProc(double NowTime) {
 
-		Input.HitKeyesProcess(__ConfigPtr->DonInputLeft, KeyState::Down, [&] {
-			__SkinPtr->Base->Playing.SE.Don.Play();
-			MiniTaikoFlash[(int)HitType::DonLeft].Start();
-			JudgeNote(NowTime, '1');
-			Action(HitType::DonLeft);
-			});
-		Input.HitKeyesProcess(__ConfigPtr->DonInputRight, KeyState::Down, [&] {
-			__SkinPtr->Base->Playing.SE.Don.Play();
-			MiniTaikoFlash[(int)HitType::DonRight].Start();
-			JudgeNote(NowTime, '1');
-			Action(HitType::DonRight);
-			});
-		Input.HitKeyesProcess(__ConfigPtr->KaInputLeft, KeyState::Down, [&] {
-			__SkinPtr->Base->Playing.SE.Ka.Play();
-			MiniTaikoFlash[(int)HitType::KaLeft].Start();
-			JudgeNote(NowTime, '2');
-			Action(HitType::KaLeft);
-			});
-		Input.HitKeyesProcess(__ConfigPtr->KaInputRight, KeyState::Down, [&] {
-			__SkinPtr->Base->Playing.SE.Ka.Play();
-			MiniTaikoFlash[(int)HitType::KaRight].Start();
-			JudgeNote(NowTime, '2');
-			Action(HitType::KaRight);
-			});
+		static auto KeyDownProc = [&](int array, HitType type, SoundData SE, std::vector<int> keys) {
+			for (int i = 0; i < keys.size(); i++) {
+				Input.HitKeyProcess(keys[i], KeyState::Down, [&] {
+					SE.Play();
+					MiniTaikoFlash[(int)type].Start();
+					KeyFlash[array][i].Start();
+					JudgeNote(NowTime, (char)(((int)type % 2) + '1'));
+					Action(type);
+					});
+			}
+			};
+
+		KeyDownProc(0, HitType::KaLeft, __SkinPtr->Base->Playing.SE.Ka, __ConfigPtr->KaInputLeft);
+		KeyDownProc(1, HitType::DonLeft, __SkinPtr->Base->Playing.SE.Don, __ConfigPtr->DonInputLeft);
+		KeyDownProc(2, HitType::DonRight, __SkinPtr->Base->Playing.SE.Don, __ConfigPtr->DonInputRight);
+		KeyDownProc(3, HitType::KaRight, __SkinPtr->Base->Playing.SE.Ka, __ConfigPtr->KaInputRight);
 	}
 
 	void TraningModeProc(double nowtime) {
@@ -820,7 +816,12 @@ public:
 
 			if (MeasureJump.GetRecordingTime() >= MeasureJumpTime) {
 				if (Chart.BGMovieHandle != 0) {
-					SeekMovieToGraph(Chart.BGMovieHandle, TrainingOffset - Chart.SongBlankTime);
+					if (Chart.OriginalData.BGMovieOffset < 0) {
+						SeekMovieToGraph(Chart.BGMovieHandle, TrainingOffset + Chart.OriginalData.BGMovieOffset * -1000);
+					}
+					else {
+						SeekMovieToGraph(Chart.BGMovieHandle, TrainingOffset - Chart.SongBlankTime);
+					}
 				}
 				MeasureJump.End();
 			}
@@ -1307,6 +1308,45 @@ break;\
 				GetStrlen(valstr, __SkinPtr->Base->Playing.Font.ExamVal.Handle),
 				valstr
 			);
+		}
+	}
+
+	void KeyCharDraw(int array, std::vector<int> keys, std::vector<std::string> strs) {
+
+		static auto KeyAlpha = [&](int array, int index) {
+			if (!KeyFlash[array][index].GetNowRecording()) {
+				return 0.0;
+			}
+			double alpha = 255 * (1 - GetEasingRate(KeyFlash[array][index].GetRecordingTime() / KeyFlashTime, ease::Base::In, ease::Line::Cubic));
+			if (alpha < 0) { KeyFlash[array][index].End(); }
+			return alpha;
+			};
+
+		for (int i = 0; i < keys.size(); i++) {
+
+			double alpha = KeyAlpha(array, i);
+
+			if (strs[i] != "*") {
+
+				__SkinPtr->Base->Playing.Image.KeyViewBack.Draw({
+					__SkinPtr->Base->Playing.Image.KeyViewBack.Size.Width * array,
+					__SkinPtr->Base->Playing.Image.KeyViewBack.Size.Height * i });
+
+				__SkinPtr->Base->Playing.Font.KeyStr.Draw({
+					__SkinPtr->Base->Playing.Config.KeyStrPos.X + __SkinPtr->Base->Playing.Image.KeyViewFlash.Size.Width * array,
+					__SkinPtr->Base->Playing.Config.KeyStrPos.Y + __SkinPtr->Base->Playing.Image.KeyViewFlash.Size.Height * i },
+					GetColor(255, 255, 255),
+					GetColor(0, 0, 0),
+					GetStrlen(strs[i], __SkinPtr->Base->Playing.Font.KeyStr.Handle),
+					strs[i]
+					);
+
+				SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha);
+				__SkinPtr->Base->Playing.Image.KeyViewFlash.Draw({
+					__SkinPtr->Base->Playing.Image.KeyViewFlash.Size.Width * array,
+					__SkinPtr->Base->Playing.Image.KeyViewFlash.Size.Height * i });
+				SetDrawBlendMode(0, 0);
+			}
 		}
 	}
 

@@ -112,12 +112,11 @@ public:
 				Pos2D<float> PlayerNamePos = { 80, 320 };
 				Pos2D<float> ExamNamePos = { 160, 380 };
 				Pos2D<float> ExamValPos = { 160, 420 };
+				Pos2D<float> KeyStrPos = { 120, 390 };
 				double LaneExtendRate = 0.948;
 				double LaneAlpha = 200;
 				double JudgeUpperExplosionFrameTime = 12;
 				double GoGoFireFrameTime = 60;
-				bool BranchSlideAnimation = true;
-				double BranchSlideTime = 120;
 				bool KeyInputView = true;
 			} Config;
 			struct _Image {
@@ -140,6 +139,8 @@ public:
 				GraphData JudgeString;
 				GraphData ProgressBar;
 				GraphData ExamProgressBar;
+				GraphData KeyViewBack;
+				GraphData KeyViewFlash;
 			} Image;
 			struct _Font {
 				FontData Title;

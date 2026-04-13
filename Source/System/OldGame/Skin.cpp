@@ -160,12 +160,11 @@ void _Skin::SkinLoad(const std::string& name) {
 	ValLoad(Playing, Config, PlayerNamePos);
 	ValLoad(Playing, Config, ExamNamePos);
 	ValLoad(Playing, Config, ExamValPos);
+	ValLoad(Playing, Config, KeyStrPos);
 	ValLoad(Playing, Config, LaneExtendRate);
 	ValLoad(Playing, Config, LaneAlpha);
 	ValLoad(Playing, Config, JudgeUpperExplosionFrameTime);
 	ValLoad(Playing, Config, GoGoFireFrameTime);
-	ValLoad(Playing, Config, BranchSlideAnimation);
-	ValLoad(Playing, Config, BranchSlideTime);
 	ValLoad(Playing, Config, KeyInputView);
 
 	DataLoad(Playing, Image, Box);
@@ -187,6 +186,8 @@ void _Skin::SkinLoad(const std::string& name) {
 	DataLoad(Playing, Image, JudgeString);
 	DataLoad(Playing, Image, ProgressBar);
 	DataLoad(Playing, Image, ExamProgressBar);
+	DataLoad(Playing, Image, KeyViewBack);
+	DataLoad(Playing, Image, KeyViewFlash);
 
 	DataLoad(Playing, Font, Title);
 	DataLoad(Playing, Font, SubTitle);

@@ -63,10 +63,15 @@ public:
 	bool ViewDebugData = false;
 	bool MultiBoot = false;
 
-	std::vector<int> KaInputLeft   {'D','S',0,0};
-	std::vector<int> DonInputLeft  {'F','G',0,0};
-	std::vector<int> DonInputRight {'J','H',0,0};
-	std::vector<int> KaInputRight  {'K','L',0,0};
+	std::vector<int> KaInputLeft{ 'D','S',0,0 };
+	std::vector<int> DonInputLeft{ 'F','G',0,0 };
+	std::vector<int> DonInputRight{ 'J','H',0,0 };
+	std::vector<int> KaInputRight{ 'K','L',0,0 };
+
+	std::vector<std::string> KeyCharKaLeft{ "D","S","*","*" };
+	std::vector<std::string> KeyCharDonLeft{ "F","G","*","*" };
+	std::vector<std::string> KeyCharDonRight{ "J","H","*","*" };
+	std::vector<std::string> KeyCharKaRight{ "K","L","*","*" };
 
 	int Selector = 0;
 	bool GenreFlag = true;
@@ -174,8 +179,8 @@ public:
 		i++;
 	}
 
-	void DrawKeyData(int& i, int selector, int data);
-	void AllDrawKeyData(int& i, int selector, std::vector<int> data);
+	void DrawKeyData(int& i, int selector, std::string data);
+	void AllDrawKeyData(int& i, int selector, std::vector<std::string> data);
 
 	template<typename T, typename I>
 	void ProcConfigData(int& i, T& data, I& input) {
@@ -202,25 +207,16 @@ public:
 		i++;
 	}
 
-	std::string GetKeyStr(int Code) {
-
-		uint scanCode = MapVirtualKey(Code, MAPVK_VK_TO_VSC);
-
-		switch (Code) {
-		case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN:
-		case VK_PRIOR: case VK_NEXT: case VK_END: case VK_HOME:
-		case VK_INSERT: case VK_DELETE: case VK_DIVIDE:
-		case VK_NUMLOCK:
-			scanCode |= KF_EXTENDED;
-			break;
-		}
-
-		char keyName[128];
-		if (GetKeyNameTextA((scanCode << 16), keyName, sizeof(keyName)) > 0) {
-			return std::string(keyName);
-		}
-		else {
-			return "*";
+	void GetKeyChar(std::vector<int>& keys, std::vector<std::string>& input) {
+		input.clear();
+		for (auto&& key : keys) {
+			uint ScanCode = MapVirtualKey(key, MAPVK_VK_TO_VSC);
+			char KeyName[128];
+			if (GetKeyNameText(ScanCode << 16, KeyName, sizeof(KeyName)) != 0) {
+				input.push_back(KeyName);
+				continue;
+			}
+			input.push_back("*");
 		}
 	}
 };
