@@ -16,6 +16,9 @@ void GameSystem::DanSelectInit() {
 	Skin.Base->SongSelect.SE.Don.SetVolume((Config.SEVolume));
 	Skin.Base->SongSelect.SE.Ka.SetVolume((Config.SEVolume));
 
+	Playing.TrainingOffset = 0;
+	Playing.NoteDataIndex = 0;
+	Playing.MeasureIndex = 0;
 }
 
 void GameSystem::DanSelectEnd() {

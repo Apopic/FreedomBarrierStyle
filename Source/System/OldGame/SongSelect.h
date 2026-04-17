@@ -822,7 +822,7 @@ public:
 
 			if (fs::path(path).extension() != ".mp4") {
 
-				std::string command = "ffmpeg -i \"movie.mp4\" -q:v 10 -r 120 \"movie" + fs::path(path).extension().string() + "\"";
+				std::string command = "ffmpeg -i \"movie.mp4\" -q:v 6 -r 60 \"movie" + fs::path(path).extension().string() + "\"";
 				int result = std::system((powershell + "\"" + command + "\"").c_str());
 
 				if (fs::exists("movie.mp4")) {
