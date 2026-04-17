@@ -743,10 +743,10 @@ public:
 				};
 
 			if (!IsInstalled("yt-dlp")) {
-				std::system((powershell + "\"" + "winget install yt-dlp -WindowStyle Hidden" + "\"").c_str());
+				std::system((powershell + "\"" + "winget install yt-dlp" + "\"").c_str());
 			}
 			else {
-				std::system((powershell + "\"" + "winget upgrade yt-dlp -WindowStyle Hidden" + "\"").c_str());
+				std::system((powershell + "\"" + "winget upgrade yt-dlp" + "\"").c_str());
 			}
 
 			if (fs::exists("song.ogg")) {
@@ -797,10 +797,10 @@ public:
 				};
 
 			if (!IsInstalled("yt-dlp")) {
-				std::system((powershell + "\"" + "winget install yt-dlp -WindowStyle Hidden" + "\"").c_str());
+				std::system((powershell + "\"" + "winget install yt-dlp" + "\"").c_str());
 			}
 			else {
-				std::system((powershell + "\"" + "winget upgrade yt-dlp -WindowStyle Hidden" + "\"").c_str());
+				std::system((powershell + "\"" + "winget upgrade yt-dlp" + "\"").c_str());
 			}
 
 			if (fs::exists("movie")) {

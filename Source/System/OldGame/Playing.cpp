@@ -32,6 +32,8 @@ void GameSystem::PlayingInit() {
 			Playing.KeyFlash[i][j].End();
 		}
 	}
+
+	Playing.Chart.CursorMove.End();
 }
 
 void GameSystem::PlayingEnd() {
@@ -117,13 +119,13 @@ void GameSystem::PlayingDraw() {
 		}
 	}
 
-	if (SongSelect.IsDanMode) {
-		Skin.Base->Playing.Image.Box.Draw({ 0,0 });
-		Playing.ExamProgressBarDraw();
-		Playing.ExamValDraw();
-	}
-
 	if (!MultiRoom.MultiFlag) {
+
+		if (SongSelect.IsDanMode) {
+			Skin.Base->Playing.Image.Box.Draw({ 0,0 });
+			Playing.ExamProgressBarDraw();
+			Playing.ExamValDraw();
+		}
 
 		if (Skin.Base->Playing.Config.KeyInputView) {
 			Playing.KeyCharDraw(0, Config.KaInputLeft, Config.KeyCharKaLeft);
@@ -140,7 +142,7 @@ void GameSystem::PlayingDraw() {
 				DrawFormatString(
 					Skin.Base->Playing.Image.Note.Pos.X,
 					Skin.Base->Playing.Image.Note.Pos.Y - 100,
-					GetColor(255, 255, 255), 
+					GetColor(255, 255, 255),
 					"(%d/%d)",
 					Playing.MeasureIndex, Playing.AllMeasureCount
 				);

@@ -205,7 +205,7 @@ struct ChartStreamData {
 		AllNoteCount = 0;
 		BGMovieHandle = 0;
 		BGMovieSize = { 1280, 720 };
-		HitErrorTime = 0;
+		HitErrorTime.clear();
 		CursorPos = 0;
 		if (!IsDanPlay) {
 			for (auto&& judge : Judge) { judge = JudgeData(); }
@@ -251,7 +251,7 @@ struct ChartStreamData {
 	bool IsFall = true;
 	std::vector<ExamStreamData> ExamDatas = std::vector<ExamStreamData>();
 
-	double HitErrorTime = 0;
+	std::vector<double> HitErrorTime;
 	float CursorPos = 0;
 
 	Timer<millisecond> CursorMove;
@@ -357,12 +357,7 @@ public:
 
 		static auto NoteAlpha = [&](int& Alpha, double _one, AlphaType Type) {
 
-			if (_one > 1) {
-				_one = 1;
-			}
-			if (_one < 0) {
-				_one = 0;
-			}
+			std::clamp(_one, 0.0, 1.0);
 
 			switch (Type) {
 			case AlphaType::Hidden:
@@ -372,8 +367,8 @@ public:
 				Alpha = Alpha * (1 - _one);
 				break;
 			}
-
 			SetDrawBlendMode(DX_BLENDMODE_ALPHA, Alpha);
+
 			};
 
 		const Pos2D<double>& NoteOrigin = {
@@ -1005,8 +1000,8 @@ break;\
 				Judge.Hit(JudgeType::Bad, 0, '\0', __ConfigPtr->AutoPlayFlag);
 			}
 
+			Chart.HitErrorTime.push_back(_HitError);
 			Chart.CursorMove.Start();
-			Chart.HitErrorTime = _HitError;
 
 			data.HitFlag = true;
 			data.NoteType = '\0';
@@ -1357,20 +1352,43 @@ break;\
 	}
 
 	void ScoreMeterDraw() {
-		
-		if (Chart.HitErrorTime != 0) {
-			if (std::abs(Chart.CursorPos) < (__SkinPtr->Base->Playing.Image.ScoreMeter.Size.Width / 2)) {
-				float dest = (__SkinPtr->Base->Playing.Image.ScoreMeter.Size.Width / 2) * (Chart.HitErrorTime / __ConfigPtr->JudgeBad);
-				double time = GetEasingRate(Chart.CursorMove.GetRecordingTime() / Chart.CursorMoveTime, ease::Base::In, ease::Line::Linear);
-				Chart.CursorPos = std::lerp(Chart.CursorPos, dest, time);
-				if (time >= 1.0) {
-					Chart.HitErrorTime = 0;
-				}
-			}
-		}
 
 		__SkinPtr->Base->Playing.Image.ScoreMeter.Draw({ 0,0 });
-		__SkinPtr->Base->Playing.Image.ScoreCursor.Draw({ Chart.CursorPos, 0});
+
+		float dest = 0;
+		float average = 0;
+		int i = 0;
+
+		for (auto&& errortime : Chart.HitErrorTime | std::views::reverse) {
+
+			float dest = (__SkinPtr->Base->Playing.Image.ScoreMeter.Size.Width / 2) * (errortime / __ConfigPtr->JudgeBad);
+
+			const Pos2D<double> ScoreLinePos = {
+				__SkinPtr->Base->Playing.Image.ScoreMeter.Pos.X + dest,
+				__SkinPtr->Base->Playing.Image.ScoreMeter.Pos.Y };
+
+			SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255 / (i + 1));
+			DrawLineAA(ScoreLinePos.X, ScoreLinePos.Y - 10, ScoreLinePos.X, ScoreLinePos.Y + 10, GetColor(255, 255, 255), 2.0f);
+			SetDrawBlendMode(0, 0);
+
+			if (i > 16) {
+				Chart.HitErrorTime.erase(Chart.HitErrorTime.end() - i);
+				continue;
+			}
+
+			average += dest;
+			i++;
+		}
+
+		if (i > 0) {		
+			dest = average / i;
+		}
+
+		double time = GetEasingRate(Chart.CursorMove.GetRecordingTime() / Chart.CursorMoveTime, ease::Base::In, ease::Line::Linear);
+		Chart.CursorPos = std::lerp(Chart.CursorPos, dest, time);
+
+		__SkinPtr->Base->Playing.Image.ScoreCursor.Draw({ Chart.CursorPos, 0 });
+
 	}
 
 	void Action(HitType type);
