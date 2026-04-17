@@ -49,6 +49,7 @@ void GameSystem::MultiRoomProc() {
 
 		if (Public.HitKey == HitType::Enter && MultiRoom.IsSelected) {
 			Skin.Base->Title.SE.Don.Play();
+			PrevScene = Scene::MultiRoom;
 			NowScene = Scene::Loading;
 			return;
 		}
@@ -83,6 +84,7 @@ void GameSystem::MultiRoomProc() {
 							Skin.Base->Title.SE.Don.Play();
 							Public.HitKey = HitType::Enter;
 							Send(DataType::Public, Public);
+							PrevScene = Scene::MultiRoom;
 							NowScene = Scene::Loading;
 							return;
 						}

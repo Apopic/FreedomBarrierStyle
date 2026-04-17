@@ -1,7 +1,6 @@
 ﻿#include "Result.h"
 #include "GameSystem.h"
 
-_Skin* skinptr;
 _Result* Result;
 
 _Result::_Result(GameSystem* ptr) {
@@ -190,59 +189,4 @@ void GameSystem::ResultProc() {
 	}
 }
 
-void _Result::ScoreDraw(const Pos2D<float>& Pos, ulonglong Num) {
-	int digit = std::digit(Num);
 
-	float offset = 0;
-	int i = 0;
-	do {
-		skinptr->Base->Result.Image.Number.Draw({ offset + Pos.X, Pos.Y }, Num % 10);
-		Num /= 10;
-		++i;
-		offset -= skinptr->Base->Result.Image.Number.Size.Width;
-	} while (i < digit);
-}
-
-void _Result::AccuracyDraw(const Pos2D<float>& Pos, double Rate) {
-	int iRate = Rate * 100;
-	int digit = std::digit(iRate) + 2;
-	if (iRate == 0) {
-		digit = 5;
-	}
-
-	float offset = 0;
-	skinptr->Base->Result.Image.Number.Draw({ offset + Pos.X, Pos.Y }, 11);
-	offset -= skinptr->Base->Result.Image.Number.Size.Width;
-	--digit;
-
-	int i = 0;
-	do {
-		if (i == 2) {
-			skinptr->Base->Result.Image.Number.Draw({ offset + Pos.X, Pos.Y }, 12);
-		}
-		else {
-			skinptr->Base->Result.Image.Number.Draw({ offset + Pos.X, Pos.Y }, iRate % 10);
-			iRate /= 10;
-		}
-		++i;
-		offset -= skinptr->Base->Result.Image.Number.Size.Width;
-	} while (i < digit);
-}
-
-void _Result::JudgesDraw(const Pos2D<float>& Pos, ulonglong Num) {
-
-	int digit = std::digit(Num) + 1;
-
-	float offset = skinptr->Base->Result.Image.Number.Size.Width * digit;
-	skinptr->Base->Result.Image.Number.Draw({ offset + Pos.X, Pos.Y }, 10);
-	offset -= skinptr->Base->Result.Image.Number.Size.Width;
-	--digit;
-
-	int i = 0;
-	do {
-		skinptr->Base->Result.Image.Number.Draw({ offset + Pos.X, Pos.Y }, Num % 10);
-		Num /= 10;
-		++i;
-		offset -= skinptr->Base->Result.Image.Number.Size.Width;
-	} while (i < digit);
-}

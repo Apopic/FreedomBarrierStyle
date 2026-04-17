@@ -154,6 +154,7 @@ void GameSystem::DanSelectProc() {
 		}
 		else {
 			SongSelect.CourseIndex = (int)ChartCourseType::Dan;
+			PrevScene = Scene::DanSelect;
 			NowScene = Scene::Loading;
 		}
 		};

@@ -77,7 +77,7 @@ void GameSystem::PlayingDraw() {
 		Skin.Base->Playing.Image.Note.Draw(add, 0);
 
 		if (Playing.Chart.NowGoGo) {
-			Playing.GoGoFireDraw(add, NowTime);
+			Skin.Base->Playing.Image.GoGoFire.Draw({ 0,0 + add.Y }, (uint)(NowTime / Skin.Base->Playing.Config.GoGoFireFrameTime) % Skin.Base->Playing.Image.GoGoFire.Div.X);
 		}
 
 		Playing.JudgeUnderExplosionDraw(add, HitNote);
@@ -96,13 +96,13 @@ void GameSystem::PlayingDraw() {
 		Playing.MiniTaikoFlashDraw(add, pldx);
 
 		if (Playing.Chart.BalloonCount > 0) {
-			Playing.BalloonDraw(Playing.Chart.BalloonCount, add);
+			Playing.NumberDraw(Skin.Base->Playing.Image.BalloonNumber, Playing.Chart.BalloonCount, 1, add);
 		}
 		if (Playing.Chart.Judge[pldx].Combo >= 3) {
-			Playing.ComboDraw(pldx, add);
+			Playing.NumberDraw(Skin.Base->Playing.Image.ComboNumber, Playing.Chart.Judge[pldx].Combo, 0, add);
 		}
 
-		Playing.ScoreDraw(pldx, add);
+		Playing.NumberDraw(Skin.Base->Playing.Image.ScoreNumber, Playing.Chart.Judge[pldx].Score, 1, add);
 
 		pldx++;
 
@@ -110,12 +110,12 @@ void GameSystem::PlayingDraw() {
 
 	if (Private.CountAll < 4) {
 		if (!SongSelect.IsDanMode) {
-			Playing.TitleDraw(Playing.Chart.OriginalData.Title, Playing.Chart.OriginalData.PlayingTitleStrlen);
-			Playing.SubTitleDraw(Playing.Chart.OriginalData.SubTitle, Playing.Chart.OriginalData.PlayingSubTitleStrlen);
+			Playing.TitleDraw(Skin.Base->Playing.Font.Title, Skin.Base->Playing.Config.TitlePos, Playing.Chart.OriginalData.Title, Playing.Chart.OriginalData.PlayingTitleStrlen);
+			Playing.TitleDraw(Skin.Base->Playing.Font.SubTitle, Skin.Base->Playing.Config.SubTitlePos, Playing.Chart.OriginalData.SubTitle, Playing.Chart.OriginalData.PlayingSubTitleStrlen);
 		}
 		else {
-			Playing.TitleDraw(Playing.Chart.OriginalData.DanTitle, Playing.Chart.OriginalData.DanTitleStrlen);
-			Playing.SubTitleDraw(Playing.Chart.OriginalData.DanSubTitle, Playing.Chart.OriginalData.DanSubTitleStrlen);
+			Playing.TitleDraw(Skin.Base->Playing.Font.Title, Skin.Base->Playing.Config.TitlePos, Playing.Chart.OriginalData.DanTitle, Playing.Chart.OriginalData.DanTitleStrlen);
+			Playing.TitleDraw(Skin.Base->Playing.Font.SubTitle, Skin.Base->Playing.Config.SubTitlePos, Playing.Chart.OriginalData.DanSubTitle, Playing.Chart.OriginalData.DanSubTitleStrlen);
 		}
 	}
 

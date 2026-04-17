@@ -347,6 +347,7 @@ void GameSystem::SongSelectProc() {
 					return;
 				}
 
+				PrevScene = Scene::SongSelect;
 				NowScene = Scene::Loading;
 			}
 		}

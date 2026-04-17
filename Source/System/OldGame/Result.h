@@ -10,18 +10,73 @@ public:
 	_Result(GameSystem* ptr);
 	~_Result();
 
+	_Skin* skinptr = nullptr;
+
 	int Index = 0;
 
 	std::string GenUID() {
-		unsigned seed = std::chrono::steady_clock::now().time_since_epoch().count();
-		std::mt19937_64 engine(seed);
-		std::uniform_int_distribution<ulonglong> dist(0, ULLONG_MAX);
-		return std::to_string(dist(engine));
+		ulonglong high = (ulonglong)GetRand(0xFFFFFFFF);
+		ulonglong low = (ulonglong)GetRand(0xFFFFFFFF);
+		ulonglong result = (high << 32) | low;
+		return std::to_string(result);
 	}
 
-	void ScoreDraw(const Pos2D<float> &Pos, ulonglong Num);
-	void AccuracyDraw(const Pos2D<float> &Pos, double Rate);
-	void JudgesDraw(const Pos2D<float> &Pos, ulonglong Num);
+	void ScoreDraw(const Pos2D<float>& Pos, ulonglong Num) {
+		int digit = std::digit(Num);
+
+		float offset = 0;
+		int i = 0;
+		do {
+			skinptr->Base->Result.Image.Number.Draw({ offset + Pos.X, Pos.Y }, Num % 10);
+			Num /= 10;
+			++i;
+			offset -= skinptr->Base->Result.Image.Number.Size.Width;
+		} while (i < digit);
+	}
+
+	void AccuracyDraw(const Pos2D<float>& Pos, double Rate) {
+		int iRate = Rate * 100;
+		int digit = std::digit(iRate) + 2;
+		if (iRate == 0) {
+			digit = 5;
+		}
+
+		float offset = 0;
+		skinptr->Base->Result.Image.Number.Draw({ offset + Pos.X, Pos.Y }, 11);
+		offset -= skinptr->Base->Result.Image.Number.Size.Width;
+		--digit;
+
+		int i = 0;
+		do {
+			if (i == 2) {
+				skinptr->Base->Result.Image.Number.Draw({ offset + Pos.X, Pos.Y }, 12);
+			}
+			else {
+				skinptr->Base->Result.Image.Number.Draw({ offset + Pos.X, Pos.Y }, iRate % 10);
+				iRate /= 10;
+			}
+			++i;
+			offset -= skinptr->Base->Result.Image.Number.Size.Width;
+		} while (i < digit);
+	}
+
+	void JudgesDraw(const Pos2D<float>& Pos, ulonglong Num) {
+
+		int digit = std::digit(Num) + 1;
+
+		float offset = skinptr->Base->Result.Image.Number.Size.Width * digit;
+		skinptr->Base->Result.Image.Number.Draw({ offset + Pos.X, Pos.Y }, 10);
+		offset -= skinptr->Base->Result.Image.Number.Size.Width;
+		--digit;
+
+		int i = 0;
+		do {
+			skinptr->Base->Result.Image.Number.Draw({ offset + Pos.X, Pos.Y }, Num % 10);
+			Num /= 10;
+			++i;
+			offset -= skinptr->Base->Result.Image.Number.Size.Width;
+		} while (i < digit);
+	}
 
 	JudgeData ScoreDataLoad(std::string ChartID, std::string Course, std::string FileDir) {
 

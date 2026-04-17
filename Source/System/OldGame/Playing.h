@@ -1,8 +1,6 @@
 ﻿#pragma once
 #include "Include.hpp"
 #include "SongSelect.h"
-#include "Config.h"
-#include "Skin.h"
 
 enum class AlphaType {
 	Hidden,
@@ -357,7 +355,7 @@ public:
 
 		static auto NoteAlpha = [&](int& Alpha, double _one, AlphaType Type) {
 
-			std::clamp(_one, 0.0, 1.0);
+			_one = std::clamp(_one, 0.0, 1.0);
 
 			switch (Type) {
 			case AlphaType::Hidden:
@@ -368,7 +366,6 @@ public:
 				break;
 			}
 			SetDrawBlendMode(DX_BLENDMODE_ALPHA, Alpha);
-
 			};
 
 		const Pos2D<double>& NoteOrigin = {
@@ -1028,18 +1025,6 @@ break;\
 		}
 	}
 
-	void GoGoFireDraw(Pos2D<float> add, double NowTime) {
-
-		uint drawindex = NowTime / __SkinPtr->Base->Playing.Config.GoGoFireFrameTime;
-
-		__SkinPtr->Base->Playing.Image.GoGoFire.Draw(
-			{
-			__SkinPtr->Base->Playing.Image.GoGoFire.Pos.X,
-			__SkinPtr->Base->Playing.Image.GoGoFire.Pos.Y + add.Y
-			},
-			drawindex % __SkinPtr->Base->Playing.Image.GoGoFire.Div.X);
-	}
-
 	void JudgeUnderExplosionDraw(const Pos2D<float> add, _HitNote& HitNote) {
 
 		int i = HitNote.Index;
@@ -1167,9 +1152,9 @@ break;\
 #undef TAIKOFLASH
 	}
 
-	void TitleDraw(std::string str, int strlen) {
-		__SkinPtr->Base->Playing.Font.Title.Draw(
-			__SkinPtr->Base->Playing.Config.TitlePos,
+	void TitleDraw(FontData font, Pos2D<float> pos, std::string str, int strlen) {
+		font.Draw(
+			pos,
 			GetColor(255, 255, 255),
 			GetColor(0, 0, 0),
 			strlen,
@@ -1177,57 +1162,23 @@ break;\
 		);
 	}
 
-	void SubTitleDraw(std::string str, int strlen) {
-		__SkinPtr->Base->Playing.Font.SubTitle.Draw(
-			__SkinPtr->Base->Playing.Config.SubTitlePos,
-			GetColor(255, 255, 255),
-			GetColor(0, 0, 0),
-			strlen,
-			str
-		);
-	}
+	void NumberDraw(GraphData Image, ulonglong num, uint type, Pos2D<float> pos) {
+		int digit = std::digit(num);
+		float offset = 0;
 
-	void ComboDraw(int index, Pos2D<float> pos) {
-		ulonglong combo = Chart.Judge[index].Combo;
+		if (type == 0) {
+			offset = Image.Size.Width * (digit - 1) / 2;
+		}
+		if (type == 1) {
+			offset = Image.Size.Width - (digit - 1) + digit;
+		}
 
-		int digit = std::digit(combo);
-
-		float offset = __SkinPtr->Base->Playing.Image.ComboNumber.Size.Width * (digit - 1) / 2;
 		int i = 0;
 		do {
-			__SkinPtr->Base->Playing.Image.ComboNumber.Draw({ offset, pos.Y }, combo % 10);
-			combo /= 10;
+			Image.Draw({ offset, pos.Y }, num % 10);
+			num /= 10;
 			++i;
-			offset -= __SkinPtr->Base->Playing.Image.ComboNumber.Size.Width;
-		} while (i < digit);
-	}
-
-	void ScoreDraw(int index, Pos2D<float> pos) {
-		ulonglong score = Chart.Judge[index].Score;
-
-		int digit = std::digit(score);
-
-		float offset = __SkinPtr->Base->Playing.Image.ScoreNumber.Size.Width - (digit - 1) + digit;
-		int i = 0;
-		do {
-			__SkinPtr->Base->Playing.Image.ScoreNumber.Draw({ offset, pos.Y }, score % 10);
-			score /= 10;
-			++i;
-			offset -= __SkinPtr->Base->Playing.Image.ScoreNumber.Size.Width;
-		} while (i < digit);
-	}
-
-	void BalloonDraw(int val, Pos2D<float> pos) {
-		int c = val;
-		int digit = std::digit(c);
-
-		float offset = __SkinPtr->Base->Playing.Image.BalloonNumber.Size.Width - (digit - 1) + digit;
-		int i = 0;
-		do {
-			__SkinPtr->Base->Playing.Image.BalloonNumber.Draw({ offset, pos.Y }, c % 10);
-			c /= 10;
-			++i;
-			offset -= __SkinPtr->Base->Playing.Image.BalloonNumber.Size.Width;
+			offset -= Image.Size.Width;
 		} while (i < digit);
 	}
 
@@ -1251,11 +1202,12 @@ break;\
 
 		double Ratio = ((double)Chart.Judge[index].Good + (double)Chart.Judge[index].Ok * 0.5) / Chart.AllNoteCount;
 		float Width = __SkinPtr->Base->Playing.Image.ProgressBar.Size.Width * Ratio;
+		float MaxWidth = __SkinPtr->Base->Playing.Image.ProgressBar.Size.Width;
 
 		__SkinPtr->Base->Playing.Image.ProgressBar.RectDraw(
 			pos,
 			{ 0,__SkinPtr->Base->Playing.Image.ProgressBar.Size.Height },
-			{ std::min(__SkinPtr->Base->Playing.Image.ProgressBar.Size.Width, Width),
+			{ Width < MaxWidth ? Width : MaxWidth,
 			__SkinPtr->Base->Playing.Image.ProgressBar.Size.Height },
 			1
 		);
@@ -1269,12 +1221,13 @@ break;\
 
 			double Ratio = (double)Chart.ExamDatas[i].ExamVals / (double)Chart.OriginalData.ExamDatas[i].PassVal[0];
 			float Width = __SkinPtr->Base->Playing.Image.ExamProgressBar.Size.Width * Ratio;
+			float MaxWidth = __SkinPtr->Base->Playing.Image.ExamProgressBar.Size.Width;
 
 			if (!Chart.ExamDatas[i].IsFall) {
 				__SkinPtr->Base->Playing.Image.ExamProgressBar.RectDraw(
 					{ 0,120.0f * i },
 					{ 0, __SkinPtr->Base->Playing.Image.ExamProgressBar.Size.Height },
-					{ std::min(__SkinPtr->Base->Playing.Image.ExamProgressBar.Size.Width, Width),
+					{ Width < MaxWidth ? Width : MaxWidth,
 					__SkinPtr->Base->Playing.Image.ExamProgressBar.Size.Height },
 					1
 				);

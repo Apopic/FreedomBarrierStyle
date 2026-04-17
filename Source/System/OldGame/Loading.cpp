@@ -226,9 +226,17 @@ void GameSystem::LoadingProc() {
 			}
 		}
 		catch (const std::invalid_argument) {
+
 			std::string error = std::to_string(i + 1) + "行目の記述が不正です。";
 			MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
-			NowScene = Scene::SongSelect;
+
+			if (SongSelect.IsDanMode) {
+				Playing.Chart.IsDanPlay = false;
+				Playing.Chart.ExamDatas.clear();
+				Playing.Chart.DanPlayCount = 0;
+			}
+
+			NowScene = PrevScene;
 			return;
 		}
 
