@@ -166,6 +166,7 @@ void _Skin::SkinLoad(const std::string& name) {
 	ValLoad(Playing, Config, JudgeUpperExplosionFrameTime);
 	ValLoad(Playing, Config, GoGoFireFrameTime);
 	ValLoad(Playing, Config, KeyInputView);
+	ValLoad(Playing, Config, ScoreMeterView);
 
 	DataLoad(Playing, Image, Box);
 	DataLoad(Playing, Image, BackGround);
@@ -188,6 +189,8 @@ void _Skin::SkinLoad(const std::string& name) {
 	DataLoad(Playing, Image, ExamProgressBar);
 	DataLoad(Playing, Image, KeyViewBack);
 	DataLoad(Playing, Image, KeyViewFlash);
+	DataLoad(Playing, Image, ScoreMeter);
+	DataLoad(Playing, Image, ScoreCursor);
 
 	DataLoad(Playing, Font, Title);
 	DataLoad(Playing, Font, SubTitle);

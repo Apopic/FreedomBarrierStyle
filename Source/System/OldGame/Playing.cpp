@@ -63,7 +63,7 @@ void GameSystem::PlayingDraw() {
 		auto& HitNote = Playing.HitNote[pldx];
 
 		Skin.Base->Playing.Image.LaneFrame.Draw(add);
-		if (Playing.Chart.BGMovieHandle != 0) {
+		if (Playing.Chart.BGMovieHandle != 0) { 
 			SetDrawBlendMode(DX_BLENDMODE_ALPHA, Skin.Base->Playing.Config.LaneAlpha);
 		}
 		Skin.Base->Playing.Image.Lane.Draw(add);
@@ -78,9 +78,8 @@ void GameSystem::PlayingDraw() {
 			Playing.GoGoFireDraw(add, NowTime);
 		}
 
-		Playing.JudgeUnderExplosionDraw(&Skin, add, HitNote);
+		Playing.JudgeUnderExplosionDraw(add, HitNote);
 
-		Playing.NoteDrawData(NowTime);
 		Playing.NoteDraw(MultiData, NowTime, add, MultiRoom.MultiFlag, pldx);
 
 		Skin.Base->Playing.Image.Base.Draw(add);
@@ -131,6 +130,9 @@ void GameSystem::PlayingDraw() {
 			Playing.KeyCharDraw(1, Config.DonInputLeft, Config.KeyCharDonLeft);
 			Playing.KeyCharDraw(2, Config.DonInputRight, Config.KeyCharDonRight);
 			Playing.KeyCharDraw(3, Config.KaInputRight, Config.KeyCharKaRight);
+		}
+		if (Skin.Base->Playing.Config.ScoreMeterView) {
+			Playing.ScoreMeterDraw();
 		}
 
 		if (Config.TrainingMode) {

@@ -205,6 +205,8 @@ struct ChartStreamData {
 		AllNoteCount = 0;
 		BGMovieHandle = 0;
 		BGMovieSize = { 1280, 720 };
+		HitErrorTime = 0;
+		CursorPos = 0;
 		if (!IsDanPlay) {
 			for (auto&& judge : Judge) { judge = JudgeData(); }
 			ExamDatas.clear();
@@ -249,6 +251,11 @@ struct ChartStreamData {
 	bool IsFall = true;
 	std::vector<ExamStreamData> ExamDatas = std::vector<ExamStreamData>();
 
+	double HitErrorTime = 0;
+	float CursorPos = 0;
+
+	Timer<millisecond> CursorMove;
+	double CursorMoveTime = 3600;
 };
 
 extern class GameSystem* gameptr;
@@ -322,7 +329,7 @@ public:
 	} HitNote[4];
 
 	void MovieDraw(double nowtime) {
-		
+
 		if (Chart.BGMovieHandle != 0) {
 
 			DrawFillBox(0, 0, __SkinPtr->Info.Resolution.X, __SkinPtr->Info.Resolution.Y, GetColor(0, 0, 0));
@@ -331,7 +338,7 @@ public:
 				__SkinPtr->Info.Resolution.Y / 2 - Chart.BGMovieSize.Height / 2,
 				__SkinPtr->Info.Resolution.X / 2 + Chart.BGMovieSize.Width / 2,
 				__SkinPtr->Info.Resolution.Y / 2 + Chart.BGMovieSize.Height / 2,
-				Chart.BGMovieHandle, 
+				Chart.BGMovieHandle,
 				FALSE);
 
 			if ((nowtime + (Chart.OriginalData.BGMovieOffset * -1000)) > 128 && Chart.NowTime.GetNowRecording()) {
@@ -341,7 +348,7 @@ public:
 
 			SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255 * (1 - (__ConfigPtr->BGBrightness / 100)));
 			DrawFillBox(0, 0, __SkinPtr->Info.Resolution.X, __SkinPtr->Info.Resolution.Y, GetColor(0, 0, 0));
-			SetDrawBlendMode(0,0);
+			SetDrawBlendMode(0, 0);
 		}
 	}
 
@@ -369,9 +376,9 @@ public:
 			SetDrawBlendMode(DX_BLENDMODE_ALPHA, Alpha);
 			};
 
-			const Pos2D<double>&NoteOrigin = {
-		__SkinPtr->Base->Playing.Image.Note.Pos.X,
-		__SkinPtr->Base->Playing.Image.Note.Pos.Y + add.Y
+		const Pos2D<double>& NoteOrigin = {
+	__SkinPtr->Base->Playing.Image.Note.Pos.X,
+	__SkinPtr->Base->Playing.Image.Note.Pos.Y + add.Y
 		};
 
 		auto GetNotePos = [&](NoteData& data)->Pos2D<double> {
@@ -405,6 +412,54 @@ public:
 			return _ret;
 
 			};
+
+		auto&& ProcNotes = Chart.RawNoteDatas;
+		double _addms = ProcNotes[0].AbsTime;
+		for (int i = 0, size = ProcNotes.size(); i < size; ++i) {
+			NoteData& data = ProcNotes[i];
+
+			if (data.AbsTime < NowTime) {
+				data.BMFlag = true;
+				Chart.NowBPM = data.BPM;
+			}
+
+			if (data.BpmChangeFlag) {
+				if (data.BPM * data.Measure > 0) {
+					for (int j = i + 1; j < size; ++j) {
+						auto& jdata = ProcNotes[j];
+						if (jdata.BpmChangeFlag && jdata.BPM * jdata.Measure < 0) {
+							data.BpmChangeFlag = false;
+							for (int k = j; k < size; ++k) {
+								auto& kdata = ProcNotes[k];
+								if (kdata.AbsTime < jdata.AbsTime) {
+									kdata.BpmSpawnFlag = true;
+								}
+								else {
+									kdata.BpmSpawnFlag = false;
+								}
+							}
+							break;
+						}
+						if (jdata.BpmChangeFlag && jdata.BPM * jdata.Measure > 0) {
+							data.BpmChangeFlag = false;
+							for (int k = j; k < size; ++k) {
+								ProcNotes[k].BpmSpawnFlag = false;
+							}
+							break;
+						}
+					}
+				}
+				else {
+					data.BpmChangeFlag = false;
+				}
+			}
+
+			if (data.BMFlag || i == 0) { _addms = data.AbsTime; data.BMTime = data.AbsTime; continue; }
+
+			double _bpm = (Chart.NowBPM / ProcNotes[i - 1].BPM);
+			_addms += ProcNotes[i - 1].RelaTime / _bpm;
+			data.BMTime = _addms;
+		}
 
 #define InRange(x, y) (x > __SkinPtr->SimulationRect.Left && x < __SkinPtr->SimulationRect.Right && y > __SkinPtr->SimulationRect.Top && y < __SkinPtr->SimulationRect.Bottom)
 
@@ -879,7 +934,6 @@ break;\
 
 	void JudgeNote(double nowtime, char type) {
 
-		auto&& NoteDatas = Chart.RawNoteDatas;
 		auto& Judge = Chart.Judge[0];
 
 		int rollcount = 0;
@@ -888,7 +942,7 @@ break;\
 
 		bool NextImage = false;
 
-		for (auto&& data : NoteDatas) {
+		for (auto&& data : Chart.RawNoteDatas) {
 
 			if (data.HitFlag) {
 				continue;
@@ -951,6 +1005,9 @@ break;\
 				Judge.Hit(JudgeType::Bad, 0, '\0', __ConfigPtr->AutoPlayFlag);
 			}
 
+			Chart.CursorMove.Start();
+			Chart.HitErrorTime = _HitError;
+
 			data.HitFlag = true;
 			data.NoteType = '\0';
 
@@ -976,57 +1033,6 @@ break;\
 		}
 	}
 
-	void NoteDrawData(double NowTime) {
-
-		auto&& ProcNotes = Chart.RawNoteDatas;
-		double _addms = ProcNotes[0].AbsTime;
-		for (int i = 0, size = ProcNotes.size(); i < size; ++i) {
-			NoteData& data = ProcNotes[i];
-
-			if (data.AbsTime < NowTime) {
-				data.BMFlag = true;
-				Chart.NowBPM = data.BPM;
-			}
-
-			if (data.BpmChangeFlag) {
-				if (data.BPM * data.Measure > 0) {
-					for (int j = i + 1; j < size; ++j) {
-						auto& jdata = ProcNotes[j];
-						if (jdata.BpmChangeFlag && jdata.BPM * jdata.Measure < 0) {
-							data.BpmChangeFlag = false;
-							for (int k = j; k < size; ++k) {
-								auto& kdata = ProcNotes[k];
-								if (kdata.AbsTime < jdata.AbsTime) {
-									kdata.BpmSpawnFlag = true;
-								}
-								else {
-									kdata.BpmSpawnFlag = false;
-								}
-							}
-							break;
-						}
-						if (jdata.BpmChangeFlag && jdata.BPM * jdata.Measure > 0) {
-							data.BpmChangeFlag = false;
-							for (int k = j; k < size; ++k) {
-								ProcNotes[k].BpmSpawnFlag = false;
-							}
-							break;
-						}
-					}
-				}
-				else {
-					data.BpmChangeFlag = false;
-				}
-			}
-
-			if (data.BMFlag || i == 0) { _addms = data.AbsTime; data.BMTime = data.AbsTime; continue; }
-
-			double _bpm = (Chart.NowBPM / ProcNotes[i - 1].BPM);
-			_addms += ProcNotes[i - 1].RelaTime / _bpm;
-			data.BMTime = _addms;
-		}
-	}
-
 	void GoGoFireDraw(Pos2D<float> add, double NowTime) {
 
 		uint drawindex = NowTime / __SkinPtr->Base->Playing.Config.GoGoFireFrameTime;
@@ -1039,7 +1045,7 @@ break;\
 			drawindex % __SkinPtr->Base->Playing.Image.GoGoFire.Div.X);
 	}
 
-	void JudgeUnderExplosionDraw(_Skin* Skin, const Pos2D<float> add, _HitNote& HitNote) {
+	void JudgeUnderExplosionDraw(const Pos2D<float> add, _HitNote& HitNote) {
 
 		int i = HitNote.Index;
 		const double JudgeUnderExplosionTime = __SkinPtr->Base->Playing.Config.JudgeUpperExplosionFrameTime * __SkinPtr->Base->Playing.Image.JudgeUnderExplosion.Div.X;
@@ -1178,7 +1184,7 @@ break;\
 
 	void SubTitleDraw(std::string str, int strlen) {
 		__SkinPtr->Base->Playing.Font.SubTitle.Draw(
-		__SkinPtr->Base->Playing.Config.SubTitlePos,
+			__SkinPtr->Base->Playing.Config.SubTitlePos,
 			GetColor(255, 255, 255),
 			GetColor(0, 0, 0),
 			strlen,
@@ -1348,6 +1354,23 @@ break;\
 				SetDrawBlendMode(0, 0);
 			}
 		}
+	}
+
+	void ScoreMeterDraw() {
+		
+		if (Chart.HitErrorTime != 0) {
+			if (std::abs(Chart.CursorPos) < (__SkinPtr->Base->Playing.Image.ScoreMeter.Size.Width / 2)) {
+				float dest = (__SkinPtr->Base->Playing.Image.ScoreMeter.Size.Width / 2) * (Chart.HitErrorTime / __ConfigPtr->JudgeBad);
+				double time = GetEasingRate(Chart.CursorMove.GetRecordingTime() / Chart.CursorMoveTime, ease::Base::In, ease::Line::Linear);
+				Chart.CursorPos = std::lerp(Chart.CursorPos, dest, time);
+				if (time >= 1.0) {
+					Chart.HitErrorTime = 0;
+				}
+			}
+		}
+
+		__SkinPtr->Base->Playing.Image.ScoreMeter.Draw({ 0,0 });
+		__SkinPtr->Base->Playing.Image.ScoreCursor.Draw({ Chart.CursorPos, 0});
 	}
 
 	void Action(HitType type);

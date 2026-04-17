@@ -439,7 +439,8 @@ RollType = '\0'
 		GetGraphSizeF(Playing.Chart.BGMovieHandle, &Playing.Chart.BGMovieSize.Width, &Playing.Chart.BGMovieSize.Height);
 		float ExtendRate = Playing.Chart.BGMovieSize.Height / 720.0f;
 		Playing.Chart.BGMovieSize = { Playing.Chart.BGMovieSize.Width / ExtendRate, Playing.Chart.BGMovieSize.Height / ExtendRate };
-	
+		SetPlaySpeedRateMovieToGraph(Playing.Chart.BGMovieHandle, SongSpeed);
+
 		if (Playing.Chart.OriginalData.BGMovieOffset < 0) {
 			SeekMovieToGraph(Playing.Chart.BGMovieHandle, Playing.TrainingOffset + Playing.Chart.OriginalData.BGMovieOffset * -1000);
 		}

@@ -743,10 +743,10 @@ public:
 				};
 
 			if (!IsInstalled("yt-dlp")) {
-				std::system((powershell + "\"" + "winget install yt-dlp" + "\"").c_str());
+				std::system((powershell + "\"" + "winget install yt-dlp -WindowStyle Hidden" + "\"").c_str());
 			}
 			else {
-				std::system((powershell + "\"" + "winget upgrade yt-dlp" + "\"").c_str());
+				std::system((powershell + "\"" + "winget upgrade yt-dlp -WindowStyle Hidden" + "\"").c_str());
 			}
 
 			if (fs::exists("song.ogg")) {
@@ -797,10 +797,10 @@ public:
 				};
 
 			if (!IsInstalled("yt-dlp")) {
-				std::system((powershell + "\"" + "winget install yt-dlp" + "\"").c_str());
+				std::system((powershell + "\"" + "winget install yt-dlp -WindowStyle Hidden" + "\"").c_str());
 			}
 			else {
-				std::system((powershell + "\"" + "winget upgrade yt-dlp" + "\"").c_str());
+				std::system((powershell + "\"" + "winget upgrade yt-dlp -WindowStyle Hidden" + "\"").c_str());
 			}
 
 			if (fs::exists("movie")) {
@@ -822,7 +822,7 @@ public:
 
 			if (fs::path(path).extension() != ".mp4") {
 
-				std::string command = "ffmpeg -i \"movie.mp4\" \"movie" + fs::path(path).extension().string() + "\"";
+				std::string command = "ffmpeg -i \"movie.mp4\" -q:v 10 -r 120 \"movie" + fs::path(path).extension().string() + "\"";
 				int result = std::system((powershell + "\"" + command + "\"").c_str());
 
 				if (fs::exists("movie.mp4")) {

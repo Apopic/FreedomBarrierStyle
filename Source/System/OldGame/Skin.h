@@ -118,6 +118,7 @@ public:
 				double JudgeUpperExplosionFrameTime = 12;
 				double GoGoFireFrameTime = 60;
 				bool KeyInputView = true;
+				bool ScoreMeterView = true;
 			} Config;
 			struct _Image {
 				GraphData Box;
@@ -141,6 +142,8 @@ public:
 				GraphData ExamProgressBar;
 				GraphData KeyViewBack;
 				GraphData KeyViewFlash;
+				GraphData ScoreMeter;
+				GraphData ScoreCursor;
 			} Image;
 			struct _Font {
 				FontData Title;
