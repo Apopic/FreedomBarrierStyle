@@ -46,6 +46,7 @@ void _Config::ConfigLoad() {
 	JSONDATA(ChartSpeed);
 	JSONDATA(SongSpeed);
 	JSONDATA(BGBrightness);
+	JSONDATA(ScoreMeterBuffer);
 	JSONDATA(TrainingMode);
 	JSONDATA(ScreenFade);
 	JSONDATA(SkinName);
@@ -100,6 +101,7 @@ void _Config::ConfigWrite() {
 		JSONDATA(ChartSpeed),
 		JSONDATA(SongSpeed),
 		JSONDATA(BGBrightness),
+		JSONDATA(ScoreMeterBuffer),
 		JSONDATA(TrainingMode),
 		JSONDATA(ScreenFade),
 		JSONDATA(SkinName),
@@ -195,6 +197,7 @@ void GameSystem::ConfigDraw() {
 			Config.DrawConfigData(configptr, i, std::to_string(Config.ChartSpeed));
 			Config.DrawConfigData(configptr, i, std::to_string(Config.SongSpeed));
 			Config.DrawConfigData(configptr, i, std::to_string(Config.BGBrightness));
+			Config.DrawConfigData(configptr, i, std::to_string(Config.ScoreMeterBuffer));
 			Config.DrawConfigData(configptr, i, Config.TrainingMode ? "true" : "false");
 			Config.DrawConfigData(configptr, i, Config.ScreenFade ? "true" : "false");
 			Config.DrawConfigData(configptr, i, Config.SkinName);
@@ -406,6 +409,7 @@ void GameSystem::ConfigProc() {
 				Config.ProcConfigData(i, Config.ChartSpeed, Config.inputdouble);
 				Config.ProcConfigData(i, Config.SongSpeed, Config.inputdouble);
 				Config.ProcConfigData(i, Config.BGBrightness, Config.inputdouble);
+				Config.ProcConfigData(i, Config.ScoreMeterBuffer, Config.inputint);
 				Config.ProcConfigData(i, Config.TrainingMode, Config.inputbool);
 				Config.ProcConfigData(i, Config.ScreenFade, Config.inputbool);
 				Config.ProcConfigData(i, Config.SkinName, Config.inputstring);

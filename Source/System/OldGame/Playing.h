@@ -1306,7 +1306,16 @@ break;\
 
 	void ScoreMeterDraw() {
 
-		__SkinPtr->Base->Playing.Image.ScoreMeter.Draw({ 0,0 });
+		float Center = __SkinPtr->Info.Resolution.X / 2;
+		float Edge = (Center / 640) * 320;
+		float GoodBorder[2] = { Center - Edge * (__ConfigPtr->JudgeGood / __ConfigPtr->JudgeBad), Center + Edge * (__ConfigPtr->JudgeGood / __ConfigPtr->JudgeBad) };
+		float OkBorder[2]   = { Center - Edge * (__ConfigPtr->JudgeOk / __ConfigPtr->JudgeBad), Center + Edge * (__ConfigPtr->JudgeOk / __ConfigPtr->JudgeBad) };
+		float BadBorder[2]  = { Center - Edge, Center + Edge };
+
+		DrawLineAA(BadBorder[0] - 2.5, 700, BadBorder[1] + 2.5, 700, GetColor(100, 100, 100), 15.0f);
+		DrawLineAA(BadBorder[0], 700, BadBorder[1], 700, GetColor(0, 200, 225), 10.0f);
+		DrawLineAA(OkBorder[0], 700, OkBorder[1], 700, GetColor(100, 255, 25), 10.0f);
+		DrawLineAA(GoodBorder[0], 700, GoodBorder[1], 700, GetColor(255, 125, 25), 10.0f);
 
 		float dest = 0;
 		float average = 0;
@@ -1314,17 +1323,15 @@ break;\
 
 		for (auto&& errortime : Chart.HitErrorTime | std::views::reverse) {
 
-			float dest = (__SkinPtr->Base->Playing.Image.ScoreMeter.Size.Width / 2) * (errortime / __ConfigPtr->JudgeBad);
+			float dest = Edge * (errortime / __ConfigPtr->JudgeBad);
 
-			const Pos2D<double> ScoreLinePos = {
-				__SkinPtr->Base->Playing.Image.ScoreMeter.Pos.X + dest,
-				__SkinPtr->Base->Playing.Image.ScoreMeter.Pos.Y };
+			const Pos2D<float> ScoreLinePos = { 640 + dest, 700 };
 
-			SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255 / (i + 1));
+			SetDrawBlendMode(DX_BLENDMODE_ALPHA, std::lerp(255, -255, (double)(i + 1) / __ConfigPtr->ScoreMeterBuffer));
 			DrawLineAA(ScoreLinePos.X, ScoreLinePos.Y - 10, ScoreLinePos.X, ScoreLinePos.Y + 10, GetColor(255, 255, 255), 2.0f);
 			SetDrawBlendMode(0, 0);
 
-			if (i > 16) {
+			if (i > __ConfigPtr->ScoreMeterBuffer) {
 				Chart.HitErrorTime.erase(Chart.HitErrorTime.end() - i);
 				continue;
 			}

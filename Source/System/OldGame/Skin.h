@@ -142,7 +142,6 @@ public:
 				GraphData ExamProgressBar;
 				GraphData KeyViewBack;
 				GraphData KeyViewFlash;
-				GraphData ScoreMeter;
 				GraphData ScoreCursor;
 			} Image;
 			struct _Font {

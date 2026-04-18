@@ -15,8 +15,8 @@ public:
 	int Index = 0;
 
 	std::string GenUID() {
-		ulonglong high = (ulonglong)GetRand(0xFFFFFFFF);
-		ulonglong low = (ulonglong)GetRand(0xFFFFFFFF);
+		ulonglong high = (ulonglong)GetRand(INT_MAX);
+		ulonglong low = (ulonglong)GetRand(INT_MAX);
 		ulonglong result = (high << 32) | low;
 		return std::to_string(result);
 	}

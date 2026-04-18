@@ -34,6 +34,7 @@ public:
 	double ChartSpeed = 1;
 	double SongSpeed = 1;
 	double BGBrightness = 100;
+	int ScoreMeterBuffer = 64;
 
 	bool TrainingMode = false;
 	bool ScreenFade = true;
@@ -97,7 +98,7 @@ public:
 		"KeyConfig",
 	};
 
-	std::string GameConfig[35]{
+	std::string GameConfig[36]{
 	"PlayerName",
 	"AutoPlayFlag",
 	"ServerAddress",
@@ -112,6 +113,7 @@ public:
 	"ChartSpeed",
 	"SongSpeed",
 	"BGBrightness",
+	"ScoreMeterBuffer",
 	"TrainingMode",
 	"ScreenFade",
 	"SkinName",

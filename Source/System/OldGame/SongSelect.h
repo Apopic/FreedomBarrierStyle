@@ -810,7 +810,7 @@ public:
 
 			{
 				
-				std::string command = "yt-dlp -f bv[vcodec^=avc1] --merge-output-format mp4 -o \"movie.mp4\" " + link;
+				std::string command = "yt-dlp -f bv*[vcodec^=avc1]+ba[ext=m4a]/b[ext=mp4]/b --merge-output-format mp4 -o \"movie.mp4\" " + link;
 
 				int result = std::system((powershell + "\"" + command + "\"").c_str());
 
