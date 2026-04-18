@@ -76,10 +76,8 @@ PROC_END:
 	return 0;
 }
 
-int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {
-	
-	fs::current_path(fs::path(GetExePath()).parent_path());
-	
+int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {	
+
 	Main _main;
 	int ret = _main.Process();
 	return ret;

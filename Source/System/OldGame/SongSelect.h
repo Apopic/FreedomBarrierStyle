@@ -253,12 +253,12 @@ struct ChartData {
 		return ret;
 	}
 	void ReLoad(const std::string& path, _Skin* _skinptr, _Config* _configptr) {
-		FileAccess FA(path, FAO::rc_slash);
+		FileAccess FA(path, FAO::null);
 		if (!FA.GetIsOpen()) { return; }
 
 		FilePath = path;
 
-		FA.CodePageToUTF8(GetChartCodePage(path));
+		FA.CodePageToUTF8(GetChartCodePage(path), FAO::null);
 		FA.Write();
 
 		int level = 0;
@@ -788,6 +788,7 @@ public:
 
 		static auto MovieDownload = [&](const std::string link, const fs::path path) {
 
+			std::string extension = fs::path(path).extension().string();
 			std::string powershell = "powershell -Command ";
 
 			static auto IsInstalled = [&](const std::string& packageName) {
@@ -803,13 +804,13 @@ public:
 				std::system((powershell + "\"" + "winget upgrade yt-dlp" + "\"").c_str());
 			}
 
-			if (fs::exists("movie")) {
-				fs::remove("movie");
+			if (fs::exists("movie.mp4")) {
+				fs::remove("movie.mp4");
 			}
 
 			{
-
-				std::string command = "yt-dlp -f bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[vcodec^=avc1]/best --merge-output-format mp4 -o \"movie\" " + link;
+				
+				std::string command = "yt-dlp -f bv[vcodec^=avc1] --merge-output-format mp4 -o \"movie.mp4\" " + link;
 
 				int result = std::system((powershell + "\"" + command + "\"").c_str());
 
@@ -820,9 +821,9 @@ public:
 				}
 			}
 
-			if (fs::path(path).extension() != ".mp4") {
+			if (extension != ".mp4") {
 
-				std::string command = "ffmpeg -i \"movie.mp4\" -q:v 6 -r 60 \"movie" + fs::path(path).extension().string() + "\"";
+				std::string command = "ffmpeg -i \"movie.mp4\" -q:v 10 -r 60 \"movie" + extension + "\"";
 				int result = std::system((powershell + "\"" + command + "\"").c_str());
 
 				if (fs::exists("movie.mp4")) {
@@ -836,8 +837,8 @@ public:
 				}
 			}
 
-			if (fs::exists("movie" + fs::path(path).extension().string())) {
-				fs::rename("movie" + fs::path(path).extension().string(), path);
+			if (fs::exists("movie" + extension)) {
+				fs::rename("movie" + extension, path);
 			}
 			};
 
@@ -845,7 +846,7 @@ public:
 
 		Dest.CourseIndex = CourseIndex;
 
-		FileAccess FA(Chart.FilePath, FAO::rc_slash);
+		FileAccess FA(Chart.FilePath, FAO::null);
 		for (int i = 0; i < FA.LineCount(); ++i) {
 			Dest.FileData.push_back(FA[i]);
 		}

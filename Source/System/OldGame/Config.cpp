@@ -74,8 +74,6 @@ void _Config::ConfigLoad() {
 
 #undef JSONDATA
 
-	//KeyCodeParser(false);
-
 	ifs.close();
 
 	GetKeyChar(KaInputLeft, KeyCharKaLeft);

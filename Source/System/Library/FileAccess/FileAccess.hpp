@@ -76,9 +76,7 @@ public:
 
 			if (option != FAO::rc_all) {
 				if (option == FAO::rc_slash) {
-					if (line.find("SONGLINK:") == std::string::npos && line.find("MOVIELINK:") == std::string::npos) {
-						line = line.find("//") != std::string::npos ? line.substr(0, line.find("//")) : line;
-					}
+					line = line.find("//") != std::string::npos ? line.substr(0, line.find("//")) : line;
 				}
 				else if (option == FAO::rc_sharp) {
 					line = line.find("#") != std::string::npos ? line.substr(0, line.find("#")) : line;
@@ -115,7 +113,7 @@ public:
 		}
 	}
 
-	void CodePageToUTF8(UINT codepage) {
+	void CodePageToUTF8(UINT codepage, FAO option = FAO::null) {
 		std::ifstream ifs(FilePath.string());
 
 		if (!ifs.is_open()) {
@@ -146,7 +144,7 @@ public:
 
 		ofs.close();
 
-		this->Read(FilePath.string(), m_Option);
+		this->Read(FilePath.string(), option);
 	}
 
 	inline size_t LineCount() const { return m_List.size(); }
