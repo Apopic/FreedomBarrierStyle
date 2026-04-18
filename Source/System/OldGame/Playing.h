@@ -680,6 +680,8 @@ public:
 				data.BigNoteTime == 0 &&
 				_HitError < -__ConfigPtr->JudgeBad) {
 				Chart.Judge[0].Hit(JudgeType::Bad, 0, '\0', __ConfigPtr->AutoPlayFlag);
+				Chart.HitErrorTime.push_back(__ConfigPtr->JudgeBad);
+				Chart.CursorMove.Start();
 				Action(HitType::Empty);
 				data.HitFlag = true;
 			}
