@@ -132,8 +132,8 @@ struct ChartData {
 	std::vector<uint> DanIndexs;
 
 	std::vector<std::string> FileData;
-	std::string WaveData;
-	std::string MovieData;
+	std::vector<char> WaveData;
+	std::vector<char> MovieData;
 	int CourseIndex = 0;
 
 	CourseData CourseDatas[(uint)ChartCourseType::Count];
@@ -171,6 +171,7 @@ struct ChartData {
 		Packet::StoreBytes(ret, DanIndexs);
 		Packet::StoreBytes(ret, FileData);
 		Packet::StoreBytes(ret, WaveData);
+		Packet::StoreBytes(ret, MovieData);
 		Packet::StoreBytes(ret, CourseIndex);
 		for (auto&& c : CourseDatas) {
 			Packet::StoreBytes(ret, c);
@@ -210,6 +211,7 @@ struct ChartData {
 		Packet::LoadBytes(view, DanIndexs);
 		Packet::LoadBytes(view, FileData);
 		Packet::LoadBytes(view, WaveData);
+		Packet::LoadBytes(view, MovieData);
 		Packet::LoadBytes(view, CourseIndex);
 		for (auto&& c : CourseDatas) {
 			Packet::LoadBytes(view, c);
@@ -731,110 +733,138 @@ public:
 		}
 	}
 
+	void LoadFileToMem(std::string path, std::vector<char>& dest) {
+
+		if (fs::exists(path)) {
+
+			size_t file_size = fs::file_size(path);
+			std::vector<char> buffer(file_size);
+			std::ifstream file(path, std::ios::binary);
+
+			if (file.read(buffer.data(), file_size)) {
+				dest = buffer;
+			}
+
+			file.close();
+		}
+	}
+
 	ChartData ChartDataGet(ChartData Chart) {
 
-		static auto SongDownload = [&](const std::string link, const fs::path path) {
+		std::string powershell = "powershell -Command ";
 
-			std::string extension = fs::path(path).extension().string();
-			std::string powershell = "powershell -Command ";
-
-			static auto IsInstalled = [&](const std::string& packageName) {
-				std::string command = "winget list \"" + packageName + "\" > nul 2>&1";
-				int result = std::system((powershell + "\"" + command + "\"").c_str());
-				return (bool)(result == 0);
-				};
-
-			if (!IsInstalled("yt-dlp")) {
-				std::system((powershell + "\"" + "winget install yt-dlp" + "\"").c_str());
-			}
-			else {
-				std::system((powershell + "\"" + "winget upgrade yt-dlp" + "\"").c_str());
-			}
-
-			if (!IsInstalled("ffmpeg")) {
-				std::system((powershell + "\"" + "winget install ffmpeg" + "\"").c_str());
-			}
-			else {
-				std::system((powershell + "\"" + "winget upgrade ffmpeg" + "\"").c_str());
-			}
-
-			if (fs::exists("song.ogg")) {
-				fs::remove("song.ogg");
-			}
-
-			{
-
-				std::string command = "yt-dlp -x --audio-format mp3 -o \"song\" " + link;
-
-				int result = std::system((powershell + "\"" + command + "\"").c_str());
-
-				if (result != 0) {
-					std::string error = "音源のダウンロードに失敗しました";
-					MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
-					return;
-				}
-			}
-
-			{
-				std::string command = "ffmpeg -i \"song.mp3\" \"song" + extension + "\"";
-				int result = std::system((powershell + "\"" + command + "\"").c_str());
-
-				if (fs::exists("song.mp3")) {
-					fs::remove("song.mp3");
-				}
-
-				if (result != 0) {
-					std::string error = "音源の変換に失敗しました";
-					MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
-					return;
-				}
-			}
-
-			if (fs::exists("song" + extension)) {
-				fs::rename("song" + extension, path);
-			}
+		static auto IsInstalled = [&](const std::string& packageName) {
+			std::string command = "winget list \"" + packageName + "\" > nul 2>&1";
+			int result = std::system((powershell + "\"" + command + "\"").c_str());
+			return (bool)(result == 0);
 			};
 
-		static auto MovieDownload = [&](const std::string link, const fs::path path) {
-
-			std::string extension = fs::path(path).extension().string();
-			std::string powershell = "powershell -Command ";
-
-			static auto IsInstalled = [&](const std::string& packageName) {
-				std::string command = "winget list \"" + packageName + "\" > nul 2>&1";
-				int result = std::system((powershell + "\"" + command + "\"").c_str());
-				return (bool)(result == 0);
-				};
-
+		static auto InstallCheck = [&] {
 			if (!IsInstalled("yt-dlp")) {
-				std::system((powershell + "\"" + "winget install yt-dlp" + "\"").c_str());
+				std::system((powershell + "winget install yt-dlp").c_str());
 			}
-			else {
-				std::system((powershell + "\"" + "winget upgrade yt-dlp" + "\"").c_str());
+			std::system((powershell + "winget upgrade yt-dlp").c_str());
+		};
+
+		static auto SongDownload = [&](std::string link, fs::path path) {
+
+			if (!link.empty() && !fs::exists(path)) {
+
+				int result = MessageBox(NULL, TEXT("音声ファイルがありません。ダウンロードしますか？"), "", MB_YESNO);
+
+				if (result == IDYES) {
+
+					InstallCheck;
+
+					if (fs::exists("song.ogg")) {
+						fs::remove("song.ogg");
+					}
+
+					{
+						std::string command = "yt-dlp -x --audio-format mp3 -o song " + link;
+						int result = std::system((powershell + command).c_str());
+
+						if (result != 0) {
+							std::string error = "音源のダウンロードに失敗しました";
+							MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
+							return;
+						}
+					}
+
+					{
+						std::string command = "ffmpeg -i song.mp3 song.ogg";
+						int result = std::system((powershell + command).c_str());
+
+						if (fs::exists("song.mp3")) {
+							fs::remove("song.mp3");
+						}
+
+						if (result != 0) {
+							std::string error = "音源の変換に失敗しました";
+							MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
+							return;
+						}
+					}
+
+					if (fs::exists("song.ogg")) {
+						fs::rename("song.ogg", path);
+					}
+				}
 			}
+		};
 
-			if (fs::exists("movie.mp4")) {
-				fs::remove("movie.mp4");
+		static auto MovieDownload = [&](std::string link, fs::path path) {
+
+			if (!link.empty() && !fs::exists(path)) {
+
+				int result = MessageBox(NULL, TEXT("動画ファイルがありません。ダウンロードしますか？"), "", MB_YESNO);
+
+				if (result == IDYES) {
+
+					InstallCheck;
+
+					if (fs::exists("movie.mp4")) {
+						fs::remove("movie.mp4");
+					}
+
+					{
+
+						std::string command = "yt-dlp -f bv[vcodec^=avc1]+ba[acodec^=mp4a]/b --merge-output-format mp4 -o movie.mp4 " + link;
+						int result = std::system((powershell + command).c_str());
+
+						if (result != 0) {
+							std::string error = "動画のダウンロードに失敗しました";
+							MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
+							return;
+						}
+					}
+
+					std::string extension = fs::path(path).extension().string();
+
+					if (extension != ".mp4") {
+
+						std::string command = "ffmpeg -i movie.mp4 -q:v 10 -r 60 movie" + extension;
+						int result = std::system((powershell + command).c_str());
+
+						if (fs::exists("movie.mp4")) {
+							fs::remove("movie.mp4");
+						}
+
+						if (result != 0) {
+							std::string error = "動画の変換に失敗しました";
+							MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
+							return;
+						}
+					}
+
+					if (fs::exists("movie" + extension)) {
+						fs::rename("movie" + extension, path);
+					}
+				}
 			}
-
-			std::string command = "yt-dlp -f bv*[vcodec^=avc1]+ba[ext=m4a]/b[ext=mp4]/b --merge-output-format mp4 -o \"movie.mp4\" " + link;
-
-			int result = std::system((powershell + "\"" + command + "\"").c_str());
-
-			if (result != 0) {
-				std::string error = "動画のダウンロードに失敗しました";
-				MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
-				return;
-			}
-
-			if (fs::exists("movie.mp4")) {
-				fs::rename("movie.mp4", path);
-			}
-
 		};
 
 		ChartData& Dest = Chart;
-
 		Dest.CourseIndex = CourseIndex;
 
 		FileAccess FA(Chart.FilePath, FAO::null);
@@ -842,29 +872,11 @@ public:
 			Dest.FileData.push_back(FA[i]);
 		}
 
-		if (!Chart.SongLink.empty() && !fs::exists(Chart.WavePath)) {
-			switch (MessageBox(NULL, TEXT("音源ファイルがありません。ダウンロードしますか？"), "", MB_OKCANCEL)) {
-			case IDOK:
-				SongDownload(Chart.SongLink, Chart.WavePath);
-				break;
-			}
-		}
+		SongDownload(Chart.SongLink, Chart.WavePath);
+		MovieDownload(Chart.MovieLink, Chart.BGMoviePath);
 
-		if (!Chart.MovieLink.empty() && !fs::exists(Chart.BGMoviePath)) {
-			switch (MessageBox(NULL, TEXT("動画ファイルがありません。ダウンロードしますか？"), "", MB_OKCANCEL)) {
-			case IDOK:
-				MovieDownload(Chart.MovieLink, Chart.BGMoviePath);
-				break;
-			}
-		}
-
-		std::ifstream wave(Chart.WavePath, std::ios::binary);
-		Dest.WaveData = std::string((std::istreambuf_iterator<char>(wave)), (std::istreambuf_iterator<char>()));
-		wave.close();
-
-		std::ifstream movie(Chart.BGMoviePath, std::ios::binary);
-		Dest.MovieData = std::string((std::istreambuf_iterator<char>(wave)), (std::istreambuf_iterator<char>()));
-		movie.close();
+		LoadFileToMem(Chart.WavePath, Dest.WaveData);
+		LoadFileToMem(Chart.BGMoviePath, Dest.MovieData);
 
 		return Dest;
 	}

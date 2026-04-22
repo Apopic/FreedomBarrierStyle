@@ -198,10 +198,7 @@ void GameSystem::LoadingProc() {
 				LoadData.CourseDatas[SongSelect.CourseIndex].AddScore = stoi(sp[4]);
 
 				fs::path WavePath = fs::path(LoadData.FilePath).parent_path().string() + "\\" + sp[3];
-				std::ifstream file(WavePath, std::ios::binary);
-				LoadData.WaveData = std::string((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
-				file.close();
-
+				SongSelect.LoadFileToMem(WavePath.string(), LoadData.WaveData);
 				NextFlag = true;
 				});
 
@@ -442,7 +439,7 @@ RollType = '\0'
 
 	if (!LoadData.BGMoviePath.empty()) {
 
-		//Playing.Chart.BGMovieHandle = CreateGraphFromMem(LoadData.MovieData.data(), LoadData.MovieData.size());
+		//laying.Chart.BGMovieHandle = CreateGraphFromMem(LoadData.MovieData.data(), LoadData.MovieData.size());
 		Playing.Chart.BGMovieHandle = LoadGraph(LoadData.BGMoviePath.c_str());
 
 		GetGraphSizeF(Playing.Chart.BGMovieHandle, &Playing.Chart.BGMovieSize.Width, &Playing.Chart.BGMovieSize.Height);

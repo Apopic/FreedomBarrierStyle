@@ -328,7 +328,7 @@ public:
 
 	void MovieDraw(double nowtime) {
 
-		if (Chart.BGMovieHandle != 0) {
+		if (Chart.BGMovieHandle != 0 && __ConfigPtr->BGBrightness > 0) {
 
 			DrawFillBox(0, 0, __SkinPtr->Info.Resolution.X, __SkinPtr->Info.Resolution.Y, GetColor(0, 0, 0));
 			DrawExtendGraphF(
