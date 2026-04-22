@@ -439,7 +439,6 @@ RollType = '\0'
 
 	if (!LoadData.BGMoviePath.empty()) {
 
-		//laying.Chart.BGMovieHandle = CreateGraphFromMem(LoadData.MovieData.data(), LoadData.MovieData.size());
 		Playing.Chart.BGMovieHandle = LoadGraph(LoadData.BGMoviePath.c_str());
 
 		GetGraphSizeF(Playing.Chart.BGMovieHandle, &Playing.Chart.BGMovieSize.Width, &Playing.Chart.BGMovieSize.Height);

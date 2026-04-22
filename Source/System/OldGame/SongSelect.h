@@ -133,7 +133,6 @@ struct ChartData {
 
 	std::vector<std::string> FileData;
 	std::vector<char> WaveData;
-	std::vector<char> MovieData;
 	int CourseIndex = 0;
 
 	CourseData CourseDatas[(uint)ChartCourseType::Count];
@@ -171,7 +170,6 @@ struct ChartData {
 		Packet::StoreBytes(ret, DanIndexs);
 		Packet::StoreBytes(ret, FileData);
 		Packet::StoreBytes(ret, WaveData);
-		Packet::StoreBytes(ret, MovieData);
 		Packet::StoreBytes(ret, CourseIndex);
 		for (auto&& c : CourseDatas) {
 			Packet::StoreBytes(ret, c);
@@ -211,7 +209,6 @@ struct ChartData {
 		Packet::LoadBytes(view, DanIndexs);
 		Packet::LoadBytes(view, FileData);
 		Packet::LoadBytes(view, WaveData);
-		Packet::LoadBytes(view, MovieData);
 		Packet::LoadBytes(view, CourseIndex);
 		for (auto&& c : CourseDatas) {
 			Packet::LoadBytes(view, c);
@@ -829,7 +826,8 @@ public:
 
 					{
 
-						std::string command = "yt-dlp -f bv[vcodec^=avc1]+ba[acodec^=mp4a]/b --merge-output-format mp4 -o movie.mp4 " + link;
+						std::string command = "yt-dlp -f bv*[vcodec^=avc1]+ba[ext=m4a]/b[ext=mp4]/b --merge-output-format mp4 -o movie.mp4 " + link;
+
 						int result = std::system((powershell + command).c_str());
 
 						if (result != 0) {
@@ -844,6 +842,7 @@ public:
 					if (extension != ".mp4") {
 
 						std::string command = "ffmpeg -i movie.mp4 -q:v 10 -r 60 movie" + extension;
+
 						int result = std::system((powershell + command).c_str());
 
 						if (fs::exists("movie.mp4")) {
@@ -876,7 +875,6 @@ public:
 		MovieDownload(Chart.MovieLink, Chart.BGMoviePath);
 
 		LoadFileToMem(Chart.WavePath, Dest.WaveData);
-		LoadFileToMem(Chart.BGMoviePath, Dest.MovieData);
 
 		return Dest;
 	}
