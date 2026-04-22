@@ -3,6 +3,8 @@
 
 _MultiRoom::_MultiRoom(GameSystem* ptr) {
 	gameptr = ptr;
+	__SkinPtr = &ptr->Skin;
+	__ConfigPtr = &ptr->Config;
 }
 
 _MultiRoom::~_MultiRoom() {
@@ -33,10 +35,10 @@ void GameSystem::MultiRoomDraw() {
 	Skin.Base->MultiRoom.Image.TitleBox.Draw({ 0,0 });
 
 	if (!Playing.Chart.OriginalData.WaveData.empty()) {
-		MultiRoom.ChartStrDraw(&Skin, &SongSelect, &Playing.Chart.OriginalData);
+		MultiRoom.ChartStrDraw(&SongSelect, &Playing.Chart.OriginalData);
 	}
 
-	MultiRoom.PlayerDatasDraw(&Skin, Private);
+	MultiRoom.PlayerDatasDraw(Private);
 }
 
 void GameSystem::MultiRoomProc() {
@@ -151,7 +153,7 @@ void GameSystem::MultiRoomProc() {
 				MultiRoom.ConnectPort = Config.ServerPort;
 			}
 			PlayerData data = PlayerData();
-			if (MultiRoom.ConnectTry(&Config, data)) {
+			if (MultiRoom.ConnectTry(data)) {
 				Send(DataType::List, data);
 			}
 			};

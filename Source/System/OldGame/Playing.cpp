@@ -64,10 +64,10 @@ void GameSystem::PlayingDraw() {
 
 		auto& HitNote = Playing.HitNote[pldx];
 
-		Skin.Base->Playing.Image.LaneFrame.Draw(add);
-		if (Playing.Chart.BGMovieHandle != 0) { 
+		if (Playing.Chart.BGMovieHandle != 0) {
 			SetDrawBlendMode(DX_BLENDMODE_ALPHA, Skin.Base->Playing.Config.LaneAlpha);
 		}
+		Skin.Base->Playing.Image.LaneFrame.Draw(add);
 		Skin.Base->Playing.Image.Lane.Draw(add);
 		SetDrawBlendMode(0, 0);
 

@@ -192,6 +192,7 @@ struct ChartStreamData {
 
 	void Init() {
 		RawNoteDatas.clear();
+		HitErrorTime.clear();
 		SongData.Delete();
 		FrameNowTime.End();
 		NowTime.End();
@@ -202,9 +203,8 @@ struct ChartStreamData {
 		BalloonCount = 0;
 		AllNoteCount = 0;
 		BGMovieHandle = 0;
-		BGMovieSize = { 1280, 720 };
-		HitErrorTime.clear();
 		CursorPos = 0;
+		BGMovieSize = { 1280, 720 };
 		if (!IsDanPlay) {
 			for (auto&& judge : Judge) { judge = JudgeData(); }
 			ExamDatas.clear();
@@ -1185,7 +1185,6 @@ break;\
 	}
 
 	void NameDraw(std::string name, Pos2D<float> pos) {
-
 		__SkinPtr->Base->Playing.Font.PlayerName.Draw({
 			__SkinPtr->Base->Playing.Config.PlayerNamePos.X,
 			__SkinPtr->Base->Playing.Config.PlayerNamePos.Y + pos.Y },
@@ -1308,16 +1307,17 @@ break;\
 
 	void ScoreMeterDraw() {
 
-		float Center = __SkinPtr->Info.Resolution.X / 2;
-		float Edge = (Center / 640) * 320;
-		float GoodBorder[2] = { Center - Edge * (__ConfigPtr->JudgeGood / __ConfigPtr->JudgeBad), Center + Edge * (__ConfigPtr->JudgeGood / __ConfigPtr->JudgeBad) };
-		float OkBorder[2]   = { Center - Edge * (__ConfigPtr->JudgeOk / __ConfigPtr->JudgeBad), Center + Edge * (__ConfigPtr->JudgeOk / __ConfigPtr->JudgeBad) };
-		float BadBorder[2]  = { Center - Edge, Center + Edge };
+		const float Center = __SkinPtr->Info.Resolution.X / 2;
+		const float Edge = (Center / 640) * 320;
+		const float GoodBorder[2] = { Center - Edge * (__ConfigPtr->JudgeGood / __ConfigPtr->JudgeBad), Center + Edge * (__ConfigPtr->JudgeGood / __ConfigPtr->JudgeBad) };
+		const float OkBorder[2]   = { Center - Edge * (__ConfigPtr->JudgeOk / __ConfigPtr->JudgeBad), Center + Edge * (__ConfigPtr->JudgeOk / __ConfigPtr->JudgeBad) };
+		const float BadBorder[2]  = { Center - Edge, Center + Edge };
 
-		DrawLineAA(BadBorder[0] - 2.5, 700, BadBorder[1] + 2.5, 700, GetColor(100, 100, 100), 15.0f);
+		DrawLineAA(BadBorder[0] - 2.5f, 700, BadBorder[1] + 2.5f, 700, GetColor(100, 100, 100), 15.0f);
 		DrawLineAA(BadBorder[0], 700, BadBorder[1], 700, GetColor(0, 200, 225), 10.0f);
-		DrawLineAA(OkBorder[0], 700, OkBorder[1], 700, GetColor(100, 255, 25), 10.0f);
-		DrawLineAA(GoodBorder[0], 700, GoodBorder[1], 700, GetColor(255, 125, 25), 10.0f);
+		DrawLineAA(std::max(OkBorder[0], BadBorder[0]), 700, std::min(OkBorder[1], BadBorder[1]), 700, GetColor(100, 255, 25), 10.0f);
+		DrawLineAA(std::max(GoodBorder[0], BadBorder[0]), 700, std::min(GoodBorder[1], BadBorder[1]), 700, GetColor(255, 125, 25), 10.0f);
+		DrawLineAA(640, 705, 640, 695, GetColor(255, 255, 255), 8.0f);
 
 		float dest = 0;
 		float average = 0;

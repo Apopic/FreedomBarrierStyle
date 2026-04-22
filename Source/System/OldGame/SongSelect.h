@@ -6,9 +6,9 @@
 #include <shobjidl.h>
 #include <urlmon.h>
 
-#pragma comment(lib, "urlmon.lib")
-
 using namespace cppunzip;
+
+#pragma comment(lib, "urlmon.lib")
 
 enum class ChartCourseType {
 	Null = -1,
@@ -133,6 +133,7 @@ struct ChartData {
 
 	std::vector<std::string> FileData;
 	std::string WaveData;
+	std::string MovieData;
 	int CourseIndex = 0;
 
 	CourseData CourseDatas[(uint)ChartCourseType::Count];
@@ -734,6 +735,7 @@ public:
 
 		static auto SongDownload = [&](const std::string link, const fs::path path) {
 
+			std::string extension = fs::path(path).extension().string();
 			std::string powershell = "powershell -Command ";
 
 			static auto IsInstalled = [&](const std::string& packageName) {
@@ -747,6 +749,13 @@ public:
 			}
 			else {
 				std::system((powershell + "\"" + "winget upgrade yt-dlp" + "\"").c_str());
+			}
+
+			if (!IsInstalled("ffmpeg")) {
+				std::system((powershell + "\"" + "winget install ffmpeg" + "\"").c_str());
+			}
+			else {
+				std::system((powershell + "\"" + "winget upgrade ffmpeg" + "\"").c_str());
 			}
 
 			if (fs::exists("song.ogg")) {
@@ -767,7 +776,7 @@ public:
 			}
 
 			{
-				std::string command = "ffmpeg -i \"song.mp3\" \"song.ogg\"";
+				std::string command = "ffmpeg -i \"song.mp3\" \"song" + extension + "\"";
 				int result = std::system((powershell + "\"" + command + "\"").c_str());
 
 				if (fs::exists("song.mp3")) {
@@ -781,8 +790,8 @@ public:
 				}
 			}
 
-			if (fs::exists("song.ogg")) {
-				fs::rename("song.ogg", path);
+			if (fs::exists("song" + extension)) {
+				fs::rename("song" + extension, path);
 			}
 			};
 
@@ -808,39 +817,21 @@ public:
 				fs::remove("movie.mp4");
 			}
 
-			{
-				
-				std::string command = "yt-dlp -f bv*[vcodec^=avc1]+ba[ext=m4a]/b[ext=mp4]/b --merge-output-format mp4 -o \"movie.mp4\" " + link;
+			std::string command = "yt-dlp -f bv*[vcodec^=avc1]+ba[ext=m4a]/b[ext=mp4]/b --merge-output-format mp4 -o \"movie.mp4\" " + link;
 
-				int result = std::system((powershell + "\"" + command + "\"").c_str());
+			int result = std::system((powershell + "\"" + command + "\"").c_str());
 
-				if (result != 0) {
-					std::string error = "動画のダウンロードに失敗しました";
-					MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
-					return;
-				}
+			if (result != 0) {
+				std::string error = "動画のダウンロードに失敗しました";
+				MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
+				return;
 			}
 
-			if (extension != ".mp4") {
-
-				std::string command = "ffmpeg -i \"movie.mp4\" -q:v 10 -r 60 \"movie" + extension + "\"";
-				int result = std::system((powershell + "\"" + command + "\"").c_str());
-
-				if (fs::exists("movie.mp4")) {
-					fs::remove("movie.mp4");
-				}
-
-				if (result != 0) {
-					std::string error = "動画の変換に失敗しました";
-					MessageBox(NULL, TEXT(error.c_str()), TEXT("エラー"), MB_ICONERROR);
-					return;
-				}
+			if (fs::exists("movie.mp4")) {
+				fs::rename("movie.mp4", path);
 			}
 
-			if (fs::exists("movie" + extension)) {
-				fs::rename("movie" + extension, path);
-			}
-			};
+		};
 
 		ChartData& Dest = Chart;
 
@@ -871,6 +862,10 @@ public:
 		Dest.WaveData = std::string((std::istreambuf_iterator<char>(wave)), (std::istreambuf_iterator<char>()));
 		wave.close();
 
+		std::ifstream movie(Chart.BGMoviePath, std::ios::binary);
+		Dest.MovieData = std::string((std::istreambuf_iterator<char>(wave)), (std::istreambuf_iterator<char>()));
+		movie.close();
+
 		return Dest;
 	}
 
@@ -885,10 +880,14 @@ public:
 
 			for (auto& fileEntry : unzipper.listFiles()) {
 
+				fs::path filepath = fileEntry.fileName();
+
+				if (!fs::exists(dest / filepath.parent_path())) {
+					fs::create_directories(dest / filepath.parent_path());
+				}
+
 				if (!fileEntry.isDir()) {
 
-					fs::path filepath = fileEntry.fileName();
-					fs::create_directories(dest / filepath.parent_path());
 					std::ofstream file(dest / filepath, std::ios::binary);
 
 					for (auto c : fileEntry.readContent()) {
@@ -916,6 +915,7 @@ public:
 
 			HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd));
 			if (SUCCEEDED(hr)) {
+
 				DWORD dwFlags;
 				pfd->GetOptions(&dwFlags);
 				pfd->SetOptions(dwFlags | FOS_PICKFOLDERS);
@@ -938,7 +938,7 @@ public:
 								fs::path dest(pszFilePath);
 
 								if (path.extension() == ".zip") { UnZip(path, dest); }
-								else { fs::rename(path, dest.string() + (std::string)"\\" + path.filename().string()); }
+								else { fs::rename(path, dest.string() / path.filename()); }
 							}
 						}
 						psi->Release();
