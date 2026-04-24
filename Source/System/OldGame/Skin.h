@@ -81,12 +81,14 @@ public:
 			struct _Config {
 				Pos2D<float> BoxDistance = { 40,80 };
 				Pos2D<float> SongBoxListPos = { 640,360 };
+				Pos2D<float> KeywordPos = { 190, 80 };
 			} Config;
 			struct _Image {
 				GraphData BackGround;
 				GraphData Box;
 				GraphData TitleBox;
 				GraphData LevelBox;
+				GraphData SearchBox;
 				GraphData Crown;
 			} Image;
 			struct _Font {
@@ -96,6 +98,7 @@ public:
 				FontData BoxSubTitle;
 				FontData Course;
 				FontData HighScore;
+				FontData Keyword;
 			} Font;
 			struct _SE {
 				SoundData Don;

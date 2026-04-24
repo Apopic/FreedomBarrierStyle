@@ -30,26 +30,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -100,7 +100,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>C:\boost_vc\include\boost-1_84;C:\fmt-10.1.0\include;C:\DxLib_VC\AddProject_VC;Source\System;Source\System\Game;C:\LuaScript</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -130,7 +130,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\discord_social_sdk\include;"C:\cppunzip-main";C:\vcpkg\packages\zlib_x64-windows\include;C:\vcpkg\packages\curl_x64-windows\include;C:\Socket_h-main\include;C:\DxLib_VC\AddProject_VC;Source\System</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\discord_social_sdk\include;C:\cppunzip-main;C:\vcpkg\packages\zlib_x64-windows\include;C:\vcpkg\packages\curl_x64-windows\include;C:\Socket_h-main\include;C:\DxLib_VC\AddProject_VC;Source\System</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -149,7 +149,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>"C:\cppunzip-main";C:\vcpkg\packages\zlib_x64-windows\include;C:\vcpkg\packages\curl_x64-windows\include;C:\DxLib_VC\AddProject_VC</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\cppunzip-main;C:\vcpkg\packages\zlib_x64-windows\include;C:\vcpkg\packages\curl_x64-windows\include;C:\DxLib_VC\AddProject_VC</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>$(CoreLibraryDependencies);C:\vcpkg\packages\curl_x64-windows\lib\libcurl.lib;C:\discord_social_sdk\lib\release\discord_partner_sdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -163,7 +163,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>C:\boost_vc\include\boost-1_84;C:\fmt-10.1.0\include;C:\DxLib_VC\AddProject_VC;Source\System;Source\System\Game;C:\LuaScript</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -193,7 +193,7 @@
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\discord_social_sdk\include;"C:\cppunzip-main";C:\vcpkg\packages\zlib_x64-windows\include;C:\vcpkg\packages\curl_x64-windows\include;C:\Socket_h-main\include;C:\DxLib_VC\AddProject_VC;Source\System</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\discord_social_sdk\include;C:\cppunzip-main;C:\vcpkg\packages\zlib_x64-windows\include;C:\vcpkg\packages\curl_x64-windows\include;C:\Socket_h-main\include;C:\DxLib_VC\AddProject_VC;Source\System</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -212,7 +212,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>"C:\cppunzip-main";C:\vcpkg\packages\zlib_x64-windows\include;C:\vcpkg\packages\curl_x64-windows\include;C:\DxLib_VC\AddProject_VC</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\cppunzip-main;C:\vcpkg\packages\zlib_x64-windows\include;C:\vcpkg\packages\curl_x64-windows\include;C:\DxLib_VC\AddProject_VC</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(Platform)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>$(CoreLibraryDependencies);C:\vcpkg\packages\curl_x64-windows\lib\libcurl.lib;C:\discord_social_sdk\lib\release\discord_partner_sdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>

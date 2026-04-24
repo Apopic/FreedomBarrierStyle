@@ -45,6 +45,10 @@ void GameSystem::SongSelectDraw() {
 
 	Skin.Base->SongSelect.Image.BackGround.Draw(Pos2D<float>{0, 0});
 
+	if (SongSelect.InputHandle != 0) {
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, 50);
+	}
+
 	if (!SongSelect.CourseSelect) {
 
 		if (SongSelect.BoxMotion.GetRecordingTime() > SongSelect.UseBoxMotionTime) {
@@ -289,35 +293,54 @@ void GameSystem::SongSelectDraw() {
 
 		}
 	}
+
+	if (SongSelect.InputHandle != 0) {
+
+		SetDrawBlendMode(0, 0);
+		Skin.Base->SongSelect.Image.SearchBox.Draw({ 0,0 });
+
+		SetKeyInputDrawArea(
+			Skin.Base->SongSelect.Image.SearchBox.Pos.X - Skin.Base->SongSelect.Image.SearchBox.Size.Width / 2.2,
+			Skin.Base->SongSelect.Image.SearchBox.Pos.Y - Skin.Base->SongSelect.Image.SearchBox.Size.Height / 3,
+			Skin.Base->SongSelect.Image.SearchBox.Pos.X + Skin.Base->SongSelect.Image.SearchBox.Size.Width / 2.2,
+			Skin.Base->SongSelect.Image.SearchBox.Pos.Y + Skin.Base->SongSelect.Image.SearchBox.Size.Height / 3,
+			SongSelect.InputHandle);
+		SetKeyInputStringFont(Skin.Base->SongSelect.Font.Keyword.Handle);
+		DrawKeyInputString(Skin.Base->SongSelect.Config.KeywordPos.X, Skin.Base->SongSelect.Config.KeywordPos.Y, SongSelect.InputHandle);
+		SetKeyInputStringFont(-1);
+	}
 }
 
 void GameSystem::SongSelectProc() {
 
-	Input.HitKeyProcess(VK_ESCAPE, KeyState::Down, [&] {
-		if (!SongSelect.CourseSelect) {
-			if (MultiRoom.MultiFlag) {
-				Playing.Chart.OriginalData.WaveData.clear();
-				NowScene = Scene::MultiRoom;
-				return;
+	if (SongSelect.InputHandle == 0) {
+
+		Input.HitKeyProcess(VK_ESCAPE, KeyState::Down, [&] {
+			if (!SongSelect.CourseSelect) {
+				if (MultiRoom.MultiFlag) {
+					Playing.Chart.OriginalData.WaveData.clear();
+					NowScene = Scene::MultiRoom;
+					return;
+				}
+				Playing.Chart.Init();
+				NowScene = Scene::Title;
 			}
-			Playing.Chart.Init();
-			NowScene = Scene::Title;
-		}
-		else {
-			for (auto&& HighScore : Playing.HighScore) {
-				HighScore = JudgeData();
+			else {
+				for (auto&& HighScore : Playing.HighScore) {
+					HighScore = JudgeData();
+				}
+				SongSelect.HighScoreDataChange.End();
+				SongSelect.CourseSelect = false;
 			}
-			SongSelect.HighScoreDataChange.End();
-			SongSelect.CourseSelect = false;
-		}
-		});
+			});
+	}
 
 	static auto DonInputProc = [&] {
 		Skin.Base->SongSelect.SE.Don.Play();
 		if (SongSelect.BoxDatas[SongSelect.BoxDataIndex]->IsGenre()) {
 			bool& _f = SongSelect.BoxDatas[SongSelect.BoxDataIndex]->GetGenre()->Open;
 			_f = !_f;
-			SongSelect.BoxDatasUpdate();
+			SongSelect.BoxDatasUpdate(SongSelect.Keyword, true);
 		}
 		else {
 			if (!SongSelect.CourseSelect) {
@@ -351,7 +374,7 @@ void GameSystem::SongSelectProc() {
 				NowScene = Scene::Loading;
 			}
 		}
-	};
+		};
 	static auto KaInputProc = [&](bool direction) {
 		Skin.Base->SongSelect.SE.Ka.Play();
 		if (!direction) {
@@ -409,6 +432,31 @@ void GameSystem::SongSelectProc() {
 		}
 	}
 
+	static auto SongSearch = [&]() {
+
+		Skin.Base->SongSelect.SE.Don.Play();
+
+		if (SongSelect.InputHandle == 0) {
+			SongSelect.InputHandle = MakeKeyInput(CHAR_MAX, FALSE, FALSE, FALSE);
+			SetActiveKeyInput(SongSelect.InputHandle);
+			return;
+		}
+		GetKeyInputString(SongSelect.Keyword, SongSelect.InputHandle);
+		for (auto&& word : SongSelect.Keyword) {
+			word = std::tolower(word);
+		}
+		SongSelect.BoxDatasUpdate(SongSelect.Keyword, true);
+		if (SongSelect.BoxDatas.empty()) {
+			SongSelect.BoxDatasUpdate();
+		}
+
+		DeleteKeyInput(SongSelect.InputHandle);
+		SongSelect.InputHandle = 0;
+		SongSelect.BoxDataIndex = 0;
+		SongSelect.DemoSongPlayBlank.End();
+		SongSelect.DemoSong.Delete();
+	};
+
 	static auto RandomInputProc = [&] {
 		Skin.Base->SongSelect.SE.Ka.Play();
 		SongSelect.BoxDataIndex = GetRand(SongSelect.BoxDatas.size() - 1);
@@ -420,31 +468,38 @@ void GameSystem::SongSelectProc() {
 		SongSelect.SongPreview(&Config, SongSelect.BoxDatas[SongSelect.BoxDataIndex]->GetChart());
 	}
 
-	if (GetDragFileNum()) {
-		SongSelect.ImportFile();
-		SongSelect.EnumChartFile(Config.SongDirectories);
-	}
+	if (SongSelect.InputHandle == 0) {
 
-	Input.HitKeyesProcess(Config.KaInputLeft, KeyState::Down, [&] { KaInputProc(false); });
-	Input.HitKeyesProcess(Config.KaInputRight, KeyState::Down, [&] { KaInputProc(true); });
-	Input.HitKeyesProcess({ VK_UP, VK_LEFT }, KeyState::Down, [&] { KaInputProc(false); });
-	Input.HitKeyesProcess({ VK_DOWN, VK_RIGHT }, KeyState::Down, [&] { KaInputProc(true); });
+		if (GetDragFileNum()) {
+			SongSelect.ImportFile();
+			SongSelect.EnumChartFile(Config.SongDirectories);
+		}
 
-	Input.HitKeyesProcess(Config.DonInputLeft, KeyState::Down, DonInputProc);
-	Input.HitKeyesProcess(Config.DonInputRight, KeyState::Down, DonInputProc);
-	Input.HitKeyProcess(VK_RETURN, KeyState::Down, DonInputProc);
+		Input.HitKeyesProcess(Config.KaInputLeft, KeyState::Down, [&] { KaInputProc(false); });
+		Input.HitKeyesProcess(Config.KaInputRight, KeyState::Down, [&] { KaInputProc(true); });
+		Input.HitKeyesProcess({ VK_UP, VK_LEFT }, KeyState::Down, [&] { KaInputProc(false); });
+		Input.HitKeyesProcess({ VK_DOWN, VK_RIGHT }, KeyState::Down, [&] { KaInputProc(true); });
 
-	if (!SongSelect.CourseSelect) {
-		Input.HitKeyProcess(VK_SHIFT, KeyState::Hold, [&] {
-			Input.HitKeyProcess(VK_TAB, KeyState::Down, RandomInputProc);
+		Input.HitKeyesProcess(Config.DonInputLeft, KeyState::Down, DonInputProc);
+		Input.HitKeyesProcess(Config.DonInputRight, KeyState::Down, DonInputProc);
+		Input.HitKeyProcess(VK_RETURN, KeyState::Down, DonInputProc);
+
+		if (!SongSelect.CourseSelect) {
+			Input.HitKeyProcess(VK_SHIFT, KeyState::Hold, [&] {
+				Input.HitKeyProcess(VK_TAB, KeyState::Down, RandomInputProc);
+				});
+			Input.HitKeyProcess(VK_SPACE, KeyState::Down, SongSearch);
+		}
+
+		Input.HitKeyProcess(VK_CONTROL, KeyState::Hold, [&] {
+			Input.HitKeyProcess(VK_F1, KeyState::Down, [&] {
+				Skin.Base->Title.SE.Don.Play();
+				PrevScene = Scene::SongSelect;
+				NowScene = Scene::Config;
+				});
 			});
 	}
-
-	Input.HitKeyProcess(VK_CONTROL, KeyState::Hold, [&] {
-		Input.HitKeyProcess(VK_F1, KeyState::Down, [&] {
-			Skin.Base->Title.SE.Don.Play();
-			PrevScene = Scene::SongSelect;
-			NowScene = Scene::Config;
-			});
-		});
+	else {
+		Input.HitKeyProcess(VK_RETURN, KeyState::Down, SongSearch);
+	}
 }

@@ -91,7 +91,7 @@ Main::Main() {
 	SetOutApplicationLogValidFlag(FALSE);
 #endif
 	SetUseCharCodeFormat(DX_CHARCODEFORMAT_UTF8);
-	
+
 	ChangeWindowMode(!Game.Config.FullScreen);
 	SetWindowIconID(IDI_ICON1);
 	SetMainWindowText("FreedomBarrierStyle");

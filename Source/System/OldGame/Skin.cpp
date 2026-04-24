@@ -134,11 +134,13 @@ void _Skin::SkinLoad(const std::string& name) {
 
 	ValLoad(SongSelect, Config, BoxDistance   );
 	ValLoad(SongSelect, Config, SongBoxListPos);
+	ValLoad(SongSelect, Config, KeywordPos);
 
 	DataLoad(SongSelect, Image, BackGround);
 	DataLoad(SongSelect, Image, Box);
 	DataLoad(SongSelect, Image, TitleBox);
 	DataLoad(SongSelect, Image, LevelBox);
+	DataLoad(SongSelect, Image, SearchBox);
 	DataLoad(SongSelect, Image, Crown);
 
 	DataLoad(SongSelect, Font, Title);
@@ -147,6 +149,7 @@ void _Skin::SkinLoad(const std::string& name) {
 	DataLoad(SongSelect, Font, BoxSubTitle);
 	DataLoad(SongSelect, Font, Course);
 	DataLoad(SongSelect, Font, HighScore);
+	DataLoad(SongSelect, Font, Keyword);
 
 	DataLoad(SongSelect, SE, Don);
 	DataLoad(SongSelect, SE, Ka);

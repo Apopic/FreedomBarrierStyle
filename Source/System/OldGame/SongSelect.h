@@ -5,7 +5,6 @@
 #include "cppunzip.hpp"
 #include <shobjidl.h>
 #include <urlmon.h>
-
 using namespace cppunzip;
 
 #pragma comment(lib, "urlmon.lib")
@@ -626,6 +625,9 @@ public:
 
 	bool IsDanMode = false;
 
+	int InputHandle = 0;
+	char Keyword[CHAR_MAX];
+
 	void EnumChartFile(const std::vector<std::string>& dir) {
 		__BoxDatas.clear();
 		__BoxDatas.reserve(dir.capacity());
@@ -673,12 +675,30 @@ public:
 
 		BoxDataIndex = std::clamp<int>(BoxDataIndex, 0, BoxDatas.size() - 1);
 	}
-	void BoxDatasUpdate() {
+	void BoxDatasUpdate(std::string keyword = "", bool is_search = false) {
+
+		static auto TolowerFind = [&](std::string str, std::string findstr) {
+			std::string tolowerstr = str;
+			std::transform(tolowerstr.begin(), tolowerstr.end(), tolowerstr.begin(),
+				[](unsigned char c) { return std::tolower(c); });
+			return (bool)(tolowerstr.find(findstr) != std::string::npos);
+			};
+
 		BoxDatas.clear();
 		BoxDatas.reserve(__BoxDatas.capacity());
 		auto recusiveproc = [&](const std::vector<std::unique_ptr<BoxData>>& datas, auto f) -> void {
 			for (uint i = 0; i < datas.size(); ++i) {
 				if (datas[i]->IsGenre()) {
+					if (is_search && keyword != "") {
+						for (auto& data : datas[i]->GetGenre()->Datas) {
+							if (!data->IsGenre() &&
+								(TolowerFind(data->GetChart()->Title, keyword) ||
+									TolowerFind(data->GetChart()->SubTitle, keyword))) {
+								BoxDatas.push_back(data.get());
+							}
+						}
+						continue;
+					}
 					BoxDatas.push_back(datas[i].get());
 					if (datas[i]->GetGenre()->Open) {
 						f(datas[i]->GetGenre()->Datas, f);
@@ -688,7 +708,16 @@ public:
 			for (uint i = 0; i < datas.size(); ++i) {
 				if (datas[i]->IsGenre()) { continue; }
 				if (datas[i]->GetChart()->IsDanFlag) { continue; }
+				if (is_search && keyword != "") {
+					if (!TolowerFind(datas[i]->GetChart()->Title, keyword) &&
+						!TolowerFind(datas[i]->GetChart()->SubTitle, keyword)) {
+						continue;
+					}
+				}
 				BoxDatas.push_back(datas[i].get());
+			}
+			if (is_search && BoxDatas.empty()) {
+				BoxDatasUpdate();
 			}
 			};
 		recusiveproc(__BoxDatas, recusiveproc);
@@ -761,7 +790,7 @@ public:
 				std::system((powershell + "winget install yt-dlp").c_str());
 			}
 			std::system((powershell + "winget upgrade yt-dlp").c_str());
-		};
+			};
 
 		static auto SongDownload = [&](std::string link, fs::path path) {
 
@@ -808,7 +837,7 @@ public:
 					}
 				}
 			}
-		};
+			};
 
 		static auto MovieDownload = [&](std::string link, fs::path path) {
 
@@ -861,7 +890,7 @@ public:
 					}
 				}
 			}
-		};
+			};
 
 		ChartData& Dest = Chart;
 		Dest.CourseIndex = CourseIndex;
@@ -906,7 +935,7 @@ public:
 					file.close();
 				}
 			}
-		};
+			};
 
 		int fileCount = GetDragFileNum();
 
@@ -969,4 +998,3 @@ public:
 		}
 	}
 };
-
