@@ -779,18 +779,21 @@ public:
 
 		std::string powershell = "powershell -Command ";
 
-		static auto IsInstalled = [&](const std::string& packageName) {
-			std::string command = "winget list \"" + packageName + "\" > nul 2>&1";
-			int result = std::system((powershell + "\"" + command + "\"").c_str());
-			return (bool)(result == 0);
-			};
+		static auto InstallCheck = [&](std::string packagename) {
 
-		static auto InstallCheck = [&] {
-			if (!IsInstalled("yt-dlp")) {
-				std::system((powershell + "winget install yt-dlp").c_str());
+			static auto IsInstalled = [&](std::string _packagename) {
+				std::string command = _packagename + "--version > nul 2>&1";
+				int result = std::system((powershell + "\"" + command + "\"").c_str());
+				return (bool)(result == 0);
+				};
+
+			if (!IsInstalled(packagename)) {
+				std::system((powershell + "winget install " + packagename).c_str());
 			}
-			std::system((powershell + "winget upgrade yt-dlp").c_str());
-			};
+			else {
+				std::system((powershell + packagename + " -U").c_str());
+			}
+		};
 
 		static auto SongDownload = [&](std::string link, fs::path path) {
 
@@ -800,7 +803,7 @@ public:
 
 				if (result == IDYES) {
 
-					InstallCheck;
+					InstallCheck("yt-dlp");
 
 					if (fs::exists("song.ogg")) {
 						fs::remove("song.ogg");
@@ -847,7 +850,7 @@ public:
 
 				if (result == IDYES) {
 
-					InstallCheck;
+					InstallCheck("yt-dlp");
 
 					if (fs::exists("movie.mp4")) {
 						fs::remove("movie.mp4");
