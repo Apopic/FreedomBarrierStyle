@@ -98,9 +98,9 @@ struct ChartData {
 
 	std::string FilePath = "";
 	std::string WavePath = "";
+	std::string MoviePath;
 	std::string SongLink;
 	std::string MovieLink;
-	std::string BGMoviePath;
 
 	std::string Title = "";
 	std::string SubTitle = "";
@@ -140,9 +140,9 @@ struct ChartData {
 		Packet::bytearray ret;
 		Packet::StoreBytes(ret, FilePath);
 		Packet::StoreBytes(ret, WavePath);
+		Packet::StoreBytes(ret, MoviePath);
 		Packet::StoreBytes(ret, SongLink);
 		Packet::StoreBytes(ret, MovieLink);
-		Packet::StoreBytes(ret, BGMoviePath);
 		Packet::StoreBytes(ret, Title);
 		Packet::StoreBytes(ret, SubTitle);
 		Packet::StoreBytes(ret, TitleStrlen);
@@ -179,9 +179,9 @@ struct ChartData {
 	Packet::byte_view FromBytes(Packet::byte_view view) {
 		Packet::LoadBytes(view, FilePath);
 		Packet::LoadBytes(view, WavePath);
+		Packet::LoadBytes(view, MoviePath);
 		Packet::LoadBytes(view, SongLink);
 		Packet::LoadBytes(view, MovieLink);
-		Packet::LoadBytes(view, BGMoviePath);
 		Packet::LoadBytes(view, Title);
 		Packet::LoadBytes(view, SubTitle);
 		Packet::LoadBytes(view, TitleStrlen);
@@ -312,7 +312,7 @@ struct ChartData {
 				if (data.empty()) {
 					return;
 				}
-				this->BGMoviePath = std::filesystem::path(path).parent_path().string() + "\\" + data;
+				this->MoviePath = std::filesystem::path(path).parent_path().string() + "\\" + data;
 				});
 			Exsubstr(FA[i], "SONGLINK:", [&](const std::string& data) {
 				if (data.empty()) {
@@ -904,7 +904,7 @@ public:
 		}
 
 		SongDownload(Chart.SongLink, Chart.WavePath);
-		MovieDownload(Chart.MovieLink, Chart.BGMoviePath);
+		MovieDownload(Chart.MovieLink, Chart.MoviePath);
 
 		LoadFileToMem(Chart.WavePath, Dest.WaveData);
 

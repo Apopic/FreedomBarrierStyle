@@ -64,7 +64,7 @@ void GameSystem::PlayingDraw() {
 
 		auto& HitNote = Playing.HitNote[pldx];
 
-		if (Playing.Chart.BGMovieHandle != 0) {
+		if (Playing.Chart.BGMovieHandle != -1) {
 			SetDrawBlendMode(DX_BLENDMODE_ALPHA, Skin.Base->Playing.Config.LaneAlpha);
 		}
 		Skin.Base->Playing.Image.LaneFrame.Draw(add);
@@ -186,13 +186,11 @@ void GameSystem::PlayingProc() {
 				});
 
 			if (!Config.TrainingMode) {
-
 				Input.HitKeyProcess(VK_SHIFT, KeyState::Hold, [&] {
 					Input.HitKeyProcess(VK_TAB, KeyState::Down, [&] {
 						NowScene = Scene::Result;
 						});
 					});
-
 			}
 			else if (!Playing.Chart.NowTime.GetNowRecording()) {
 				Playing.TraningModeProc(NowTime);

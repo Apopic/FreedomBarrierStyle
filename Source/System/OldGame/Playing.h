@@ -239,7 +239,7 @@ struct ChartStreamData {
 	int BalloonCount = 0;
 	uint AllNoteCount = 0;
 
-	int BGMovieHandle = 0;
+	int BGMovieHandle = -1;
 	Size2D<float> BGMovieSize = { 1280,720 };
 
 	uint DanPlayCount = 0;
@@ -328,7 +328,7 @@ public:
 
 	void MovieDraw(double nowtime) {
 
-		if (Chart.BGMovieHandle != 0 && __ConfigPtr->BGBrightness > 0) {
+		if (Chart.BGMovieHandle != -1 && __ConfigPtr->BGBrightness > 0) {
 
 			DrawFillBox(0, 0, __SkinPtr->Info.Resolution.X, __SkinPtr->Info.Resolution.Y, GetColor(0, 0, 0));
 			DrawExtendGraphF(
@@ -340,7 +340,6 @@ public:
 				FALSE);
 
 			if ((nowtime + (Chart.OriginalData.BGMovieOffset * -1000)) > 128 && Chart.NowTime.GetNowRecording()) {
-				SetMovieVolumeToGraph(0, Chart.BGMovieHandle);
 				PlayMovieToGraph(Chart.BGMovieHandle);
 			}
 
@@ -680,8 +679,6 @@ public:
 				data.BigNoteTime == 0 &&
 				_HitError < -__ConfigPtr->JudgeBad) {
 				Chart.Judge[0].Hit(JudgeType::Bad, 0, '\0', __ConfigPtr->AutoPlayFlag);
-				Chart.HitErrorTime.push_back(__ConfigPtr->JudgeBad);
-				Chart.CursorMove.Start();
 				Action(HitType::Empty);
 				data.HitFlag = true;
 			}
@@ -821,25 +818,39 @@ public:
 		if (!MeasureJump.GetNowRecording()) {
 
 			static auto MoveInputProc = [&](bool direction) {
-				while (!ProcessMessage()) {
-					if (direction) {
-						NoteDataIndex < Chart.RawNoteDatas.size() - 1 ? NoteDataIndex++ : NoteDataIndex;
-						if (Chart.RawNoteDatas[NoteDataIndex].BarlineDisplay || NoteDataIndex == Chart.RawNoteDatas.size() - 1) {
-							MeasureIndex < AllMeasureCount ? MeasureIndex++ : MeasureIndex;
-							break;
-						}
-					}
-					else {
-						NoteDataIndex > 0 ? NoteDataIndex-- : NoteDataIndex;
-						if (Chart.RawNoteDatas[NoteDataIndex].BarlineDisplay || NoteDataIndex == 0) {
-							MeasureIndex > 0 ? MeasureIndex-- : MeasureIndex;
-							break;
+
+				bool is_find = false;
+				auto v = Chart.RawNoteDatas;
+				auto barline_find = [](NoteData data) { return data.BarlineDisplay; };
+
+				if (direction) {
+					if (MeasureIndex < AllMeasureCount) {
+						auto begin = std::next(v.begin() + NoteDataIndex);
+						auto it = std::find_if(begin, v.end(), barline_find);
+						if (it != v.end()) {
+							NoteDataIndex = std::distance(v.begin(), it);
+							MeasureIndex++;
+							is_find = true;
 						}
 					}
 				}
-				MemNowTime = nowtime;
-				MeasureJump.Start();
-				};
+				else {
+					if (MeasureIndex > 0) {
+						auto rbegin = v.begin() + NoteDataIndex;
+						auto rit = std::find_if(std::reverse_iterator(rbegin), v.rend(), barline_find);
+						if (rit != v.rend()) {
+							NoteDataIndex = std::distance(v.begin(), std::prev(rit.base()));
+							MeasureIndex--;
+							is_find = true;
+						}
+					}
+				}
+
+				if (is_find) {
+					MemNowTime = nowtime;
+					MeasureJump.Start();
+				}
+			};
 
 			static auto StartInputProc = [&] {
 				Chart.NowTime.Start();
@@ -864,13 +875,8 @@ public:
 			TrainingOffset = std::lerp(MemNowTime, Chart.RawNoteDatas[NoteDataIndex].AbsTime, GetEasingRate(MeasureJump.GetRecordingTime() / MeasureJumpTime, ease::Base::In, ease::Line::Linear));
 
 			if (MeasureJump.GetRecordingTime() >= MeasureJumpTime) {
-				if (Chart.BGMovieHandle != 0) {
-					if (Chart.OriginalData.BGMovieOffset < 0) {
-						SeekMovieToGraph(Chart.BGMovieHandle, TrainingOffset + Chart.OriginalData.BGMovieOffset * -1000);
-					}
-					else {
-						SeekMovieToGraph(Chart.BGMovieHandle, TrainingOffset - Chart.SongBlankTime);
-					}
+				if (Chart.BGMovieHandle != -1) {
+					SeekMovieToGraph(Chart.BGMovieHandle, (bool)(Chart.OriginalData.BGMovieOffset < 0) ? TrainingOffset + Chart.OriginalData.BGMovieOffset * -1000 : TrainingOffset - Chart.SongBlankTime);
 				}
 				MeasureJump.End();
 			}

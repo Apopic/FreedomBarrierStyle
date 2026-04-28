@@ -437,18 +437,16 @@ RollType = '\0'
 	Playing.Chart.SongData.Load(LoadData.WaveData.data(), LoadData.WaveData.size(), 1);
 	SetCreateSoundDataType(DX_SOUNDDATATYPE_MEMNOPRESS);
 
-	if (!LoadData.BGMoviePath.empty()) {
+	if (!LoadData.MoviePath.empty()) {
 
-		Playing.Chart.BGMovieHandle = LoadGraph(LoadData.BGMoviePath.c_str());
+		Playing.Chart.BGMovieHandle = LoadGraph(LoadData.MoviePath.c_str());
 
 		GetGraphSizeF(Playing.Chart.BGMovieHandle, &Playing.Chart.BGMovieSize.Width, &Playing.Chart.BGMovieSize.Height);
 		float ExtendRate = Playing.Chart.BGMovieSize.Height / 720.0f;
 		Playing.Chart.BGMovieSize = { Playing.Chart.BGMovieSize.Width / ExtendRate, Playing.Chart.BGMovieSize.Height / ExtendRate };
+		SetMovieVolumeToGraph(0, Playing.Chart.BGMovieHandle);
 		SetPlaySpeedRateMovieToGraph(Playing.Chart.BGMovieHandle, SongSpeed);
-
-		if (Playing.Chart.OriginalData.BGMovieOffset < 0) {
-			SeekMovieToGraph(Playing.Chart.BGMovieHandle, Playing.TrainingOffset + Playing.Chart.OriginalData.BGMovieOffset * -1000);
-		}
+		SeekMovieToGraph(Playing.Chart.BGMovieHandle, (bool)(LoadData.BGMovieOffset < 0) ? Playing.TrainingOffset + LoadData.BGMovieOffset * -1000 : Playing.TrainingOffset - Playing.Chart.SongBlankTime);
 	}
 
 	Playing.Chart.SongData.SetVolume(Playing.Chart.OriginalData.SongVolume * (Config.SongVolume / 100));
